@@ -1,9 +1,12 @@
 
+# %%
+from pandas.core.common import flatten
+
 # %% Define base types
 class Color:
   ctype = 'col'
-  def __init__(self, val): self.val = val
-  def __str__(self): return self.val
+  def __init__(self, name): self.name = name
+  def __str__(self): return self.name
 
 Red = Color('red')
 Blue = Color('blue')
@@ -11,8 +14,8 @@ Yellow = Color('yellow')
 
 class Shape:
   ctype = 'shp'
-  def __init__(self, val): self.val = val
-  def __str__(self): return self.val
+  def __init__(self, name): self.name = name
+  def __str__(self): return self.name
 
 Circle = Shape('circle')
 Square = Shape('square')
@@ -20,8 +23,8 @@ Triangle = Shape('triangle')
 
 class Pattern:
   ctype = 'pat'
-  def __init__(self, val): self.val = val
-  def __str__(self): return self.val
+  def __init__(self, name): self.name = name
+  def __str__(self): return self.name
 
 Stripy = Pattern('stripy')
 Dotted = Pattern('dotted')
@@ -29,8 +32,8 @@ Plain = Pattern('plain')
 
 class Scale:
   ctype = 'int'
-  def __init__(self, val): self.val = val
-  def __str__(self): return str(self.val)
+  def __init__(self, name): self.name = name
+  def __str__(self): return str(self.name)
 
 S1 = Scale(1)
 S2 = Scale(2)
@@ -40,17 +43,23 @@ S4 = Scale(4)
 # %% Define objects
 class Stone:
   ctype = 'obj'
-  def __init__(self, color = None, c_scale = None, shape = None, s_scale = None, pattern = None, p_scale = None):
-    self.col = color.val
-    self.col_int = c_scale.val
-    self.shp = shape.val
-    self.shp_int = s_scale.val
-    self.pat = pattern.val
-    self.pat_int = p_scale.val
+  def __init__(self, color, c_scale, shape, s_scale, pattern, p_scale):
+    self.color = color
+    self.saturation = c_scale
+    self.shape = shape
+    self.size = s_scale
+    self.pattern = pattern
+    self.density = p_scale
+  @property
+  def name(self):
+    return (
+      self.color.name + str(self.saturation.name) + '_'
+      + self.shape.name + str(self.size.name) + '_'
+      + self.pattern.name + str(self.density.name))
   def __str__(self):
-    return f'{self.col}{self.col_int}_{self.shp}{self.shp_int}_{self.pat}{self.pat_int}'
+    return self.name
 
-# s = Stone(Red, S2, Circle, S2, Plain, S1)
+s = Stone(Red, S2, Circle, S2, Plain, S1)
 
 # %% Generate learning data
 learning_data = [
@@ -70,13 +79,10 @@ class Primitive:
   def __str__(self):
     return f'{self.name} {self.typesig}'
 
-def get_color (obj):
-  return obj.col
+def get_color (obj): return obj.color
 getColor = Primitive('getColor', ['obj', 'col'], get_color)
 
-def set_color (obj, col):
-  obj.col = col
-  return obj
+def set_color (obj, col): obj.color = col; return obj
 setColor = Primitive('setColor', ['obj', ['obj', 'col']], set_color)
 
 # %% Routers
@@ -85,19 +91,48 @@ class Router:
   def __init__(self, name = None, func = None):
     self.name = name
     self.run = func
+    self.n_var = len(name)
   def __str__(self):
-    return f'{self.name}'
+    return self.name
 
-def send_right(x, y, z):
-  return [ y, z(x) ]
+def send_right(x, left, right): return [ left, [ right, x ]]
 B = Router('B', send_right)
 
-def send_left(x, y, z):
-  return [ y(x), z ]
+def send_left(x, left, right): return [[ left, x ], right ]
 C = Router('C', send_left)
 
-def send_both(x, y, z):
-  return [ y(x), z(x) ]
+def send_both(x, left, right): return [[ left, x ], [ right, x ]]
 S = Router('S', send_both)
+
+# %% Composite routers
+class ComRouter:
+  ctype = 'router'
+  def __init__(self, routers):
+    self.name = ''.join(list(map(lambda x: x.name, routers)))
+    self.n_var = len(routers)
+    self.routers = routers
+  def __str__(self):
+    return self.name
+
+BC = ComRouter([B, C])
+
+# %% Demo program
+class Program:
+  ctype = 'program'
+  def __init__(self, terms):
+    self.terms = terms
+  def __str__(self):
+    return '(' + ' '.join(list(map(lambda x: x.name, self.terms))) + ')'
+
+demo = Program([BC, setColor, getColor])
+simple_demo = Program([C, setColor, Red])
+
+# %%
+def runProgram(program, objs):
+  send_var = program.terms[0].run(objs[0], program.terms[1], program.terms[2])
+  currying = list(flatten(send_var))
+  return currying[0].run(currying[1], currying[2])
+
+o = runProgram(simple_demo, [s])
 
 # %%
