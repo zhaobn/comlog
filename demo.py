@@ -1,6 +1,6 @@
 
 # %%
-from pandas.core.common import flatten
+from pandas.core.common import flatten, is_true_slices
 
 # %% Define base types
 class Color:
@@ -31,6 +31,8 @@ Dotted = Pattern('dotted')
 Plain = Pattern('plain')
 
 class Scale:
+  # For now: same scale for all three categorical features;
+  # Future: consider different scale per categorical feature.
   ctype = 'int'
   def __init__(self, name): self.name = name
   def __str__(self): return str(self.name)
@@ -51,7 +53,7 @@ class Stone:
     self.pattern = pattern
     self.density = p_scale
   @property
-  def name(self):
+  def name(self): # Human-readable
     return (
       self.color.name + str(self.saturation.name) + '_'
       + self.shape.name + str(self.size.name) + '_'
@@ -75,7 +77,7 @@ class Primitive:
   def __init__(self, name = None, typesig = [], func = None):
     self.name = name
     self.typesig = typesig
-    self.run = func
+    self.run = func # Handcrafted for now; not sure how to make it automatically defined by type signature
   def __str__(self):
     return f'{self.name} {self.typesig}'
 
@@ -95,14 +97,17 @@ class Router:
   def __str__(self):
     return self.name
 
-def send_right(x, left, right): return [ left, [ right, x ]]
+def send_right(x, y, z): return [ x, [y, z] ]
 B = Router('B', send_right)
 
-def send_left(x, left, right): return [[ left, x ], right ]
+def send_left(x, y, z): return [[ x, z ], y ]
 C = Router('C', send_left)
 
-def send_both(x, left, right): return [[ left, x ], [ right, x ]]
+def send_both(x, y, z): return [ x, z, [ y, z ]]
 S = Router('S', send_both)
+
+def return_myself(x): return x
+I = Router('I', return_myself)
 
 # %% Composite routers
 class ComRouter:
@@ -121,18 +126,24 @@ class Program:
   ctype = 'program'
   def __init__(self, terms):
     self.terms = terms
-  def __str__(self):
-    return '(' + ' '.join(list(map(lambda x: x.name, self.terms))) + ')'
+  def print_program(self):
+    def recursive_get_name(mylist):
+	    retlist = []
+	    for x in mylist:
+		    if isinstance(x, list):
+			    named_list = recursive_get_name(x)
+			    retlist.append(named_list)
+		    else:
+			    retlist.append(x.name)
+	    return retlist
+    return recursive_get_name(self.terms)
 
 demo = Program([BC, setColor, getColor])
-simple_demo = Program([C, setColor, Red])
+simple_demo = Program([C, setColor, Yellow])
 
 # %%
 def runProgram(program, objs):
-  send_var = program.terms[0].run(objs[0], program.terms[1], program.terms[2])
-  currying = list(flatten(send_var))
-  return currying[0].run(currying[1], currying[2])
 
-o = runProgram(simple_demo, [s])
 
 # %%
+t = Stone(Blue, S1, Circle, S2, Dotted, S2)
