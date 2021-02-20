@@ -1,6 +1,23 @@
 
 # %%
-from pandas.core.common import flatten, is_true_slices
+from pandas.core.common import flatten
+
+# %% Global helper
+# Get human-readable translation of a list of objects
+# Expensive operation (recursion), be careful
+def print_name(mylist):
+  retlist = []
+  for x in mylist:
+    if isinstance(x, list):
+      named_list = print_name(x)
+      retlist.append(named_list)
+    else:
+      retlist.append(x.name)
+  return retlist
+# Return a list
+def secure_list(input):
+  output = input if isinstance(input, list) else [ input ]
+  return output
 
 # %% Define base types
 class Color:
@@ -61,89 +78,136 @@ class Stone:
   def __str__(self):
     return self.name
 
-s = Stone(Red, S2, Circle, S2, Plain, S1)
+# Stones for test
+# s = Stone(Red, S2, Circle, S2, Plain, S1)
+# t = Stone(Blue, S1, Square, S4, Dotted, S2)
 
-# %% Generate learning data
-learning_data = [
-  (Stone(Red, S2, Circle, S2, Plain, S1), Stone(Blue, S2, Circle, S2, Plain, S3), Stone(Red, S2, Circle, S2, Plain, S3)),
-  (Stone(Yellow, S2, Circle, S2, Plain, S1), Stone(Red, S1, Square, S2, Dotted, S1), Stone(Yellow, S1, Square, S2, Dotted, S1)),
-  (Stone(Red, S4, Circle, S2, Plain, S1), Stone(Blue, S4, Circle, S1, Plain, S4), Stone(Red, S4, Circle, S1, Plain, S4)),
-  (Stone(Blue, S1, Triangle, S2, Dotted, S4), Stone(Red, S4, Circle, S3, Plain, S4), Stone(Blue, S4, Circle, S3, Plain, S4))
-]
-
-# %% Primitives
+# %% Define primitives
 class Primitive:
   ctype = 'primitive'
-  def __init__(self, name = None, typesig = [], func = None):
+  def __init__(self, name = None, arg_type = None, return_type = None, func = None):
     self.name = name
-    self.typesig = typesig
-    self.run = func # Handcrafted for now; not sure how to make it automatically defined by type signature
+    self.arg_type = arg_type
+    self.return_type = return_type
+    self.n_arg = len(list(flatten([arg_type])))
+    self.run = func
   def __str__(self):
-    return f'{self.name} {self.typesig}'
+    return f'{self.name} {self.arg_type} -> {self.return_type}'
 
-def get_color (obj): return obj.color
-getColor = Primitive('getColor', ['obj', 'col'], get_color)
+def get_color (obj):
+  if isinstance(obj, list): obj = obj[0]
+  return obj.color
+getColor = Primitive('getColor', 'obj', 'col', get_color)
 
-def set_color (obj, col): obj.color = col; return obj
-setColor = Primitive('setColor', ['obj', ['obj', 'col']], set_color)
+def set_color (arg_list):
+  obj, col = arg_list
+  obj.color = col
+  return obj
+setColor = Primitive('setColor', ['obj', 'col'], 'obj', set_color)
 
-# %% Routers
+# %% Define routers
 class Router:
   ctype = 'router'
   def __init__(self, name = None, func = None):
     self.name = name
+    self.n_arg = len(name)
     self.run = func
-    self.n_var = len(name)
   def __str__(self):
     return self.name
 
-def send_right(x, y, z): return [ x, [y, z] ]
+def send_right(arg_dict, arg_list):
+  arg_dict['right'] = list(flatten(arg_dict['right'] + [arg_list]))
+  return arg_dict
 B = Router('B', send_right)
 
-def send_left(x, y, z): return [[ x, z ], y ]
+def send_left(arg_dict, arg_list):
+  arg_dict['left'] = list(flatten(arg_dict['left'] + [arg_list]))
+  return arg_dict
 C = Router('C', send_left)
 
-def send_both(x, y, z): return [ x, z, [ y, z ]]
+def send_both(arg_dict, arg_list):
+  arg_dict['left'] = list(flatten(arg_dict['left'] + [arg_list]))
+  arg_dict['right'] = list(flatten(arg_dict['right'] + [arg_list]))
+  return arg_dict
 S = Router('S', send_both)
 
-def return_myself(x): return x
+def return_myself(_, arg_list):
+  if isinstance(arg_list, list):
+    return arg_list[0]
+  else:
+    return arg_list
 I = Router('I', return_myself)
 
-# %% Composite routers
+# # %% Test routers
+# d = {'left': [], 'right': []}
+# B.run(d, [1])
+
+# %% Define composite routers
 class ComRouter:
   ctype = 'router'
-  def __init__(self, routers):
-    self.name = ''.join(list(map(lambda x: x.name, routers)))
-    self.n_var = len(routers)
-    self.routers = routers
+  def __init__(self, router_list):
+    self.name = ''.join(list(map(lambda x: x.name, router_list)))
+    self.n_arg = len(router_list)
+    self.routers = router_list
+  def run(self, arg_dict, arg_list):
+    for i in range(len(self.routers)):
+      self.routers[i].run(arg_dict, arg_list[i])
+    return arg_dict
   def __str__(self):
     return self.name
 
-BC = ComRouter([B, C])
+# # Test composite router
+# CB = ComRouter([C, B])
 
 # %% Demo program
 class Program:
   ctype = 'program'
   def __init__(self, terms):
     self.terms = terms
-  def print_program(self):
-    def recursive_get_name(mylist):
-	    retlist = []
-	    for x in mylist:
-		    if isinstance(x, list):
-			    named_list = recursive_get_name(x)
-			    retlist.append(named_list)
-		    else:
-			    retlist.append(x.name)
-	    return retlist
-    return recursive_get_name(self.terms)
+  def run(self, arg_list = None):
+    if self.terms[0].ctype is 'router':
+      if len(self.terms) != 3:
+        print('Bad format!') # Raise error?
+        return None
+      else:
+        router_term, left_terms, right_terms = self.terms
+        left_tree = Program(secure_list(left_terms))
+        right_tree = Program(secure_list(right_terms))
+        # Route arguments
+        sorted_args = {'left': [], 'right': []}
+        sorted_args = router_term.run(sorted_args, arg_list)
+        # Run subtrees
+        left_ret = left_tree.run(sorted_args['left'])
+        right_ret = right_tree.run(sorted_args['right'])
+        return Program(secure_list(left_ret) + secure_list(right_ret)).run()
+    elif self.terms[0].ctype is 'primitive': # TODO: include compound (learned) functions
+      func_term = self.terms[0]
+      args_term = self.terms[1:]
+      if arg_list is not None:
+        args_term += secure_list(arg_list)
+      if len(args_term) == func_term.n_arg:
+        return func_term.run(args_term) # Functions are leaf nodes
+      else:
+        return [ func_term ] + args_term
+    else:
+      return self.terms # Base types
 
-demo = Program([BC, setColor, getColor])
-simple_demo = Program([C, setColor, Yellow])
+# Test program
+# simple_demo = Program([C, setColor, Yellow])
+# simple_demo.run([s])
 
 # %%
-def runProgram(program, objs):
-
+demo = Program([ComRouter([B,C]), setColor, getColor])
+s = Stone(Red, S2, Circle, S2, Plain, S1)
+t = Stone(Blue, S1, Square, S4, Dotted, S2)
+# demo.run([s, t])
+demo.run([s, t]).name
 
 # %%
-t = Stone(Blue, S1, Circle, S2, Dotted, S2)
+# # %% Generate learning data
+# learning_data = [
+#   (Stone(Red, S2, Circle, S2, Plain, S1), Stone(Blue, S2, Circle, S2, Plain, S3), Stone(Red, S2, Circle, S2, Plain, S3)),
+#   (Stone(Yellow, S2, Circle, S2, Plain, S1), Stone(Red, S1, Square, S2, Dotted, S1), Stone(Yellow, S1, Square, S2, Dotted, S1)),
+#   (Stone(Red, S4, Circle, S2, Plain, S1), Stone(Blue, S4, Circle, S1, Plain, S4), Stone(Red, S4, Circle, S1, Plain, S4)),
+#   (Stone(Blue, S1, Triangle, S2, Dotted, S4), Stone(Red, S4, Circle, S3, Plain, S4), Stone(Blue, S4, Circle, S3, Plain, S4))
+# ]
