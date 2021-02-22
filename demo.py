@@ -1,6 +1,7 @@
 
 # %%
 from pandas.core.common import flatten
+from copy import copy
 
 # %% Global helper
 
@@ -20,6 +21,13 @@ def print_name(mylist):
 def secure_list(input):
   output = input if isinstance(input, list) else [ input ]
   return output
+
+# Return copy of a list (of objects)
+def copy_list(lt):
+  ret = []
+  for _l in lt: ret.append(copy(_l))
+  return ret
+
 
 # %% Define combinitorial logic terms
 
@@ -162,7 +170,7 @@ class ComRouter:
   def __str__(self):
     return self.name
 
-# program
+# %% program
 class Program:
   ctype = 'program'
   def __init__(self, terms):
@@ -180,7 +188,7 @@ class Program:
         right_tree = Program(secure_list(right_terms))
         # Route arguments
         sorted_args = {'left': [], 'right': []}
-        sorted_args = router_term.run(sorted_args, arg_list)
+        sorted_args = router_term.run(sorted_args, copy_list(arg_list))
         # Run subtrees
         left_ret = left_tree.run(sorted_args['left'])
         right_ret = right_tree.run(sorted_args['right'])
@@ -197,7 +205,7 @@ class Program:
     else:
       return self.terms # Base types
 
-# %% Run demo programs
+# Run demo programs
 s = Stone(Red, S2, Circle, S2, Plain, S1)
 t = Stone(Blue, S1, Square, S4, Dotted, S2)
 
@@ -209,12 +217,13 @@ t = Stone(Blue, S1, Square, S4, Dotted, S2)
 # demo.run([s, t]).name
 
 # demo = Program([B, [eqColor, Red], getColor])
-# demo.run(s)
+# demo.run([s])
 
 CS = ComRouter([C, S])
 CB = ComRouter([C, B])
 demo = Program([CS, [CB, [B, ifElse, [B, [eqColor, Red], getColor]], [C, setColor, Red]], I])
 demo.run([s, t]).name
+
 
 # %%
 # # %% Generate learning data
