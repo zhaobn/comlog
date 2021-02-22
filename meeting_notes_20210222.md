@@ -11,7 +11,7 @@ Bonan earlier notes: https://github.com/zhaobn/alien-stones/blob/main/notes/note
 ### Summary
 
 - Define everything with `class`: base types, primitives, routers, programs
-- Define `program.run([objs])` recursively => manage to run all the examples in Bonan & Chris' notes
+- Define `program.run([objs])` recursively => manage to run all the examples in Bonan & Chris' notes :white_check_mark:
 
 ### Not sure
 
@@ -22,5 +22,5 @@ Bonan earlier notes: https://github.com/zhaobn/alien-stones/blob/main/notes/note
 ## To implement
 
 - **Program generator**. How do I handle sampling the right type? Need a type calculator?
-- How to **approximate posterior**? Not sure how version space works for now; start with whatever prior programs => posterior distribution over them? Basically `\propto P(d|h)P(h)`, if starting with a finite sample of H.
-- How to **grow a library**? Add (which) subtrees to the library, seems very much related with the type calculator.
+- How to **approximate posterior**? Not sure how version space works for now; start with whatever prior programs => posterior distribution over them? Basically `\propto P(d|h)P(h)`, if starting with a finite sample of `H`.
+- How to **grow a library**? Add (which) subtrees to the library. Seems very much related with the type calculator.
