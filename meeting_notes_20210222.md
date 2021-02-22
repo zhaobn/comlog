@@ -5,7 +5,7 @@ Demo code: https://github.com/zhaobn/comlog/blob/main/demo.py
 
 Chris sketches: https://www.overleaf.com/read/mydmcyqmpdrh
 
-Bonan earlier notes: https://github.com/zhaobn/alien-stones/blob/main/notes/note.pdf
+Bonan earlier notes: https://www.overleaf.com/read/wqdptkxvmynt
 
 ## Implemented
 ### Summary
