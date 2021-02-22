@@ -7,14 +7,13 @@ Chris sketches: https://www.overleaf.com/read/mydmcyqmpdrh
 
 Bonan earlier notes: https://github.com/zhaobn/alien-stones/blob/main/notes/note.pdf
 
-## Implementation
-
+## Implemented
 ### Summary
 
 - Define everything with `class`: base types, primitives, routers, programs
 - Define `program.run([objs])` recursively => manage to run all the examples in Bonan & Chris' notes
 
-### Checkpoints
+### Not sure
 
 - Hand-crafted functions for each primitive term. Should it be automated?
 - Used lists to represent terms in a program. Other option: binary tree?
