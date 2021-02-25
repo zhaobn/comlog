@@ -26,6 +26,7 @@ S4 = Scale(4)
 getColor = Primitive('getColor', 'obj', 'col', get_color)
 setColor = Primitive('setColor', ['obj', 'col'], 'obj', set_color)
 eqColor = Primitive('eqColor', ['col', 'col'], 'bool', eq_color)
+eqObject = Primitive('eqObject', [ 'obj', 'obj' ], 'bool', eq_object)
 ifElse = Primitive('ifElse', ['bool', 'm', 'm'], 'obj', if_else)
 
 # Routers

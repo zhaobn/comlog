@@ -1,21 +1,26 @@
 
 ####################### General imports ###############################
 from pandas.core.common import flatten
+from copy import copy
 
 ####################### Main body #####################################
 # Primitive functions
 def get_color (obj):
   if isinstance(obj, list): obj = obj[0]
-  return obj.color
+  return copy(obj.color)
 
 def set_color (arg_list):
   obj, col = arg_list
-  obj.color = col
+  obj.color = copy(col)
   return obj
 
 def eq_color(arg_list):
   col_1, col_2 = arg_list
-  return col_1 == col_2
+  return col_1.name == col_2.name
+
+def eq_object(arg_list):
+  obj_1, obj_2 = arg_list
+  return obj_1.name == obj_2.name
 
 def if_else(arg_list):
   cond, ret_1, ret_2 = arg_list
