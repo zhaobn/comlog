@@ -3,7 +3,7 @@
 from pandas.core.common import flatten
 
 ####################### Custom imports ###############################
-from my_utils import secure_list, copy_list
+from list_helpers import secure_list, copy_list
 
 ####################### Main body #####################################
 class Color:
