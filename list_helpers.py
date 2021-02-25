@@ -25,3 +25,11 @@ def copy_list(lt):
   ret = []
   for _l in lt: ret.append(copy(_l))
   return ret
+
+# Join a list of arg types into underscore-separated string
+def args_to_string(arg_list):
+  return '_'.join(secure_list(arg_list))
+
+# Stringify a list of term names for dataframe evaluation
+def names_to_string(names_list):
+  return str(names_list).replace("'", '')
