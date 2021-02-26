@@ -5,22 +5,22 @@ from base_methods import *
 
 ####################### Main body ###############################
 # Base types
-Red = Color('red')
-Blue = Color('blue')
-Yellow = Color('yellow')
+Red = Color('Red')
+Blue = Color('Blue')
+Yellow = Color('Yellow')
 
-Circle = Shape('circle')
-Square = Shape('square')
-Triangle = Shape('triangle')
+Circle = Shape('Circle')
+Square = Shape('Square')
+Triangle = Shape('Triangle')
 
-Stripy = Pattern('stripy')
-Dotted = Pattern('dotted')
-Plain = Pattern('plain')
+Stripy = Pattern('Stripy')
+Dotted = Pattern('Dotted')
+Plain = Pattern('Plain')
 
-S1 = Scale(1)
-S2 = Scale(2)
-S3 = Scale(3)
-S4 = Scale(4)
+S1 = Scale('S1')
+S2 = Scale('S2')
+S3 = Scale('S3')
+S4 = Scale('S4')
 
 # Primitives
 getColor = Primitive('getColor', 'obj', 'col', get_color)
@@ -36,6 +36,12 @@ S = Router('S', send_both)
 I = Router('I', return_myself)
 
 # Composite routers
-BC = ComRouter([B,C])
-CS = ComRouter([C, S])
+BB = ComRouter([B, B])
+BC = ComRouter([B, C])
+BS = ComRouter([B, S])
 CB = ComRouter([C, B])
+CC = ComRouter([C, C])
+CS = ComRouter([C, S])
+SB = ComRouter([S, B])
+SC = ComRouter([S, C])
+SS = ComRouter([S, S])
