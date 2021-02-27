@@ -88,7 +88,7 @@ def get_cached_program(type_signature, p_source = df_pm):
 def sample_program(p_source):
   if p_source is None:
     print('No cache found!')
-    return {'terms': 'Error', 'arg_types': '', 'return_type': '', 'name': ''}
+    return {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'name': 'ERROR'}
   elif len(p_source.index) == 1:
     s_idx = 0
   else:
@@ -103,24 +103,18 @@ def get_matched_program(return_type, p_source = df_pm):
   return matched_pms if not matched_pms.empty else None
 
 # %%
-def sample_router(arg_list, left_args, router = ''):
-  if len(arg_list) < 1:
-    return router
+def sample_router(arg_list, free_index):
+  assert len(arg_list) > 0, 'No arguments for router!'
+  if free_index < 0:
+    return 'B' * len(arg_list)
   else:
-    arg = arg_list[0]
-    if arg in left_args:
-      router += np.random.choice(['C','S'])
-      left_args = left_args[:-1] if len(left_args) > 1 else []
-    else:
-      router += 'B'
-    arg_list = arg_list[1:]
-    return sample_router(arg_list, left_args, router)
+    return ''.join([np.random.choice(['C', 'B', 'S']) for _ in arg_list])
 
 # %%
 def generate_program(type_signature, p_lib = df_pm, cur_step = 0, max_step = 5):
   if cur_step > max_step:
     print('Max step exceeded!')
-    return None
+    return {'terms': 'EXCEED', 'arg_types': '', 'return_type': '', 'name': 'EXCEED'}
   elif type_signature == [['obj'], 'obj'] and np.random.random() < 0.5:
     return {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj'}
   else:
@@ -147,13 +141,13 @@ def generate_program(type_signature, p_lib = df_pm, cur_step = 0, max_step = 5):
           return {'terms': 'randomStone', 'arg_types': '', 'return_type': 'obj', 'name': 'randomStone'}
         else:
           print('Type not found!')
-          return {'terms': 'Error', 'arg_types': '', 'return_type': '', 'name': ''}
+          return {'terms': 'NOTYPE', 'arg_types': '', 'return_type': '', 'name': 'NOTYPE'}
       else:
         # generate new program
         left = sample_program(get_matched_program(ret_t, p_lib))
         left_args = left['arg_types'].split('_')
         free_index = len(left_args) - 2
-        router = sample_router(arg_t, left_args[:(free_index+1)])
+        router = sample_router(arg_t, free_index)
         routed_args = eval(router).run({'left': [], 'right': []}, arg_t)
         # expand left side until no un-filled arguments
         left_pm = expand_program(left, routed_args['left'], free_index, p_lib, cur_step, max_step)
@@ -175,9 +169,9 @@ def expand_program(candidate, arg_list, free_index, p_lib, cur_step, max_step):
       right_pm = generate_program([arg_list, left_args[free_index]], p_lib, cur_step, max_step)
       terms = [left_pm['terms'], right_pm['terms']]
     else:
-      router = sample_router(arg_list, left_args[:free_index])
+      router = sample_router(arg_list, free_index-1)
       routed_args = eval(router).run({'left': [], 'right': []}, arg_list)
-      left_pm = expand_program(candidate, routed_args['left'], free_index - 1, p_lib, cur_step, max_step)
+      left_pm = expand_program(candidate, routed_args['left'], free_index-1, p_lib, cur_step, max_step)
       right_pm = generate_program([routed_args['right'], left_args[free_index]], p_lib, cur_step, max_step)
       terms = [router, left_pm['terms'], right_pm['terms']]
     return {
@@ -188,5 +182,3 @@ def expand_program(candidate, arg_list, free_index, p_lib, cur_step, max_step):
 
 # %%
 generate_program([['obj', 'obj'], 'obj'])
-
-# %%
