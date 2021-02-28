@@ -1,5 +1,5 @@
 
-# Meeting notes (2021-02-22)
+# Meeting notes (2021-03-01)
 
 ## Implemented
 
@@ -48,7 +48,7 @@ Generate a program for type signature `[['obj'],'obj']`, with an argument of typ
   - DreamCoder: build version space
   - Brutal force: check input-output equivalence on an exhausive list of possible inputs (not scalable).
   - However, given our particular setup, we could try some sort of semantics check inspired by the brutal force method:
-    - For programs that do not contain boolean checks, use abstract input to check program equivalence. Eg. use a stone xyzabc as input, and compare output status.
+    - For programs that do not contain boolean checks, use abstract input to check program equivalence. Eg. use a stone `xyzabc` as input, and compare output status.
     - For programs that do contain boolean conditions, check both the booleans and return programs separately.
 
 - Grow program library. This follows pretty straightforwardly once the equivalence problem is solved.
