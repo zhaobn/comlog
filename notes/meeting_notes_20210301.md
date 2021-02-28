@@ -52,3 +52,8 @@ Generate a program for type signature `[['obj'],'obj']`, with an argument of typ
     - For programs that do contain boolean conditions, check both the booleans and return programs separately.
 
 - Grow program library. This follows pretty straightforwardly once the equivalence problem is solved.
+
+## Misc.
+
+- CB&B submission: Bonan aims to complete the revision this week
+- [ICT 2020](https://www.ict-2020.eu) re-submission
