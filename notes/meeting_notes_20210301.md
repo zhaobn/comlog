@@ -5,7 +5,7 @@
 
 [Program generator](https://github.com/zhaobn/comlog/blob/main/get_programs.py): given a type signature (input types, output type) sample a program.
 
-Principles:
+### Principles
 
 - Right tree provides *one* argument for the corresponding left tree.
 - A left node that has `n` input types should expand `n` times, each time the corresponding right tree fills a type in the left. This is right-associated.
@@ -20,14 +20,16 @@ Therefore, we consider program generation with two functions recursively:
 - `program_expansion`: expand a left tree until no unfilled input types.
 - `program_generation`: for a given type signature generate a program. All the right trees are generated with this method.
 
-Steps:
+### Steps
 
 - Left tree: sample a program whose return type matches the current program, fully expand it until all input types are provided from corresponding right trees.
 - When input contains variables and left tree has not been fully expanded, sample a router.
 - Right tree: sample a program whose type signature matches the current setup.
 - Do above steps recursively until a program is sampled or step exceeds max setup (`max_depth` = 5 in current implementation).
 
-Example: generate a program for type signature `[['obj'],'obj']`, with an argument of type `'obj'`.
+### Example
+
+Generate a program for type signature `[['obj'],'obj']`, with an argument of type `'obj'`.
 
 - `Left_1`: sample a program that the return type is `'obj'`. Got `obj, col -> obj` (`setColor`).
   - There is one free type in the left tree. Sample a router. Got `C`.
