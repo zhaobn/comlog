@@ -142,11 +142,15 @@ class Program_lib:
           left_pm = self.expand_program(left, routed_args['left'], free_index, cur_step, max_step)
           right_pm = self.generate_program([routed_args['right'], left_args[-1]], cur_step, max_step)
           terms = [router, left_pm['terms'], right_pm['terms']]
-          return {
+          program_dict = {
             'terms': names_to_string(terms),
             'arg_types': args_to_string(type_signature[0]),
             'return_type': type_signature[1]
           }
+          # add to program lib
+          self.add(program_dict) if 'ERROR' not in program_dict['terms'] else None
+          return program_dict
+
   # Lefthand-side tree
   def expand_program(self, candidate, arg_list, free_index, cur_step, max_step):
     if free_index < 0:
@@ -180,4 +184,4 @@ pl = Program_lib([
  ])
 
 # %%
-pl.generate_program([['obj'], 'obj'])
+pl.generate_program([['obj', 'obj'], 'obj'])
