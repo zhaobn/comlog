@@ -124,7 +124,10 @@ class Program_lib:
       # Use cached program?
       cached = self.get_cached_program(type_signature)
       if cached is not None and np.random.random() < rate:
-        return self.sample_program(cached)
+        sampled = self.sample_program(cached)
+        # increase counter
+        self.add(sampled)
+        return sampled
       else:
         cur_step += 1
         arg_t, ret_t = type_signature
@@ -184,4 +187,4 @@ pl = Program_lib([
  ])
 
 # %%
-pl.generate_program([['obj', 'obj'], 'obj'])
+pl.generate_program([['obj'], 'obj'], rate = 0.9)
