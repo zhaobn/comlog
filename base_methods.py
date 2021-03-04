@@ -18,6 +18,71 @@ def eq_color(arg_list):
   col_1, col_2 = arg_list
   return col_1.name == col_2.name
 
+def get_shape (obj):
+  if isinstance(obj, list): obj = obj[0]
+  return copy(obj.shape)
+
+def set_shape (arg_list):
+  obj, shp = arg_list
+  obj.shape = copy(shp)
+  return obj
+
+def eq_shape(arg_list):
+  shp_1, shp_2 = arg_list
+  return shp_1.name == shp_2.name
+
+def get_pattern (obj):
+  if isinstance(obj, list): obj = obj[0]
+  return copy(obj.pattern)
+
+def set_pattern (arg_list):
+  obj, pat = arg_list
+  obj.pattern = copy(pat)
+  return obj
+
+def eq_pattern(arg_list):
+  pat_1, pat_2 = arg_list
+  return pat_1.name == pat_2.name
+
+def get_saturation (obj):
+  if isinstance(obj, list): obj = obj[0]
+  return copy(obj.saturation)
+
+def set_saturation (arg_list):
+  obj, scl = arg_list
+  obj.saturation = copy(scl)
+  return obj
+
+def eq_saturation(arg_list):
+  scl_1, scl_2 = arg_list
+  return scl_1.name == scl_2.name
+
+def get_size (obj):
+  if isinstance(obj, list): obj = obj[0]
+  return copy(obj.size)
+
+def set_size (arg_list):
+  obj, sz = arg_list
+  obj.size = copy(sz)
+  return obj
+
+def eq_size(arg_list):
+  sz_1, sz_2 = arg_list
+  return sz_1.name == sz_2.name
+
+def get_density (obj):
+  if isinstance(obj, list): obj = obj[0]
+  return copy(obj.density)
+
+def set_density (arg_list):
+  obj, den = arg_list
+  obj.density = copy(den)
+  return obj
+
+def eq_density(arg_list):
+  den_1, den_2 = arg_list
+  return den_1.name == den_2.name
+
 def eq_object(arg_list):
   obj_1, obj_2 = arg_list
   return obj_1.name == obj_2.name

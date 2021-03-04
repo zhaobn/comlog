@@ -6,7 +6,6 @@ from numpy import random as np_random
 from base_terms import *
 from list_helpers import args_to_string, names_to_string
 
-# %%
 class Program_lib:
   def __init__(self, program_list = [],
   base_list = [ True, False, Red, Blue, Yellow,
@@ -149,14 +148,14 @@ class Program_lib:
       return ''.join([np_random.choice(['C', 'B', 'S']) for _ in arg_list])
 
   # Tail-recursion; righthand-side tree
-  def generate_program(self, type_signature, cur_step = 0, max_step = 5, rate = 0.5):
+  def generate_program(self, type_signature, cur_step = 0, max_step = 5, cache_rate = 0.5):
     if cur_step > max_step:
       print('Max step exceeded!')
       return self.ERROR_TERM
     else:
       # Use cached program?
       cached = self.get_cached_program(type_signature)
-      if cached is not None and np_random.random() < rate:
+      if cached is not None and np_random.random() < cache_rate:
         sampled = self.sample_program(cached)
         # increase counter
         self.add(sampled)
@@ -211,20 +210,24 @@ class Program_lib:
         'return_type': candidate['return_type']
       }
 
-# %%
 pl = Program_lib([
-  getColor,
-  setColor,
-  eqColor,
+  getColor, setColor, eqColor,
+  getSaturation, setSaturation, eqSaturation,
+  getShape, setShape, eqShape,
+  getSize, setSize, eqSize,
+  getPattern, setPattern, eqPattern,
+  getDensity, setDensity, eqDensity,
   eqObject,
   ifElse,
   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
  ])
 
-pl.generate_program([['obj'], 'obj'], rate = 0.1)
-
 # %%
-s = eval(pl.sample_base('obj')['terms'])
+pl.generate_program([['obj'], 'obj'], cache_rate = 0.1)
+
+# %% Tests
+# s = eval(pl.sample_base('obj')['terms'])
 # t = eval(pl.sample_base('obj')['terms'])
 # Program([SC, [CS, [BB, ifElse, eqObject], I], I]).run([t,t]).name
-Program([B, [setColor, Stone(Yellow,S1,Triangle,S2,Plain,S4)], getColor]).run(s).name
+# Program([B, [setColor, Stone(Yellow,S1,Triangle,S2,Plain,S4)], getColor]).run(s).name
+# Program([B, [setShape, Stone(Red,S2,Circle,S3,Dotted,S4)], [B, getShape, [B, [setPattern, Stone(Blue,S2,Square,S2,Plain,S4)], getPattern]]]).run(s).name
