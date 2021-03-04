@@ -8,7 +8,7 @@ from list_helpers import args_to_string, names_to_string
 
 # %%
 class Program_lib:
-  def __init__(self, program_list):
+  def __init__(self, program_list = [], base_list = [Red, Blue, Yellow, True, False]):
     self.content = pd.DataFrame({
       'terms': pd.Series([], dtype='str'),
       'arg_types': pd.Series([], dtype='str'),
@@ -16,9 +16,50 @@ class Program_lib:
       'count': pd.Series([], dtype='int'),
       'name': pd.Series([], dtype='str')
     })
+    self.base_terms = copy(self.content)
     self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'name': 'ERROR'}
-    if len(program_list) > 0:
-      self.add(program_list)
+    if len(program_list) > 0: self.add(program_list)
+    if len(base_list) > 0: self.add_bases(base_list)
+
+  def add_bases(self, base_list):
+    base_list = secure_list(base_list)
+    for bt in base_list:
+      if isinstance(bt, dict):
+        # sampled from program generation
+        terms = bt['terms']
+        return_type = bt['return_type']
+      elif isinstance(bt, bool):
+        terms = 'True' if bt == True else 'False'
+        return_type = 'bool'
+      else:
+        terms = bt.name
+        return_type = bt.ctype
+      # check existence
+      found = self.base_terms.query(f'return_type == "{return_type}" & terms == "{terms}"')
+      if found.empty:
+        self.base_terms = self.base_terms.append(pd.DataFrame({
+          'terms': pd.Series([terms], dtype='str'),
+          'arg_types': pd.Series([''], dtype='str'),
+          'return_type': pd.Series([return_type], dtype='str'),
+          'count': pd.Series([1], dtype='int'),
+          'name': pd.Series([terms], dtype='str'),
+        }), ignore_index=True)
+      elif len(found.index) > 0:
+        print('Duplicated base terms!')
+        exit
+      else:
+        self.base_terms.at[found.index[0], 'count'] += 1
+
+  def sample_base(self, type):
+    # TODO: create random object
+    bases = self.base_terms.query(f'return_type == "{type}"')
+    if bases is None:
+      print('No bases found!')
+      return self.ERROR_TERM
+    else:
+      sampled = bases.sample(n=1, weights='count')
+      idx = sampled.index[0]
+    return {'terms': sampled.at[idx, 'terms'], 'arg_types': '', 'return_type': sampled.at[idx, 'return_type'], 'name': sampled.at[idx, 'terms']}
 
   def add(self, entry_list):
     entry_list = secure_list(entry_list)
@@ -68,14 +109,10 @@ class Program_lib:
     if p_source is None:
       print('No cache found!')
       return self.ERROR_TERM
-    elif len(p_source.index) == 1:
-      s_idx = 0
     else:
-      counts = p_source['count'].to_list()
-      weights = [x / sum(counts) for x in counts]
-      s_idx = np.random.choice(np.arange(len(weights)), p = weights)
-    s_terms, s_arg_t, s_ret_t, = p_source.values[s_idx][:3]
-    return {'terms': s_terms, 'arg_types': s_arg_t, 'return_type': s_ret_t}
+      sampled = p_source.sample(n=1, weights='count')
+      idx = sampled.index[0]
+    return {'terms': sampled.at[idx, 'terms'], 'arg_types': sampled.at[idx, 'arg_types'], 'return_type': sampled.at[idx, 'return_type']}
 
   def sample_cached_program(self, type_signature):
     cached = self.get_cached_program(type_signature)
@@ -180,7 +217,6 @@ class Program_lib:
         'return_type': candidate['return_type']
       }
 
-# %%
 pl = Program_lib([
   getColor,
   setColor,
