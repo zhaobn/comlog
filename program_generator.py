@@ -1,14 +1,16 @@
 
 # %%
 import pandas as pd
-import numpy as np
+from numpy import random as np_random
 
 from base_terms import *
 from list_helpers import args_to_string, names_to_string
 
 # %%
 class Program_lib:
-  def __init__(self, program_list = [], base_list = [Red, Blue, Yellow, True, False]):
+  def __init__(self, program_list = [],
+  base_list = [ True, False, Red, Blue, Yellow,
+  Circle, Square, Triangle, Dotted, Plain, S1, S2, S3, S4 ]):
     self.content = pd.DataFrame({
       'terms': pd.Series([], dtype='str'),
       'arg_types': pd.Series([], dtype='str'),
@@ -21,46 +23,6 @@ class Program_lib:
     if len(program_list) > 0: self.add(program_list)
     if len(base_list) > 0: self.add_bases(base_list)
 
-  def add_bases(self, base_list):
-    base_list = secure_list(base_list)
-    for bt in base_list:
-      if isinstance(bt, dict):
-        # sampled from program generation
-        terms = bt['terms']
-        return_type = bt['return_type']
-      elif isinstance(bt, bool):
-        terms = 'True' if bt == True else 'False'
-        return_type = 'bool'
-      else:
-        terms = bt.name
-        return_type = bt.ctype
-      # check existence
-      found = self.base_terms.query(f'return_type == "{return_type}" & terms == "{terms}"')
-      if found.empty:
-        self.base_terms = self.base_terms.append(pd.DataFrame({
-          'terms': pd.Series([terms], dtype='str'),
-          'arg_types': pd.Series([''], dtype='str'),
-          'return_type': pd.Series([return_type], dtype='str'),
-          'count': pd.Series([1], dtype='int'),
-          'name': pd.Series([terms], dtype='str'),
-        }), ignore_index=True)
-      elif len(found.index) > 0:
-        print('Duplicated base terms!')
-        exit
-      else:
-        self.base_terms.at[found.index[0], 'count'] += 1
-
-  def sample_base(self, type):
-    # TODO: create random object
-    bases = self.base_terms.query(f'return_type == "{type}"')
-    if bases is None:
-      print('No bases found!')
-      return self.ERROR_TERM
-    else:
-      sampled = bases.sample(n=1, weights='count')
-      idx = sampled.index[0]
-    return {'terms': sampled.at[idx, 'terms'], 'arg_types': '', 'return_type': sampled.at[idx, 'return_type'], 'name': sampled.at[idx, 'terms']}
-
   def add(self, entry_list):
     entry_list = secure_list(entry_list)
     for et in entry_list:
@@ -70,7 +32,7 @@ class Program_lib:
         arg_types = et['arg_types']
         return_type = et['return_type']
         name = et['name'] if 'name' in et else ''
-      elif et.ctype is 'primitive':
+      elif et.ctype == 'primitive':
         terms = et.name
         arg_types = args_to_string(et.arg_type)
         return_type = et.return_type
@@ -95,6 +57,34 @@ class Program_lib:
         assert len(program_found.index) == 1, 'Duplicated entries in program lib!'
         idx = program_found.index[0]
         self.content.at[idx, 'count'] += 1
+
+  def add_bases(self, base_list):
+    base_list = secure_list(base_list)
+    for bt in base_list:
+      if isinstance(bt, dict):
+        # sampled from program generation
+        terms = bt['terms']
+        return_type = bt['return_type']
+      elif isinstance(bt, bool):
+        terms = 'True' if bt == True else 'False'
+        return_type = 'bool'
+      else:
+        terms = bt.name
+        return_type = bt.ctype
+      # check existence
+      found = self.base_terms.query(f'return_type == "{return_type}" & terms == "{terms}"')
+      if found.empty:
+        self.base_terms = self.base_terms.append(pd.DataFrame({
+          'terms': pd.Series([terms], dtype='str'),
+          'arg_types': pd.Series([''], dtype='str'),
+          'return_type': pd.Series([return_type], dtype='str'),
+          'count': pd.Series([1], dtype='int'),
+          'name': pd.Series([terms], dtype='str'),
+        }), ignore_index=True)
+      elif len(found.index) > 1:
+        print('Duplicated base terms!'); exit
+      else:
+        self.base_terms.at[found.index[0], 'count'] += 1
 
   def get_cached_program(self, type_signature):
     arg_t, ret_t = type_signature
@@ -130,22 +120,25 @@ class Program_lib:
     else:
       return self.sample_program(matched)
 
-  # This is hacky. TODO: do it properly.
-  def sample_primitive(self, type):
-    if type == 'col':
-      sampled_col = np.random.choice([Red, Blue, Yellow])
-      return {'terms': sampled_col.name, 'arg_types': '', 'return_type': 'col', 'name': sampled_col.name}
-    elif type == 'bool':
-      booleans = [
-        {'terms': 'True', 'arg_types': '', 'return_type': 'bool', 'name': 'True'},
-        {'terms': 'False', 'arg_types': '', 'return_type': 'bool', 'name': 'False'},
-      ]
-      return np.random.choice(booleans)
-    elif type == 'obj':
-      return {'terms': 'randomStone', 'arg_types': '', 'return_type': 'obj', 'name': 'randomStone'}
+  def sample_base(self, type):
+    if type == 'obj':
+      color = self.sample_base('col')['name']
+      color_scale = self.sample_base('int')['name']
+      shape = self.sample_base('shp')['name']
+      shape_scale = self.sample_base('int')['name']
+      pattern = self.sample_base('pat')['name']
+      pattern_scale = self.sample_base('int')['name']
+      stone = f'Stone({",".join([color, color_scale, shape, shape_scale, pattern, pattern_scale ])})'
+      return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'name': stone}
     else:
-      print('Type not found!')
-      return self.ERROR_TERM
+      bases = self.base_terms.query(f'return_type == "{type}"')
+      if bases is None or bases.empty:
+        print('No base terms found!')
+        return self.ERROR_TERM
+      else:
+        sampled = bases.sample(n=1, weights='count')
+        idx = sampled.index[0]
+        return {'terms': sampled.at[idx, 'terms'], 'arg_types': '', 'return_type': sampled.at[idx, 'return_type'], 'name': sampled.at[idx, 'terms']}
 
   @staticmethod
   def sample_router(arg_list, free_index):
@@ -153,7 +146,7 @@ class Program_lib:
     if free_index < 0:
       return 'B' * len(arg_list)
     else:
-      return ''.join([np.random.choice(['C', 'B', 'S']) for _ in arg_list])
+      return ''.join([np_random.choice(['C', 'B', 'S']) for _ in arg_list])
 
   # Tail-recursion; righthand-side tree
   def generate_program(self, type_signature, cur_step = 0, max_step = 5, rate = 0.5):
@@ -163,7 +156,7 @@ class Program_lib:
     else:
       # Use cached program?
       cached = self.get_cached_program(type_signature)
-      if cached is not None and np.random.random() < rate:
+      if cached is not None and np_random.random() < rate:
         sampled = self.sample_program(cached)
         # increase counter
         self.add(sampled)
@@ -172,9 +165,10 @@ class Program_lib:
         cur_step += 1
         arg_t, ret_t = type_signature
         if len(arg_t) < 1:
-          # return a primitive
-          # TODO: increase counter as well?
-          return self.sample_primitive(ret_t)
+          # return a base term
+          base_term = self.sample_base(ret_t)
+          self.add_bases(base_term) if ret_t != 'obj' else None
+          return base_term
         else:
           # generate new program
           left = self.sample_matched_program(ret_t)
@@ -217,6 +211,7 @@ class Program_lib:
         'return_type': candidate['return_type']
       }
 
+# %%
 pl = Program_lib([
   getColor,
   setColor,
@@ -226,5 +221,10 @@ pl = Program_lib([
   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
  ])
 
+pl.generate_program([['obj'], 'obj'], rate = 0.1)
+
 # %%
-pl.generate_program([['obj'], 'obj'], rate = 0.9)
+s = eval(pl.sample_base('obj')['terms'])
+# t = eval(pl.sample_base('obj')['terms'])
+# Program([SC, [CS, [BB, ifElse, eqObject], I], I]).run([t,t]).name
+Program([B, [setColor, Stone(Yellow,S1,Triangle,S2,Plain,S4)], getColor]).run(s).name

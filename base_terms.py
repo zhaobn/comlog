@@ -8,23 +8,19 @@ from base_methods import *
 Red = Color('Red')
 Blue = Color('Blue')
 Yellow = Color('Yellow')
-Col = Color('Col')
 
 Circle = Shape('Circle')
 Square = Shape('Square')
 Triangle = Shape('Triangle')
-Shp = Shape('Shp')
 
 Stripy = Pattern('Stripy')
 Dotted = Pattern('Dotted')
 Plain = Pattern('Plain')
-Pat = Pattern('Pat')
 
 S1 = Scale('S1')
 S2 = Scale('S2')
 S3 = Scale('S3')
 S4 = Scale('S4')
-Sx = Scale('Sx')
 
 # Primitives
 getColor = Primitive('getColor', 'obj', 'col', get_color)

@@ -22,3 +22,5 @@ demo = Program([CB, [S, [B, ifElse, [B, [eqColor, Blue], getColor]], I], I])
 demo.run([s, t]).name
 
 # %%
+Program([getColor, Stone(Red, S2, Circle, S2, Plain, S1)]).run().name
+# %%
