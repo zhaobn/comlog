@@ -92,7 +92,7 @@ class Program:
         right_tree = Program(secure_list(right_terms))
         # Route arguments
         sorted_args = {'left': [], 'right': []}
-        sorted_args = router_term.run(sorted_args, copy_list(arg_list))
+        sorted_args = router_term.run(sorted_args, copy_list(secure_list(arg_list)))
         # Run subtrees
         left_ret = left_tree.run(sorted_args['left'])
         right_ret = right_tree.run(sorted_args['right'])
