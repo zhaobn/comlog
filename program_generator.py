@@ -29,11 +29,14 @@ class Program_lib:
         arg_types = et['arg_types']
         return_type = et['return_type']
         name = et['name'] if 'name' in et else ''
-      else:
+      elif et.ctype is 'primitive':
         terms = et.name
         arg_types = args_to_string(et.arg_type)
         return_type = et.return_type
         name = et.name
+      else:
+        print('Adding to program lib: Bad entry type!')
+        pass
       # check existence
       program_found = self.content.query(f'terms == "{terms}" & arg_types == "{arg_types}" & return_type == "{return_type}"')
       if program_found.empty:
@@ -133,6 +136,7 @@ class Program_lib:
         arg_t, ret_t = type_signature
         if len(arg_t) < 1:
           # return a primitive
+          # TODO: increase counter as well?
           return self.sample_primitive(ret_t)
         else:
           # generate new program
