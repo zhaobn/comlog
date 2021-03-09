@@ -130,3 +130,31 @@ dmypy.json
 
 # Editor
 .vscode/
+
+# Latex
+.DS_Store
+.vscode/
+
+## Latex
+*.adx
+*.aux
+*.cb
+*.cb2
+*.ilg
+*.lof
+*.log
+*.lot
+*.fls
+*.fmt
+*.fot
+*.out
+*.pdf
+*.toc
+.*.lb
+*.fdb_latexmk
+*.dvi
+*.xdv
+*-converted-to.*
+*.bbl
+*.blg
+*.*.gz
