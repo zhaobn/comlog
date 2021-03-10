@@ -94,12 +94,12 @@ class Program_lib:
     matched_pms = self.content.query(f'return_type == "{return_type}"')
     return matched_pms if not matched_pms.empty else None
 
-  def sample_program(self, p_source, add=False):
+  def sample_program(self, p_source, add=False, weight_col = 'count'):
     if p_source is None:
       print('No cache found!')
       return self.ERROR_TERM
     else:
-      sampled = p_source.sample(n=1, weights='count').iloc[0].to_dict()
+      sampled = p_source.sample(n=1, weights=weight_col).iloc[0].to_dict()
       if add:
         self.add(sampled)
       return sampled
@@ -152,17 +152,21 @@ class Program_lib:
       return ''.join([np_random.choice(['C', 'B', 'S']) for _ in arg_list])
 
   # Tail-recursion; righthand-side tree
-  def generate_program(self, type_signature, cur_step = 0, max_step = 5, cache_rate = 0.5):
+  def generate_program(self, type_signature, cur_step = 0, max_step = 5, alpha = 1, d = 0.2):
     if cur_step > max_step:
       print('Max step exceeded!')
       return self.ERROR_TERM
     else:
-      # Use cached program?
+      # Pitman-Yor process
       cached = self.get_cached_program(type_signature)
-      if cached is not None and np_random.random() < cache_rate:
-        sampled = self.sample_program(cached, add=True)
-        return sampled
+      if cached is None:
+        cache_param = 1
       else:
+        Nt = len(cached.index)
+        Ct = sum(cached['count'])
+        cache_param = (alpha+Nt*d)/(alpha+Ct)
+      # print(f'threashold: {cache_param}')
+      if np_random.random() < cache_param: # Construct
         cur_step += 1
         arg_t, ret_t = type_signature
         if len(arg_t) < 1:
@@ -177,8 +181,8 @@ class Program_lib:
           router = self.sample_router(arg_t, free_index)
           routed_args = eval(router).run({'left': [], 'right': []}, arg_t)
           # expand left side until no un-filled arguments
-          left_pm = self.expand_program(left, routed_args['left'], free_index, cur_step, max_step)
-          right_pm = self.generate_program([routed_args['right'], left_args[-1]], cur_step, max_step)
+          left_pm = self.expand_program(left, routed_args['left'], free_index, cur_step, max_step, alpha, d)
+          right_pm = self.generate_program([routed_args['right'], left_args[-1]], cur_step, max_step, alpha, d)
           terms = [router, left_pm['terms'], right_pm['terms']]
           program_dict = {
             'terms': names_to_string(terms),
@@ -188,22 +192,26 @@ class Program_lib:
           # add to program lib
           self.add(program_dict) if 'ERROR' not in program_dict['terms'] else None
           return program_dict
+      else:
+        cached['weight'] = (cached['count']-d)/(Ct-Nt*d)
+        sampled = self.sample_program(cached, add=True, weight_col='weight')
+        return sampled
 
   # Lefthand-side tree
-  def expand_program(self, candidate, arg_list, free_index, cur_step, max_step):
+  def expand_program(self, candidate, arg_list, free_index, cur_step, max_step, alpha, d):
     if free_index < 0:
       return candidate
     else:
       left_args = candidate['arg_types'].split('_')
       if len(arg_list) < 1:
-        left_pm = self.expand_program(candidate, arg_list, free_index - 1, cur_step, max_step)
-        right_pm = self.generate_program([arg_list, left_args[free_index]], cur_step, max_step)
+        left_pm = self.expand_program(candidate, arg_list, free_index - 1, cur_step, max_step, alpha, d)
+        right_pm = self.generate_program([arg_list, left_args[free_index]], cur_step, max_step, alpha, d)
         terms = [left_pm['terms'], right_pm['terms']]
       else:
         router = self.sample_router(arg_list, free_index-1)
         routed_args = eval(router).run({'left': [], 'right': []}, arg_list)
-        left_pm = self.expand_program(candidate, routed_args['left'], free_index-1, cur_step, max_step)
-        right_pm = self.generate_program([routed_args['right'], left_args[free_index]], cur_step, max_step)
+        left_pm = self.expand_program(candidate, routed_args['left'], free_index-1, cur_step, max_step, alpha, d)
+        right_pm = self.generate_program([routed_args['right'], left_args[free_index]], cur_step, max_step, alpha, d)
         terms = [router, left_pm['terms'], right_pm['terms']]
       return {
         'terms': names_to_string(terms),
@@ -224,7 +232,7 @@ pl = Program_lib([
  ])
 
 # %%
-pl.generate_program([['obj'], 'obj'], cache_rate = 0.1)
+pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
 
 
 # %% Tests
