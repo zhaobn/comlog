@@ -6,6 +6,7 @@ from numpy import random as np_random
 from base_terms import *
 from list_helpers import args_to_string, names_to_string
 
+# %%
 class Program_lib:
   def __init__(self, program_list = [],
   base_list = [ True, False, Red, Blue, Yellow,
@@ -52,7 +53,6 @@ class Program_lib:
         })
         self.content = self.content.append(df_et, ignore_index=True)
       else:
-        # increase counter
         assert len(program_found.index) == 1, 'Duplicated entries in program lib!'
         idx = program_found.index[0]
         self.content.at[idx, 'count'] += 1
@@ -94,40 +94,43 @@ class Program_lib:
     matched_pms = self.content.query(f'return_type == "{return_type}"')
     return matched_pms if not matched_pms.empty else None
 
-  def sample_program(self, p_source):
+  def sample_program(self, p_source, add=False):
     if p_source is None:
       print('No cache found!')
       return self.ERROR_TERM
     else:
-      sampled = p_source.sample(n=1, weights='count')
-      idx = sampled.index[0]
-    return {'terms': sampled.at[idx, 'terms'], 'arg_types': sampled.at[idx, 'arg_types'], 'return_type': sampled.at[idx, 'return_type']}
+      sampled = p_source.sample(n=1, weights='count').iloc[0].to_dict()
+      if add:
+        self.add(sampled)
+      return sampled
 
-  def sample_cached_program(self, type_signature):
+  def sample_cached_program(self, type_signature, add):
     cached = self.get_cached_program(type_signature)
     if cached is None:
       print('No cache found!')
       return self.ERROR_TERM
     else:
-      return self.sample_program(cached)
+      return self.sample_program(cached, add)
 
-  def sample_matched_program(self, return_type):
+  def sample_matched_program(self, return_type, add=False):
     matched = self.get_matched_program(return_type)
     if matched is None:
       print('No match found!')
       return self.ERROR_TERM
     else:
-      return self.sample_program(matched)
+      sampled = self.sample_program(matched, add)
+      return sampled
 
-  def sample_base(self, type):
+  def sample_base(self, type, add=False):
     if type == 'obj':
-      color = self.sample_base('col')['name']
-      color_scale = self.sample_base('int')['name']
-      shape = self.sample_base('shp')['name']
-      shape_scale = self.sample_base('int')['name']
-      pattern = self.sample_base('pat')['name']
-      pattern_scale = self.sample_base('int')['name']
-      stone = f'Stone({",".join([color, color_scale, shape, shape_scale, pattern, pattern_scale ])})'
+      color = self.sample_base('col', add)
+      color_scale = self.sample_base('int', add)
+      shape = self.sample_base('shp', add)
+      shape_scale = self.sample_base('int', add)
+      pattern = self.sample_base('pat', add)
+      pattern_scale = self.sample_base('int', add)
+      sampled_props = [ color, color_scale, shape, shape_scale, pattern, pattern_scale ]
+      stone = 'Stone(' + ','.join([p['name'] for p in sampled_props]) + ')'
       return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'name': stone}
     else:
       bases = self.base_terms.query(f'return_type == "{type}"')
@@ -135,9 +138,10 @@ class Program_lib:
         print('No base terms found!')
         return self.ERROR_TERM
       else:
-        sampled = bases.sample(n=1, weights='count')
-        idx = sampled.index[0]
-        return {'terms': sampled.at[idx, 'terms'], 'arg_types': '', 'return_type': sampled.at[idx, 'return_type'], 'name': sampled.at[idx, 'terms']}
+        sampled = bases.sample(n=1, weights='count').iloc[0].to_dict()
+        if add:
+          self.add_bases(sampled)
+        return sampled
 
   @staticmethod
   def sample_router(arg_list, free_index):
@@ -156,21 +160,18 @@ class Program_lib:
       # Use cached program?
       cached = self.get_cached_program(type_signature)
       if cached is not None and np_random.random() < cache_rate:
-        sampled = self.sample_program(cached)
-        # increase counter
-        self.add(sampled)
+        sampled = self.sample_program(cached, add=True)
         return sampled
       else:
         cur_step += 1
         arg_t, ret_t = type_signature
         if len(arg_t) < 1:
           # return a base term
-          base_term = self.sample_base(ret_t)
-          self.add_bases(base_term) if ret_t != 'obj' else None
+          base_term = self.sample_base(ret_t, add=True)
           return base_term
         else:
           # generate new program
-          left = self.sample_matched_program(ret_t)
+          left = self.sample_matched_program(ret_t, add=True)
           left_args = left['arg_types'].split('_')
           free_index = len(left_args) - 2
           router = self.sample_router(arg_t, free_index)
@@ -224,6 +225,7 @@ pl = Program_lib([
 
 # %%
 pl.generate_program([['obj'], 'obj'], cache_rate = 0.1)
+
 
 # %% Tests
 # s = eval(pl.sample_base('obj')['terms'])
