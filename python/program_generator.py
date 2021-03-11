@@ -1,6 +1,8 @@
 
 # %%
 import pandas as pd
+pd.set_option('mode.chained_assignment', None)
+
 from numpy import random as np_random
 
 from base_terms import *
@@ -104,7 +106,7 @@ class Program_lib:
         self.add(sampled)
       return sampled
 
-  def sample_cached_program(self, type_signature, add):
+  def sample_cached_program(self, type_signature, add=False):
     cached = self.get_cached_program(type_signature)
     if cached is None:
       print('No cache found!')
@@ -152,7 +154,7 @@ class Program_lib:
       return ''.join([np_random.choice(['C', 'B', 'S']) for _ in arg_list])
 
   # Tail-recursion; righthand-side tree
-  def generate_program(self, type_signature, cur_step = 0, max_step = 5, alpha = 1, d = 0.2):
+  def generate_program(self, type_signature, cur_step = 0, max_step = 5, alpha = 1, d = 0.2, add=True):
     if cur_step > max_step:
       print('Max step exceeded!')
       return self.ERROR_TERM
@@ -171,18 +173,18 @@ class Program_lib:
         arg_t, ret_t = type_signature
         if len(arg_t) < 1:
           # return a base term
-          base_term = self.sample_base(ret_t, add=True)
+          base_term = self.sample_base(ret_t, add)
           return base_term
         else:
           # generate new program
-          left = self.sample_matched_program(ret_t, add=True)
+          left = self.sample_matched_program(ret_t, add)
           left_args = left['arg_types'].split('_')
           free_index = len(left_args) - 2
           router = self.sample_router(arg_t, free_index)
           routed_args = eval(router).run({'left': [], 'right': []}, arg_t)
           # expand left side until no un-filled arguments
-          left_pm = self.expand_program(left, routed_args['left'], free_index, cur_step, max_step, alpha, d)
-          right_pm = self.generate_program([routed_args['right'], left_args[-1]], cur_step, max_step, alpha, d)
+          left_pm = self.expand_program(left, routed_args['left'], free_index, cur_step, max_step, alpha, d, add)
+          right_pm = self.generate_program([routed_args['right'], left_args[-1]], cur_step, max_step, alpha, d, add)
           terms = [router, left_pm['terms'], right_pm['terms']]
           program_dict = {
             'terms': names_to_string(terms),
@@ -190,28 +192,29 @@ class Program_lib:
             'return_type': type_signature[1]
           }
           # add to program lib
-          self.add(program_dict) if 'ERROR' not in program_dict['terms'] else None
+          if add:
+            self.add(program_dict) if 'ERROR' not in program_dict['terms'] else None
           return program_dict
       else:
         cached['weight'] = (cached['count']-d)/(Ct-Nt*d)
-        sampled = self.sample_program(cached, add=True, weight_col='weight')
+        sampled = self.sample_program(cached, add, weight_col='weight')
         return sampled
 
   # Lefthand-side tree
-  def expand_program(self, candidate, arg_list, free_index, cur_step, max_step, alpha, d):
+  def expand_program(self, candidate, arg_list, free_index, cur_step, max_step, alpha, d, add):
     if free_index < 0:
       return candidate
     else:
       left_args = candidate['arg_types'].split('_')
       if len(arg_list) < 1:
-        left_pm = self.expand_program(candidate, arg_list, free_index - 1, cur_step, max_step, alpha, d)
-        right_pm = self.generate_program([arg_list, left_args[free_index]], cur_step, max_step, alpha, d)
+        left_pm = self.expand_program(candidate, arg_list, free_index - 1, cur_step, max_step, alpha, d, add)
+        right_pm = self.generate_program([arg_list, left_args[free_index]], cur_step, max_step, alpha, d, add)
         terms = [left_pm['terms'], right_pm['terms']]
       else:
         router = self.sample_router(arg_list, free_index-1)
         routed_args = eval(router).run({'left': [], 'right': []}, arg_list)
-        left_pm = self.expand_program(candidate, routed_args['left'], free_index-1, cur_step, max_step, alpha, d)
-        right_pm = self.generate_program([routed_args['right'], left_args[free_index]], cur_step, max_step, alpha, d)
+        left_pm = self.expand_program(candidate, routed_args['left'], free_index-1, cur_step, max_step, alpha, d, add)
+        right_pm = self.generate_program([routed_args['right'], left_args[free_index]], cur_step, max_step, alpha, d, add)
         terms = [router, left_pm['terms'], right_pm['terms']]
       return {
         'terms': names_to_string(terms),
@@ -231,9 +234,9 @@ pl = Program_lib([
   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
  ])
 
+
 # %%
 pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
-
 
 # %% Tests
 # s = eval(pl.sample_base('obj')['terms'])
