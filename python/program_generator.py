@@ -5,6 +5,9 @@ pd.set_option('mode.chained_assignment', None)
 
 from numpy import random as np_random
 
+from math import log
+from itertools import product as itertools_product
+
 from base_terms import *
 from list_helpers import args_to_string, names_to_string
 
@@ -86,6 +89,24 @@ class Program_lib:
         print('Duplicated base terms!'); exit
       else:
         self.base_terms.at[found.index[0], 'count'] += 1
+
+    # List all possible stones (w flat prior)
+
+  # List all the possile stones (w flat prior)
+  def get_all_objs(self):
+    stones = []
+    colors = list(self.base_terms.query('return_type=="col"')['terms'])
+    shapes = list(self.base_terms.query('return_type=="shp"')['terms'])
+    patterns = list(self.base_terms.query('return_type=="pat"')['terms'])
+    ints = list(self.base_terms.query('return_type=="int"')['terms'])
+    for c in colors:
+      for ci in ints:
+        for s in shapes:
+          for si in ints:
+            for p in patterns:
+              for pi in ints:
+                stones.append(f'Stone({c},{ci},{s},{si},{p},{pi})')
+    return pd.DataFrame({ 'terms': stones })
 
   def get_cached_program(self, type_signature):
     arg_t, ret_t = type_signature
@@ -222,6 +243,55 @@ class Program_lib:
         'return_type': candidate['return_type']
       }
 
+  # enumeration
+  def enumerate_program(self, type_signature, depth = 0):
+    programs_df = pd.DataFrame({'terms': [], 'log_prob': []})
+    arg_types, ret_type = type_signature
+    # when no arg is provided, return all the base terms
+    if len(arg_types) < 1:
+      if ret_type == 'obj':
+        ret_terms = self.get_all_objs()
+      else:
+        ret_terms = self.base_terms.query(f'return_type=="{ret_type}"')
+      programs_df['terms'] = ret_terms['terms']
+      programs_df['log_prob'] = log(1/len(ret_terms.index))
+      return programs_df
+    # when depth is reached, return direct matches
+    elif depth < 1:
+      ret_terms = self.get_cached_program(type_signature)
+      if ret_terms is not None:
+        programs_df['terms'] = ret_terms['terms']
+        programs_df['log_prob'] = log(1/len(ret_terms.index))
+      return programs_df
+    # enumerate recursively
+    else:
+      left_trees = self.get_matched_program(ret_type)
+      for i in left_trees.index:
+        left_terms = left_trees.at[i, 'terms']
+        left_arg_types = left_trees.at[i, 'arg_types'].split('_')
+        free_index = len(left_arg_types)-2
+        # get routers
+        routers = self.get_all_routers(left_arg_types, free_index)
+        for rt in routers:
+          routed_args = eval(rt).run({'left': [], 'right': []}, left_arg_types)
+          left = self.expand(left_terms, routed_args['left'], free_index-1, depth)
+          right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
+      return 'WIP'
+
+  def expand(self, left_term, left_args, free_index, depth):
+    return 'this is left'
+
+  @staticmethod
+  def get_all_routers(arg_list, free_index):
+    assert len(arg_list) > 0, 'No arguments for router!'
+    if free_index < 0:
+      return 'B' * len(arg_list)
+    else:
+      routers = []
+      for r in list(itertools_product(['C', 'B', 'S'], repeat=len(arg_list))):
+        routers.append(''.join(r))
+      return routers
+
 pl = Program_lib([
   getColor, setColor, eqColor,
   getSaturation, setSaturation, eqSaturation,
@@ -234,9 +304,12 @@ pl = Program_lib([
   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
  ])
 
+# %%
+t = [[], 'col']
+pl.enumerate_program(t)
 
 # %%
-pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
+# pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
 
 # %% Tests
 # s = eval(pl.sample_base('obj')['terms'])
