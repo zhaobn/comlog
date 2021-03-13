@@ -277,7 +277,8 @@ class Program_lib:
             routed_args = eval(rt).run({'left': [], 'right': []}, arg_types)
             left = self.expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
             right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
-            programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
+            if len(left.index) > 0 and len(right.index) > 0:
+              programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
         return programs_df
 
   def expand(self, left_term, left_arg_types, free_index, args, depth):
@@ -295,7 +296,8 @@ class Program_lib:
           routed_args = eval(rt).run({'left': [], 'right': []}, args)
           left = self.expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
           right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
-          terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
+          if len(left.index > 0) and len(right.index) > 0:
+            terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
       return terms_df
 
   @staticmethod
@@ -341,15 +343,10 @@ pl = Program_lib(
   ])
 
 # %%
-t = [['obj'], 'obj']
+t = [['obj', 'obj'], 'obj']
 rf = pl.enumerate_program(t,1)
 rf
-# %%
-x = pd.DataFrame({'terms': [ 'left_1', 'left_2' ], 'log_prob': [log(1), log(1/5)]})
-y = pd.DataFrame({'terms': [ 'A', 'B' ], 'log_prob': [log(1/2), log(1/3)]})
-pl.combine_terms(x,y,'CB',log(1/9))
 
-# pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
 
 # %% Tests
 # s = eval(pl.sample_base('obj')['terms'])
@@ -357,3 +354,5 @@ pl.combine_terms(x,y,'CB',log(1/9))
 # Program([SC, [CS, [BB, ifElse, eqObject], I], I]).run([t,t]).name
 # Program([B, [setColor, Stone(Yellow,S1,Triangle,S2,Plain,S4)], getColor]).run(s).name
 # Program([B, [setShape, Stone(Red,S2,Circle,S3,Dotted,S4)], [B, getShape, [B, [setPattern, Stone(Blue,S2,Square,S2,Plain,S4)], getPattern]]]).run(s).name
+
+# pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
