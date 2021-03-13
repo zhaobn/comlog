@@ -13,9 +13,7 @@ from list_helpers import args_to_string, names_to_string
 
 # %%
 class Program_lib:
-  def __init__(self, program_list = [],
-  base_list = [ True, False, Red, Blue, Yellow,
-  Circle, Square, Triangle, Dotted, Plain, S1, S2, S3, S4 ]):
+  def __init__(self, program_list = [], base_list = []):
     self.content = pd.DataFrame({
       'terms': pd.Series([], dtype='str'),
       'arg_types': pd.Series([], dtype='str'),
@@ -256,30 +254,62 @@ class Program_lib:
       programs_df['terms'] = ret_terms['terms']
       programs_df['log_prob'] = log(1/len(ret_terms.index))
       return programs_df
-    # when depth is reached, return direct matches
-    elif depth < 1:
+    else:
+      # find direct matches
       ret_terms = self.get_cached_program(type_signature)
       if ret_terms is not None:
         programs_df['terms'] = ret_terms['terms']
         programs_df['log_prob'] = log(1/len(ret_terms.index))
-      return programs_df
-    # enumerate recursively
-    else:
-      left_trees = self.get_matched_program(ret_type)
-      for i in left_trees.index:
-        left_terms = left_trees.at[i, 'terms']
-        left_arg_types = left_trees.at[i, 'arg_types'].split('_')
-        free_index = len(left_arg_types)-2
-        # get routers
-        routers = self.get_all_routers(left_arg_types, free_index)
-        for rt in routers:
-          routed_args = eval(rt).run({'left': [], 'right': []}, left_arg_types)
-          left = self.expand(left_terms, routed_args['left'], free_index-1, depth)
-          right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
-      return 'WIP'
+      # return direct matches
+      if depth < 1:
+        return programs_df
+      # enumerate recursively
+      else:
+        left_trees = self.get_matched_program(ret_type)
+        left_trees = left_trees.drop(programs_df.index) # exclude direct matches
+        for i in left_trees.index:
+          left_terms = left_trees.at[i, 'terms']
+          left_arg_types = left_trees.at[i, 'arg_types'].split('_')
+          free_index = len(left_arg_types)-1
+          # get routers
+          routers = self.get_all_routers(arg_types, free_index)
+          for rt in routers:
+            routed_args = eval(rt).run({'left': [], 'right': []}, arg_types)
+            left = self.expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
+            right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
+            programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
+        return programs_df
 
-  def expand(self, left_term, left_args, free_index, depth):
-    return 'this is left'
+  def expand(self, left_term, left_arg_types, free_index, args, depth):
+    if free_index < 0:
+      return pd.DataFrame({'terms': [ left_term ], 'log_prob': [log(1)]})
+    else:
+      if len(args) < 1:
+        left = self.expand(left_term, left_arg_types, free_index-1, [], depth)
+        right = self.enumerate_program([[],left_arg_types[free_index]], depth-1)
+        return self.combine_terms(left, right)
+      else:
+        routers = self.get_all_routers(args, free_index-1)
+        terms_df = pd.DataFrame({'terms': [], 'log_prob': []})
+        for rt in routers:
+          routed_args = eval(rt).run({'left': [], 'right': []}, args)
+          left = self.expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
+          right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
+          terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
+      return terms_df
+
+  @staticmethod
+  def combine_terms(left_df, right_df, router = '', router_lp = 0):
+    left_df = left_df.add_prefix('left_'); left_df['key'] = 0
+    right_df = right_df.add_prefix('right_'); right_df['key'] = 0
+    combined = left_df.merge(right_df, how='outer')
+    if len(router) < 1:
+      combined['terms'] = '[' + combined['left_terms'] + ',' + combined['right_terms'] + ']'
+      combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob']
+    else:
+      combined['terms'] = '[' + router + ',' + combined['left_terms'] + ',' + combined['right_terms'] + ']'
+      combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob'] + router_lp
+    return combined[['terms', 'log_prob']]
 
   @staticmethod
   def get_all_routers(arg_list, free_index):
@@ -292,23 +322,33 @@ class Program_lib:
         routers.append(''.join(r))
       return routers
 
-pl = Program_lib([
-  getColor, setColor, eqColor,
-  getSaturation, setSaturation, eqSaturation,
-  getShape, setShape, eqShape,
-  getSize, setSize, eqSize,
-  getPattern, setPattern, eqPattern,
-  getDensity, setDensity, eqDensity,
-  eqObject,
-  ifElse,
-  {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
- ])
+pl = Program_lib(
+  program_list=[
+    getColor, setColor, eqColor,
+    # getSaturation, setSaturation, eqSaturation,
+    # getShape, setShape, eqShape,
+    # getSize, setSize, eqSize,
+    # getPattern, setPattern, eqPattern,
+    # getDensity, setDensity, eqDensity,
+    eqObject, ifElse, {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
+   ],
+  base_list=[
+    True, False,
+    Red, Blue, #Yellow,
+    Circle, Square, #Triangle,
+    Dotted, Plain,
+    S1, S2, #S3, S4
+  ])
 
 # %%
-t = [[], 'col']
-pl.enumerate_program(t)
-
+t = [['obj'], 'obj']
+rf = pl.enumerate_program(t,1)
+rf
 # %%
+x = pd.DataFrame({'terms': [ 'left_1', 'left_2' ], 'log_prob': [log(1), log(1/5)]})
+y = pd.DataFrame({'terms': [ 'A', 'B' ], 'log_prob': [log(1/2), log(1/3)]})
+pl.combine_terms(x,y,'CB',log(1/9))
+
 # pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
 
 # %% Tests
