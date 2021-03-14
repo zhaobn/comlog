@@ -4,7 +4,6 @@ import pandas as pd
 pd.set_option('mode.chained_assignment', None)
 
 from numpy import random as np_random
-
 from math import log
 from itertools import product as itertools_product
 
@@ -56,7 +55,7 @@ class Program_lib:
         })
         self.content = self.content.append(df_et, ignore_index=True)
       else:
-        assert len(program_found.index) == 1, 'Duplicated entries in program lib!'
+        assert len(program_found) == 1, 'Duplicated entries in program lib!'
         idx = program_found.index[0]
         self.content.at[idx, 'count'] += 1
 
@@ -83,7 +82,7 @@ class Program_lib:
           'count': pd.Series([1], dtype='int'),
           'name': pd.Series([terms], dtype='str'),
         }), ignore_index=True)
-      elif len(found.index) > 1:
+      elif len(found) > 1:
         print('Duplicated base terms!'); exit
       else:
         self.base_terms.at[found.index[0], 'count'] += 1
@@ -92,19 +91,39 @@ class Program_lib:
 
   # List all the possile stones (w flat prior)
   def get_all_objs(self):
-    stones = []
-    colors = list(self.base_terms.query('return_type=="col"')['terms'])
-    shapes = list(self.base_terms.query('return_type=="shp"')['terms'])
-    patterns = list(self.base_terms.query('return_type=="pat"')['terms'])
-    ints = list(self.base_terms.query('return_type=="int"')['terms'])
-    for c in colors:
-      for ci in ints:
-        for s in shapes:
-          for si in ints:
-            for p in patterns:
-              for pi in ints:
-                stones.append(f'Stone({c},{ci},{s},{si},{p},{pi})')
-    return pd.DataFrame({ 'terms': stones })
+    stones_df = pd.DataFrame({'terms': [], 'log_prob': []})
+    colors_df = self.base_terms.query('return_type=="col"')
+    shapes_df = self.base_terms.query('return_type=="shp"')
+    patterns_df = self.base_terms.query('return_type=="pat"')
+    ints_df = self.base_terms.query('return_type=="int"')
+    colors_total = sum(colors_df['count'])
+    shapes_total = sum(shapes_df['count'])
+    patterns_total = sum(patterns_df['count'])
+    scales_total = sum(ints_df['count'])
+    for c in range(len(colors_df)):
+      for ci in range(len(ints_df)):
+        for s in range(len(shapes_df)):
+          for si in range(len(ints_df)):
+            for p in range(len(patterns_df)):
+              for pi in range(len(ints_df)):
+                stone_feats = [
+                  colors_df.iloc[c].at['terms'],
+                  ints_df.iloc[ci].at['terms'],
+                  shapes_df.iloc[s].at['terms'],
+                  ints_df.iloc[si].at['terms'],
+                  patterns_df.iloc[p].at['terms'],
+                  ints_df.iloc[pi].at['terms']
+                ]
+                counts = [
+                  colors_df.iloc[c].at['count'],
+                  ints_df.iloc[ci].at['count'],
+                  shapes_df.iloc[s].at['count'],
+                  ints_df.iloc[si].at['count'],
+                  patterns_df.iloc[p].at['count'],
+                  ints_df.iloc[pi].at['count'],
+                ]
+                stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}))
+    return stones_df
 
   def get_cached_program(self, type_signature):
     arg_t, ret_t = type_signature
@@ -183,7 +202,7 @@ class Program_lib:
       if cached is None:
         cache_param = 1
       else:
-        Nt = len(cached.index)
+        Nt = len(cached)
         Ct = sum(cached['count'])
         cache_param = (alpha+Nt*d)/(alpha+Ct)
       # print(f'threashold: {cache_param}')
@@ -252,14 +271,16 @@ class Program_lib:
       else:
         ret_terms = self.base_terms.query(f'return_type=="{ret_type}"')
       programs_df['terms'] = ret_terms['terms']
-      programs_df['log_prob'] = log(1/len(ret_terms.index))
+      total = sum(ret_terms['count'])
+      programs_df['log_prob'] = ret_terms.apply(lambda row: log(row['count']/total), axis = 1)
       return programs_df
     else:
       # find direct matches
       ret_terms = self.get_cached_program(type_signature)
       if ret_terms is not None:
         programs_df['terms'] = ret_terms['terms']
-        programs_df['log_prob'] = log(1/len(ret_terms.index))
+        total = sum(ret_terms['count'])
+        programs_df['log_prob'] = ret_terms.apply(lambda row: log(row['count']/total), axis = 1)
       # return direct matches
       if depth < 1:
         return programs_df
@@ -277,7 +298,7 @@ class Program_lib:
             routed_args = eval(rt).run({'left': [], 'right': []}, arg_types)
             left = self.expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
             right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
-            if len(left.index) > 0 and len(right.index) > 0:
+            if len(left) > 0 and len(right) > 0:
               programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
         return programs_df
 
@@ -296,7 +317,7 @@ class Program_lib:
           routed_args = eval(rt).run({'left': [], 'right': []}, args)
           left = self.expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
           right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
-          if len(left.index > 0) and len(right.index) > 0:
+          if len(left) > 0 and len(right) > 0:
             terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
       return terms_df
 
@@ -335,11 +356,11 @@ pl = Program_lib(
     eqObject, ifElse, {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
    ],
   base_list=[
-    True, False,
-    Red, Blue, #Yellow,
-    Circle, Square, #Triangle,
-    Dotted, Plain,
-    S1, S2, #S3, S4
+    True, #False,
+    Red, Red, Yellow,
+    Circle, #Square, #Triangle,
+    Dotted, #Plain,
+    S1, #S2, #S3, S4
   ])
 
 # %%
@@ -347,6 +368,7 @@ t = [['obj', 'obj'], 'obj']
 rf = pl.enumerate_program(t,1)
 rf
 
+# 33279 rows × 2 columns
 
 # %% Tests
 # s = eval(pl.sample_base('obj')['terms'])
