@@ -2,12 +2,11 @@
 
 ## Implemented
 
-**Program enumerator**: breadth-first search (BFS) with step 1; prob is given according to current counts (in log format).
+- **Program enumerator**: breadth-first search (BFS) with step 1; prob is given according to current counts (in log format).
+  - For the enumerated programs, prior can be calculated directly in the enumeration process
+  - There is also an adaptor grammar implementation of prior prob for generated programs
 
-- For the enumerated programs, prior can be calculated directly in the enumeration process
-- There is also an adaptor grammar implementation of prior prob for generated programs
-
-**Consistency check**: check whether the list of programs are consistent with a training data point
+- **MAP estimatse**: check whether a list of programs are consistent with a training data point & rank by prior
 
 ## Plan
 
