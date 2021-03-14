@@ -7,6 +7,8 @@
 - For the enumerated programs, prior can be calculated directly in the enumeration process
 - There is also an adaptor grammar implementation of prior prob for generated programs
 
+**Consistency check**: check whether the list of programs are consistent with a training data point
+
 ## Plan
 
 Approximate n-step search with iterated 1-step enumeration:
