@@ -288,6 +288,7 @@ class Program_lib:
       else:
         left_trees = self.get_matched_program(ret_type)
         left_trees = left_trees.drop(programs_df.index) # exclude direct matches
+        left_trees = self.exclude_identity(left_trees) # Identity function cannot go to the left
         for i in left_trees.index:
           left_terms = left_trees.at[i, 'terms']
           left_arg_types = left_trees.at[i, 'arg_types'].split('_')
@@ -322,6 +323,13 @@ class Program_lib:
       return terms_df
 
   @staticmethod
+  def exclude_identity(df):
+    id_df = df.query('terms=="I"')
+    if len(id_df) > 0:
+      df = df.drop(id_df.index.values[0])
+    return df
+
+  @staticmethod
   def combine_terms(left_df, right_df, router = '', router_lp = 0):
     left_df = left_df.add_prefix('left_'); left_df['key'] = 0
     right_df = right_df.add_prefix('right_'); right_df['key'] = 0
@@ -345,30 +353,30 @@ class Program_lib:
         routers.append(''.join(r))
       return routers
 
-pl = Program_lib(
-  program_list=[
-    getColor, setColor, eqColor,
-    # getSaturation, setSaturation, eqSaturation,
-    # getShape, setShape, eqShape,
-    # getSize, setSize, eqSize,
-    # getPattern, setPattern, eqPattern,
-    # getDensity, setDensity, eqDensity,
-    eqObject, ifElse, {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
-   ],
-  base_list=[
-    True, #False,
-    Red, Red, Yellow,
-    Circle, #Square, #Triangle,
-    Dotted, #Plain,
-    S1, #S2, #S3, S4
-  ])
+# pl = Program_lib(
+#   program_list=[
+#     getColor, setColor, eqColor,
+#     # getSaturation, setSaturation, eqSaturation,
+#     # getShape, setShape, eqShape,
+#     # getSize, setSize, eqSize,
+#     # getPattern, setPattern, eqPattern,
+#     # getDensity, setDensity, eqDensity,
+#     eqObject, ifElse, {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
+#    ],
+#   base_list=[
+#     True, #False,
+#     Red, Red, Yellow,
+#     Circle, #Square, #Triangle,
+#     Dotted, #Plain,
+#     S1, #S2, #S3, S4
+#   ])
 
-# %%
-t = [['obj', 'obj'], 'obj']
-rf = pl.enumerate_program(t,1)
-rf
+# # %%
+# t = [['obj', 'obj'], 'obj']
+# rf = pl.enumerate_program(t,1)
+# rf
 
-# 33279 rows × 2 columns
+# # 33279 rows × 2 columns
 
 # %% Tests
 # s = eval(pl.sample_base('obj')['terms'])
