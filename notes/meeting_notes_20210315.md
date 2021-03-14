@@ -21,3 +21,7 @@ Questions:
 
 - How to assign priors after we take out sub-programs for reuse? Do some fake count?
 - Is it necessary to ``forget'' what's learned in a data point when sweeping through it again?
+
+Notes:
+
+- Can I run experiments on Ebby?
