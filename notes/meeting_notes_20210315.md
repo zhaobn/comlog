@@ -25,3 +25,4 @@ Questions:
 Notes:
 
 - Can I run experiments on Ebby?
+- Side discovery: match rules (`[BC,[B,setColor,I],getColor]`) are easier than set-to-constant-values rules (`[BC,[B,[[ifElse, True],[C,[B,setColor,I],Red]],I]`) if we consider the latter implicitly encode a universal condition check
