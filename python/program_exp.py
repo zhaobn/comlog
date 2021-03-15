@@ -14,24 +14,17 @@ pl = Program_lib(
     eqObject, ifElse, {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
    ],
   base_list=[
-    True, #False,
+    True, False,
     Red, Red, Yellow,
-    Circle, #Square, #Triangle,
+    Square, Triangle, #Circle,
     Dotted, #Plain,
-    S1, #S2, #S3, S4
+    S1, S3, #S2, S4
   ])
 
 # %%
 t = [['obj', 'obj'], 'obj']
 rf = pl.enumerate_program(t,1)
 rf
-
-# %%
-data = {
-  'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
-  'recipient': Stone(Yellow,S3,Square,S3,Dotted,S1),
-  'result': Stone(Red,S3,Square,S3,Dotted,S1)
-}
 
 # %%
 def check_consistence(terms_list, data_dict):
@@ -41,7 +34,13 @@ def check_consistence(terms_list, data_dict):
   return result.name == data_dict['result'].name
 
 # check_consistence([BC,[B,setColor,I],getColor], data)
-# %%
+
+data = {
+  'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
+  'recipient': Stone(Yellow,S3,Square,S3,Dotted,S1),
+  'result': Stone(Red,S3,Square,S3,Dotted,S1)
+}
+
 rf['consistence'] = rf.apply(lambda row: check_consistence(row['terms'], data), axis=1)
 
 # %%

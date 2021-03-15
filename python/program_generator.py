@@ -189,7 +189,7 @@ class Program_lib:
     if free_index < 0:
       return 'B' * len(arg_list)
     else:
-      return ''.join([np_random.choice(['C', 'B', 'S']) for _ in arg_list])
+      return ''.join([np_random.choice(['C', 'B', 'S', 'K']) for _ in arg_list])
 
   # Tail-recursion; righthand-side tree
   def generate_program(self, type_signature, cur_step = 0, max_step = 5, alpha = 1, d = 0.2, add=True):
@@ -349,10 +349,11 @@ class Program_lib:
       return 'B' * len(arg_list)
     else:
       routers = []
-      for r in list(itertools_product(['C', 'B', 'S'], repeat=len(arg_list))):
+      for r in list(itertools_product(['C', 'B', 'S', 'K'], repeat=len(arg_list))):
         routers.append(''.join(r))
       return routers
 
+# # %%
 # pl = Program_lib(
 #   program_list=[
 #     getColor, setColor, eqColor,
@@ -376,13 +377,11 @@ class Program_lib:
 # rf = pl.enumerate_program(t,1)
 # rf
 
-# # 33279 rows × 2 columns
-
-# %% Tests
+# # %% Tests
+# pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
 # s = eval(pl.sample_base('obj')['terms'])
 # t = eval(pl.sample_base('obj')['terms'])
 # Program([SC, [CS, [BB, ifElse, eqObject], I], I]).run([t,t]).name
 # Program([B, [setColor, Stone(Yellow,S1,Triangle,S2,Plain,S4)], getColor]).run(s).name
 # Program([B, [setShape, Stone(Red,S2,Circle,S3,Dotted,S4)], [B, getShape, [B, [setPattern, Stone(Blue,S2,Square,S2,Plain,S4)], getPattern]]]).run(s).name
-
-# pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
+# Program([BK,[setColor,Stone(Red,S1,Circle,S1,Dotted,S1)],getColor]).run([s,t]).name

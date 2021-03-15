@@ -6,6 +6,7 @@ from base_terms import *
 s = Stone(Red, S2, Circle, S2, Plain, S1)
 t = Stone(Red, S1, Square, S4, Dotted, S2)
 
+# %%
 # demo = Program([C, setColor, Yellow])
 # demo.run([s]).name
 
@@ -23,4 +24,7 @@ demo.run([s, t]).name
 
 # %%
 Program([getColor, Stone(Red, S2, Circle, S2, Plain, S1)]).run().name
+# %%
+Program([KC, [B, setColor, I], Blue]).run([s,t]).name
+
 # %%

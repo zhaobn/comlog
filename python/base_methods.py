@@ -110,3 +110,6 @@ def return_myself(arg_list):
     return arg_list[0]
   else:
     return arg_list
+
+def constant(arg_dict, _):
+  return arg_dict
