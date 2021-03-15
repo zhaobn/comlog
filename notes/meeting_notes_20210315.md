@@ -13,17 +13,20 @@
 Approximate n-step search with iterated 1-step enumeration:
 
 - For the first data point:
-  - Enumerate all the 1-step programs
-  - Filter out all the inconsistent programs; rank consistent ones according to the prior (MAP estiamtes)
-  - List all the sub-programs for re-use (how to assign proper priors for these ones?)
+  - Enumerate all the 1-step (or 2-step) programs
+  - Filter out all the inconsistent programs
+  - Add the consistent set of programs (base terms, primitives, sub-programs) to the program library (shall we consider the enumeration prior?)
   - Use this updated program library for the next data point
 
-Questions:
+- Do this EC (Explore-Compression) style process for learning, and use the generated programs for generalization
 
-- How to assign priors after we take out sub-programs for reuse? Do some fake count?
+Question:
+
 - Is it necessary to ``forget'' what's learned in a data point when sweeping through it again?
 
 Notes:
 
+- The number of possible programs grows really fast as the number of base terms & steps increases. Full base terms with 1-step search => 326; minimal base terms with 2-step search => 33,279.
+- Current design will only *grow* the program library and not take out anything (unlikely things just got assigned very tiny probs, but still there)
 - Can I run experiments on Ebby?
 - Side discovery: match rules (`[BC,[B,setColor,I],getColor]`) are easier than set-to-constant-values rules (`[BC,[B,[[ifElse, True],[C,[B,setColor,I],Red]],I]`) if we consider the latter implicitly encode a universal condition check
