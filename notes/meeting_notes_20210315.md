@@ -26,7 +26,7 @@ Question:
 
 Notes:
 
-- The number of possible programs grows really fast as the number of base terms & steps increases. Full base terms with 1-step search => 326; minimal base terms with 2-step search => 33,279.
-- Current design will only *grow* the program library and not take out anything (unlikely things just got assigned very tiny probs, but still there)
+- The number of possible programs grows really fast as the number of base terms & steps increases. Minimal base terms with 1-step search => 326; minimal base terms with 2-step search => 33,279.
+- Current design will only *grow* the program library and not take out anything (unlikely base terms/primitives just got assigned very tiny probs, but still there)
 - Can I run experiments on Ebby?
 - Side discovery: match rules (`[BC,[B,setColor,I],getColor]`) are easier than set-to-constant-values rules (`[BC,[B,[[ifElse, True],[C,[B,setColor,I],Red]],I]`) if we consider the latter implicitly encode a universal condition check
