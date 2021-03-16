@@ -354,10 +354,11 @@ class Program_lib:
         routers.append(''.join(r))
       return routers
 
-  def check_program(self, terms, is_set, data):
+  def unfold_program(self, terms, is_set):
     if is_set == True:
       programs_list = []
       term_list = terms.split(',')
+      # TODO: remove redundancy
       for t in term_list:
         tm = t.strip('[]')
         if tm in list(self.SET_MARKERS):
@@ -370,41 +371,45 @@ class Program_lib:
         programs_list.append(unfolds)
       programs_list = list(itertools_product(*programs_list))
       programs_list = [','.join(p) for p in programs_list]
-      return [self.check_program(p, 0, data) for p in programs_list]
+      return pd.DataFrame({'terms': programs_list})
     else:
-      result = Program(eval(terms)).run([data['agent'], data['recipient']])
-      return {'terms': terms, 'is_consistent': result.name == data['result'].name}
+      return pd.DataFrame({'terms': [ terms ]}) # log_prob?
 
-  def filter_program(self, df, data, to_df = False):
-    filtered = []
+  @staticmethod
+  def check_program(terms, data):
+    result = Program(eval(terms)).run([data['agent'], data['recipient']])
+    return result.name == data['result'].name
+
+  def filter_program(self, df, data):
+    filtered = pd.DataFrame({'terms': [], 'consistent': []})
     for i in range(len(df)):
-      checks = self.check_program(df.iloc[i].at['terms'], df.iloc[i].at['is_set'], data)
-      filtered += list(filter(lambda x: x['is_consistent']==True, secure_list(checks)))
-    filtered_terms = [x['terms'] for x in filtered]
-    return pd.DataFrame({'terms': filtered_terms}) if to_df else filtered_terms
+      to_check = self.unfold_program(df.iloc[i].at['terms'], df.iloc[i].at['is_set'])
+      to_check['consistent'] = to_check.apply(lambda row: self.check_program(row['terms'], data), axis=1)
+      filtered = filtered.append(to_check.loc[to_check['consistent']==1], ignore_index=True)
+    return filtered[['terms']]
 
   # Combined function
-  def bfs_filter(self, type_signature, depth, data, to_df=True):
+  def bfs_filter(self, type_signature, depth, data):
     programs_df = self.bfs(type_signature, depth)
-    return self.filter_program(programs_df, data, to_df)
+    return self.filter_program(programs_df, data)
 
 
 pl = Program_lib(
   program_list=[
     getColor, setColor, eqColor,
-    # getSaturation, setSaturation, eqSaturation,
-    # getShape, setShape, eqShape,
-    # getSize, setSize, eqSize,
-    # getPattern, setPattern, eqPattern,
-    # getDensity, setDensity, eqDensity,
+    getSaturation, setSaturation, eqSaturation,
+    getShape, setShape, eqShape,
+    getSize, setSize, eqSize,
+    getPattern, setPattern, eqPattern,
+    getDensity, setDensity, eqDensity,
     eqObject, ifElse, {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
    ],
   base_list=[
-    True, #False,
-    Red, Red, Yellow,
-    Circle, #Square, #Triangle,
-    Dotted, #Plain,
-    S1, #S2, #S3, S4
+    True, False,
+    Red, Yellow, #Blue,
+    Square, Triangle, #Circle
+    Dotted, Plain,
+    S1, S3, #S3, S4
   ])
 
 data = {
@@ -416,10 +421,11 @@ data = {
 # %%
 t = [['obj', 'obj'], 'obj']
 rf = pl.bfs(t,1)
-rf
+# rf
 
 # %%
-pl.check_program('[BC,[B,setColor,I],getColor]', rf.iloc[0].at['is_set'], data)
+rc = pl.filter_program(rf, data, True)
+
 # # %% Tests
 # pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
 # s = eval(pl.sample_base('obj')['terms'])
