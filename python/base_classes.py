@@ -3,7 +3,7 @@
 from pandas.core.common import flatten
 
 ####################### Custom imports ###############################
-from list_helpers import secure_list, copy_list
+from list_helpers import secure_list, copy_list, print_name
 
 ####################### Main body #####################################
 class Base:
@@ -97,7 +97,12 @@ class Program:
   def __init__(self, terms):
     self.terms = terms
   def run(self, arg_list = None):
-    if self.terms[0].ctype == 'router':
+    if isinstance(self.terms[0], list):
+      left_terms, right_terms = self.terms
+      left_ret = Program(secure_list(left_terms)).run()
+      right_ret = Program(secure_list(right_terms)).run()
+      return Program(secure_list(left_ret) + secure_list(right_ret)).run()
+    elif self.terms[0].ctype == 'router':
       if len(self.terms) == 1: # Should be router I
         return self.terms[0].run(arg_list)
       else:
