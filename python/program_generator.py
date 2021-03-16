@@ -96,10 +96,6 @@ class Program_lib:
     shapes_df = self.base_terms.query('return_type=="shp"')
     patterns_df = self.base_terms.query('return_type=="pat"')
     ints_df = self.base_terms.query('return_type=="int"')
-    colors_total = sum(colors_df['count'])
-    shapes_total = sum(shapes_df['count'])
-    patterns_total = sum(patterns_df['count'])
-    scales_total = sum(ints_df['count'])
     for c in range(len(colors_df)):
       for ci in range(len(ints_df)):
         for s in range(len(shapes_df)):
@@ -262,25 +258,27 @@ class Program_lib:
 
   # enumeration
   def enumerate_program(self, type_signature, depth = 0):
-    programs_df = pd.DataFrame({'terms': [], 'log_prob': []})
+    programs_df = pd.DataFrame({'terms': [], 'has_placeholder': []})
     arg_types, ret_type = type_signature
     # when no arg is provided, return all the base terms
     if len(arg_types) < 1:
-      if ret_type == 'obj':
-        ret_terms = self.get_all_objs()
-      else:
-        ret_terms = self.base_terms.query(f'return_type=="{ret_type}"')
-      programs_df['terms'] = ret_terms['terms']
-      total = sum(ret_terms['count'])
-      programs_df['log_prob'] = ret_terms.apply(lambda row: log(row['count']/total), axis = 1)
+      programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'has_placeholder': [1]}))
+      # if ret_type == 'obj':
+      #   ret_terms = self.get_all_objs()
+      # else:
+      #   ret_terms = self.base_terms.query(f'return_type=="{ret_type}"')
+      # programs_df['terms'] = ret_terms['terms']
+      # total = sum(ret_terms['count'])
+      # programs_df['log_prob'] = ret_terms.apply(lambda row: log(row['count']/total), axis = 1)
       return programs_df
     else:
       # find direct matches
       ret_terms = self.get_cached_program(type_signature)
       if ret_terms is not None:
         programs_df['terms'] = ret_terms['terms']
-        total = sum(ret_terms['count'])
-        programs_df['log_prob'] = ret_terms.apply(lambda row: log(row['count']/total), axis = 1)
+        programs_df['has_placeholder'] = 0
+        # total = sum(ret_terms['count'])
+        # programs_df['log_prob'] = ret_terms.apply(lambda row: log(row['count']/total), axis = 1)
       # return direct matches
       if depth < 1:
         return programs_df
@@ -300,12 +298,12 @@ class Program_lib:
             left = self.expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
             right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
             if len(left) > 0 and len(right) > 0:
-              programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
+              programs_df = programs_df.append(self.combine_terms(left, right, rt)) # log(1/len(routers))
         return programs_df
 
   def expand(self, left_term, left_arg_types, free_index, args, depth):
     if free_index < 0:
-      return pd.DataFrame({'terms': [ left_term ], 'log_prob': [log(1)]})
+      return pd.DataFrame({'terms': [ left_term ], 'has_placeholder': [0]})
     else:
       if len(args) < 1:
         left = self.expand(left_term, left_arg_types, free_index-1, [], depth)
@@ -313,13 +311,13 @@ class Program_lib:
         return self.combine_terms(left, right)
       else:
         routers = self.get_all_routers(args, free_index-1)
-        terms_df = pd.DataFrame({'terms': [], 'log_prob': []})
+        terms_df = pd.DataFrame({'terms': [], 'has_placeholder': []})
         for rt in routers:
           routed_args = eval(rt).run({'left': [], 'right': []}, args)
           left = self.expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
           right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
           if len(left) > 0 and len(right) > 0:
-            terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
+            terms_df = terms_df.append(self.combine_terms(left, right, rt)) # log(1/len(routers))
       return terms_df
 
   @staticmethod
@@ -330,17 +328,19 @@ class Program_lib:
     return df
 
   @staticmethod
-  def combine_terms(left_df, right_df, router = '', router_lp = 0):
+  def combine_terms(left_df, right_df, router = ''): #router_lp = 0
     left_df = left_df.add_prefix('left_'); left_df['key'] = 0
     right_df = right_df.add_prefix('right_'); right_df['key'] = 0
     combined = left_df.merge(right_df, how='outer')
     if len(router) < 1:
       combined['terms'] = '[' + combined['left_terms'] + ',' + combined['right_terms'] + ']'
-      combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob']
+      # combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob']
     else:
       combined['terms'] = '[' + router + ',' + combined['left_terms'] + ',' + combined['right_terms'] + ']'
-      combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob'] + router_lp
-    return combined[['terms', 'log_prob']]
+      # combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob'] + router_lp
+    combined = combined.astype({'left_has_placeholder': 'int32', 'right_has_placeholder': 'int32'})
+    combined['has_placeholder'] = combined['left_has_placeholder'] | combined['right_has_placeholder']
+    return combined[['terms', 'has_placeholder']]
 
   @staticmethod
   def get_all_routers(arg_list, free_index):
@@ -353,29 +353,28 @@ class Program_lib:
         routers.append(''.join(r))
       return routers
 
-# # %%
-# pl = Program_lib(
-#   program_list=[
-#     getColor, setColor, eqColor,
-#     # getSaturation, setSaturation, eqSaturation,
-#     # getShape, setShape, eqShape,
-#     # getSize, setSize, eqSize,
-#     # getPattern, setPattern, eqPattern,
-#     # getDensity, setDensity, eqDensity,
-#     eqObject, ifElse, {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
-#    ],
-#   base_list=[
-#     True, #False,
-#     Red, Red, Yellow,
-#     Circle, #Square, #Triangle,
-#     Dotted, #Plain,
-#     S1, #S2, #S3, S4
-#   ])
+pl = Program_lib(
+  program_list=[
+    getColor, setColor, eqColor,
+    # getSaturation, setSaturation, eqSaturation,
+    # getShape, setShape, eqShape,
+    # getSize, setSize, eqSize,
+    # getPattern, setPattern, eqPattern,
+    # getDensity, setDensity, eqDensity,
+    eqObject, ifElse, {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
+   ],
+  base_list=[
+    True, #False,
+    Red, Red, Yellow,
+    Circle, #Square, #Triangle,
+    Dotted, #Plain,
+    S1, #S2, #S3, S4
+  ])
 
-# # %%
-# t = [['obj', 'obj'], 'obj']
-# rf = pl.enumerate_program(t,1)
-# rf
+# %%
+t = [['obj', 'obj'], 'obj']
+rf = pl.enumerate_program(t,1)
+rf
 
 # # %% Tests
 # pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
@@ -385,3 +384,5 @@ class Program_lib:
 # Program([B, [setColor, Stone(Yellow,S1,Triangle,S2,Plain,S4)], getColor]).run(s).name
 # Program([B, [setShape, Stone(Red,S2,Circle,S3,Dotted,S4)], [B, getShape, [B, [setPattern, Stone(Blue,S2,Square,S2,Plain,S4)], getPattern]]]).run(s).name
 # Program([BK,[setColor,Stone(Red,S1,Circle,S1,Dotted,S1)],getColor]).run([s,t]).name
+
+# %%
