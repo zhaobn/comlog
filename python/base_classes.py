@@ -6,29 +6,38 @@ from pandas.core.common import flatten
 from list_helpers import secure_list, copy_list
 
 ####################### Main body #####################################
-class Color:
-  ctype = 'col'
-  def __init__(self, name): self.name = name
+class Base:
+  def __init__(self, ctype):
+    self.ctype = ctype
+  def __str__(self): return self.ctype
+
+class Color(Base):
+  def __init__(self, name):
+    Base.__init__(self,'col')
+    self.name = name
   def __str__(self): return self.name
 
-class Shape:
-  ctype = 'shp'
-  def __init__(self, name): self.name = name
+class Shape(Base):
+  def __init__(self, name):
+    Base.__init__(self,'shp')
+    self.name = name
   def __str__(self): return self.name
 
 class Pattern:
-  ctype = 'pat'
-  def __init__(self, name): self.name = name
+  def __init__(self, name):
+    Base.__init__(self,'pat')
+    self.name = name
   def __str__(self): return self.name
 
 class Scale:
-  ctype = 'int'
-  def __init__(self, name): self.name = name
+  def __init__(self, name):
+    Base.__init__(self,'int')
+    self.name = name
   def __str__(self): return str(self.name)
 
 class Stone:
-  ctype = 'obj'
   def __init__(self, color, c_scale, shape, s_scale, pattern, p_scale):
+    Base.__init__(self,'obj')
     self.color = color
     self.saturation = c_scale
     self.shape = shape
@@ -43,6 +52,12 @@ class Stone:
       + self.pattern.name + str(self.density.name))
   def __str__(self):
     return self.name
+
+class Placeholder:
+  ctype = 'placeholder'
+  def __init__(self, name):
+    self.name = name
+  def __str__(self): return self.name
 
 class Primitive:
   ctype = 'primitive'
@@ -82,8 +97,8 @@ class Program:
   def __init__(self, terms):
     self.terms = terms
   def run(self, arg_list = None):
-    if self.terms[0].ctype is 'router':
-      if len(self.terms) is 1: # Should be router I
+    if self.terms[0].ctype == 'router':
+      if len(self.terms) == 1: # Should be router I
         return self.terms[0].run(arg_list)
       else:
         assert len(self.terms) == 3
@@ -97,7 +112,7 @@ class Program:
         left_ret = left_tree.run(sorted_args['left'])
         right_ret = right_tree.run(sorted_args['right'])
         return Program(secure_list(left_ret) + secure_list(right_ret)).run()
-    elif self.terms[0].ctype is 'primitive': # TODO: include compound (learned) functions
+    elif self.terms[0].ctype == 'primitive': # TODO: include compound (learned) functions
       func_term = self.terms[0]
       args_term = self.terms[1:]
       if arg_list is not None:
@@ -108,3 +123,5 @@ class Program:
         return [ func_term ] + args_term
     else:
       return self.terms # Base types
+
+# %%

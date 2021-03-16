@@ -22,6 +22,13 @@ S2 = Scale('S2')
 S3 = Scale('S3')
 S4 = Scale('S4')
 
+# Placeholders for program enumeration
+col = Placeholder('col')
+shp = Placeholder('shp')
+pat = Placeholder('pat')
+int = Placeholder('int')
+obj = Placeholder('obj')
+
 # Primitives
 getColor = Primitive('getColor', 'obj', 'col', get_color)
 setColor = Primitive('setColor', ['obj', 'col'], 'obj', set_color)

@@ -24,6 +24,7 @@ class Program_lib:
     self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'name': 'ERROR'}
     if len(program_list) > 0: self.add(program_list)
     if len(base_list) > 0: self.add_bases(base_list)
+    self.SET_MARKERS = set(list(self.base_terms.return_type))
 
   def add(self, entry_list):
     entry_list = secure_list(entry_list)
@@ -257,12 +258,12 @@ class Program_lib:
       }
 
   # enumeration
-  def enumerate_program(self, type_signature, depth = 0):
-    programs_df = pd.DataFrame({'terms': [], 'has_placeholder': []})
+  def bfs(self, type_signature, depth = 0):
+    programs_df = pd.DataFrame({'terms': [], 'is_set': []})
     arg_types, ret_type = type_signature
     # when no arg is provided, return all the base terms
     if len(arg_types) < 1:
-      programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'has_placeholder': [1]}))
+      programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'is_set': [1]}))
       # if ret_type == 'obj':
       #   ret_terms = self.get_all_objs()
       # else:
@@ -276,7 +277,7 @@ class Program_lib:
       ret_terms = self.get_cached_program(type_signature)
       if ret_terms is not None:
         programs_df['terms'] = ret_terms['terms']
-        programs_df['has_placeholder'] = 0
+        programs_df['is_set'] = 0
         # total = sum(ret_terms['count'])
         # programs_df['log_prob'] = ret_terms.apply(lambda row: log(row['count']/total), axis = 1)
       # return direct matches
@@ -296,26 +297,26 @@ class Program_lib:
           for rt in routers:
             routed_args = eval(rt).run({'left': [], 'right': []}, arg_types)
             left = self.expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
-            right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
+            right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
             if len(left) > 0 and len(right) > 0:
               programs_df = programs_df.append(self.combine_terms(left, right, rt)) # log(1/len(routers))
         return programs_df
 
   def expand(self, left_term, left_arg_types, free_index, args, depth):
     if free_index < 0:
-      return pd.DataFrame({'terms': [ left_term ], 'has_placeholder': [0]})
+      return pd.DataFrame({'terms': [ left_term ], 'is_set': [0]})
     else:
       if len(args) < 1:
         left = self.expand(left_term, left_arg_types, free_index-1, [], depth)
-        right = self.enumerate_program([[],left_arg_types[free_index]], depth-1)
+        right = self.bfs([[],left_arg_types[free_index]], depth-1)
         return self.combine_terms(left, right)
       else:
         routers = self.get_all_routers(args, free_index-1)
-        terms_df = pd.DataFrame({'terms': [], 'has_placeholder': []})
+        terms_df = pd.DataFrame({'terms': [], 'is_set': []})
         for rt in routers:
           routed_args = eval(rt).run({'left': [], 'right': []}, args)
           left = self.expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
-          right = self.enumerate_program([routed_args['right'], left_arg_types[free_index]], depth-1)
+          right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
           if len(left) > 0 and len(right) > 0:
             terms_df = terms_df.append(self.combine_terms(left, right, rt)) # log(1/len(routers))
       return terms_df
@@ -338,9 +339,9 @@ class Program_lib:
     else:
       combined['terms'] = '[' + router + ',' + combined['left_terms'] + ',' + combined['right_terms'] + ']'
       # combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob'] + router_lp
-    combined = combined.astype({'left_has_placeholder': 'int32', 'right_has_placeholder': 'int32'})
-    combined['has_placeholder'] = combined['left_has_placeholder'] | combined['right_has_placeholder']
-    return combined[['terms', 'has_placeholder']]
+    combined = combined.astype({'left_is_set': 'int32', 'right_is_set': 'int32'})
+    combined['is_set'] = combined['left_is_set'] | combined['right_is_set']
+    return combined[['terms', 'is_set']]
 
   @staticmethod
   def get_all_routers(arg_list, free_index):
@@ -352,6 +353,32 @@ class Program_lib:
       for r in list(itertools_product(['C', 'B', 'S', 'K'], repeat=len(arg_list))):
         routers.append(''.join(r))
       return routers
+
+  def check_program(self, terms, is_set, data):
+    if is_set == True:
+      programs_list = []
+      term_list = terms.split(',')
+      for t in term_list:
+        tm = t.strip('[]')
+        if tm in list(self.SET_MARKERS):
+          unfolded = self.base_terms.loc[self.base_terms['return_type']==tm].terms.values
+        elif tm == 'obj':
+          unfolded = self.get_all_objs().terms.values
+        else:
+          unfolded = [tm]
+        unfolds = [t.replace(tm, u) for u in unfolded]
+        programs_list.append(unfolds)
+      programs_list = list(itertools_product(*programs_list))
+      programs_list = [','.join(p) for p in programs_list]
+      return [self.check_program(p, 0, data) for p in programs_list]
+    else:
+      result = Program(eval(terms)).run([data['agent'], data['recipient']])
+      return {'terms': terms, 'is_consistent': result.name == data['result'].name}
+
+  def bfs_filter(self, type_signature, depth, data):
+    programs_df = self.bfs(type_signature, depth)
+    filtered_df = pd.DataFrame({'terms': []})
+
 
 pl = Program_lib(
   program_list=[
@@ -371,11 +398,19 @@ pl = Program_lib(
     S1, #S2, #S3, S4
   ])
 
+data = {
+  'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
+  'recipient': Stone(Yellow,S3,Square,S3,Dotted,S1),
+  'result': Stone(Red,S3,Square,S3,Dotted,S1)
+}
+
 # %%
 t = [['obj', 'obj'], 'obj']
-rf = pl.enumerate_program(t,1)
+rf = pl.bfs(t,1)
 rf
 
+# %%
+pl.check_program('[BC,[B,setColor,I],getColor]', rf.iloc[0].at['is_set'], data)
 # # %% Tests
 # pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
 # s = eval(pl.sample_base('obj')['terms'])
