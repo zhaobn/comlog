@@ -375,9 +375,18 @@ class Program_lib:
       result = Program(eval(terms)).run([data['agent'], data['recipient']])
       return {'terms': terms, 'is_consistent': result.name == data['result'].name}
 
-  def bfs_filter(self, type_signature, depth, data):
+  def filter_program(self, df, data, to_df = False):
+    filtered = []
+    for i in range(len(df)):
+      checks = self.check_program(df.iloc[i].at['terms'], df.iloc[i].at['is_set'], data)
+      filtered += list(filter(lambda x: x['is_consistent']==True, secure_list(checks)))
+    filtered_terms = [x['terms'] for x in filtered]
+    return pd.DataFrame({'terms': filtered_terms}) if to_df else filtered_terms
+
+  # Combined function
+  def bfs_filter(self, type_signature, depth, data, to_df=True):
     programs_df = self.bfs(type_signature, depth)
-    filtered_df = pd.DataFrame({'terms': []})
+    return self.filter_program(programs_df, data, to_df)
 
 
 pl = Program_lib(
