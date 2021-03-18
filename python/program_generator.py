@@ -374,11 +374,21 @@ class Program_lib:
           unfolded = [tm]
         unfolds = [t.replace(tm, u) for u in unfolded]
         programs_list.append(unfolds)
-      if 'bool]' in term_list:
-        # TODO: Compress boolean conditions
-        true_conditions = []
-        false_conditions = []
-        return 1
+      if 'bool]' in term_list: # TODO: do this recursively if there are more than one plain bool
+        bi = term_list.index('bool]')
+        # Compress the True conditions
+        true_conditions = programs_list.copy()
+        true_conditions[bi] = ['True]']
+        if len(true_conditions[bi+2]) > 1:
+          true_conditions[bi+2] = ['obj]']
+        true_programs = self.iter_compose_programs(true_conditions)
+        # Compress the False conditions
+        false_conditions = programs_list.copy()
+        false_conditions[bi] = ['False]']
+        if len(false_conditions[bi+1]) > 1:
+          false_conditions[bi+1] = ['obj]']
+        false_programs = self.iter_compose_programs(false_conditions)
+        return true_programs.append(false_programs)
       else:
         return self.iter_compose_programs(programs_list)
 
@@ -387,7 +397,6 @@ class Program_lib:
     programs_list = list(itertools_product(*terms_list))
     programs_list = [','.join(p) for p in programs_list]
     return pd.DataFrame({'terms': programs_list})
-
 
   @staticmethod
   def check_program(terms, data):
@@ -421,10 +430,10 @@ pl = Program_lib(
    ],
   base_list=[
     True, False,
-    Red, Yellow, #Blue,
-    Square, Triangle, #Circle
+    Red, Yellow, Blue,
+    Square, Triangle, Circle,
     Dotted, Plain,
-    S1, S3, #S3, S4
+    S1, S3, S3, S4
   ])
 
 data = {
@@ -439,7 +448,7 @@ rf = pl.bfs(t,1)
 # rf
 
 # %%
-rc = pl.filter_program(rf.head(3), data)
+rc = pl.filter_program(rf, data)
 
 # # %% Tests
 # pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
