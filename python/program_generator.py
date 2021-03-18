@@ -355,11 +355,16 @@ class Program_lib:
       return routers
 
   def unfold_program(self, terms, is_set):
-    if is_set == True:
+    # Ignore 'eqObject],obj],obj]' terms
+    if 'eqObject],obj],obj]' in terms:
+      return pd.DataFrame({'terms': []})
+    elif is_set == False:
+      return pd.DataFrame({'terms': [ terms ]}) # log_prob?
+    else:
       programs_list = []
       term_list = terms.split(',')
-      # TODO: remove redundancy
-      for t in term_list:
+      for i in range(len(term_list)):
+        t = term_list[i]
         tm = t.strip('[]')
         if tm in list(self.SET_MARKERS):
           unfolded = self.base_terms.loc[self.base_terms['return_type']==tm].terms.values
@@ -369,11 +374,20 @@ class Program_lib:
           unfolded = [tm]
         unfolds = [t.replace(tm, u) for u in unfolded]
         programs_list.append(unfolds)
-      programs_list = list(itertools_product(*programs_list))
-      programs_list = [','.join(p) for p in programs_list]
-      return pd.DataFrame({'terms': programs_list})
-    else:
-      return pd.DataFrame({'terms': [ terms ]}) # log_prob?
+      if 'bool]' in term_list:
+        # TODO: Compress boolean conditions
+        true_conditions = []
+        false_conditions = []
+        return 1
+      else:
+        return self.iter_compose_programs(programs_list)
+
+  @staticmethod
+  def iter_compose_programs(terms_list):
+    programs_list = list(itertools_product(*terms_list))
+    programs_list = [','.join(p) for p in programs_list]
+    return pd.DataFrame({'terms': programs_list})
+
 
   @staticmethod
   def check_program(terms, data):
@@ -384,8 +398,9 @@ class Program_lib:
     filtered = pd.DataFrame({'terms': [], 'consistent': []})
     for i in range(len(df)):
       to_check = self.unfold_program(df.iloc[i].at['terms'], df.iloc[i].at['is_set'])
-      to_check['consistent'] = to_check.apply(lambda row: self.check_program(row['terms'], data), axis=1)
-      filtered = filtered.append(to_check.loc[to_check['consistent']==1], ignore_index=True)
+      if len(to_check) > 0:
+        to_check['consistent'] = to_check.apply(lambda row: self.check_program(row['terms'], data), axis=1)
+        filtered = filtered.append(to_check.loc[to_check['consistent']==1], ignore_index=True)
     return filtered[['terms']]
 
   # Combined function
@@ -424,7 +439,7 @@ rf = pl.bfs(t,1)
 # rf
 
 # %%
-rc = pl.filter_program(rf, data, True)
+rc = pl.filter_program(rf.head(3), data)
 
 # # %% Tests
 # pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
