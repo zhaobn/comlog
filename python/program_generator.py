@@ -38,10 +38,10 @@ class Program_lib:
   # List all the possile stones (w flat prior)
   def get_all_objs(self):
     stones_df = pd.DataFrame({'terms': [], 'log_prob': []})
-    colors_df = self.base_terms.query('return_type=="col"')
-    shapes_df = self.base_terms.query('return_type=="shp"')
-    patterns_df = self.base_terms.query('return_type=="pat"')
-    ints_df = self.base_terms.query('return_type=="int"')
+    colors_df = self.content.query('return_type=="col"&type=="base_term"')
+    shapes_df = self.content.query('return_type=="shp"&type=="base_term"')
+    patterns_df = self.content.query('return_type=="pat"&type=="base_term"')
+    ints_df = self.content.query('return_type=="int"&type=="base_term"')
     for c in range(len(colors_df)):
       for ci in range(len(ints_df)):
         for s in range(len(shapes_df)):
@@ -69,11 +69,11 @@ class Program_lib:
 
   def get_cached_program(self, type_signature):
     arg_t, ret_t = type_signature
-    matched_pms = self.content.query(f'arg_types == "{args_to_string(arg_t)}" & return_type == "{ret_t}"')
+    matched_pms = self.content.query(f'arg_types=="{args_to_string(arg_t)}"&return_type=="{ret_t}"&type!="base_term"')
     return matched_pms if not matched_pms.empty else None
 
   def get_matched_program(self, return_type):
-    matched_pms = self.content.query(f'return_type == "{return_type}"')
+    matched_pms = self.content.query(f'return_type=="{return_type}"&type!="base_term"')
     return matched_pms if not matched_pms.empty else None
 
   def sample_program(self, p_source, add=False, weight_col = 'count'):
@@ -115,14 +115,14 @@ class Program_lib:
       stone = 'Stone(' + ','.join([p['name'] for p in sampled_props]) + ')'
       return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'name': stone}
     else:
-      bases = self.base_terms.query(f'return_type == "{type}"')
+      bases = self.content.query(f'return_type=="{type}"&type=="base_term"')
       if bases is None or bases.empty:
         print('No base terms found!')
         return self.ERROR_TERM
       else:
         sampled = bases.sample(n=1, weights='count').iloc[0].to_dict()
         if add:
-          self.add_bases(sampled)
+          self.add(sampled)
         return sampled
 
   @staticmethod
@@ -209,13 +209,6 @@ class Program_lib:
     # when no arg is provided, return all the base terms
     if len(arg_types) < 1:
       programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'is_set': [1]}))
-      # if ret_type == 'obj':
-      #   ret_terms = self.get_all_objs()
-      # else:
-      #   ret_terms = self.base_terms.query(f'return_type=="{ret_type}"')
-      # programs_df['terms'] = ret_terms['terms']
-      # total = sum(ret_terms['count'])
-      # programs_df['log_prob'] = ret_terms.apply(lambda row: log(row['count']/total), axis = 1)
       return programs_df
     else:
       # find direct matches
@@ -312,7 +305,7 @@ class Program_lib:
         t = term_list[i]
         tm = t.strip('[]')
         if tm in list(self.SET_MARKERS):
-          unfolded = self.base_terms.loc[self.base_terms['return_type']==tm].terms.values
+          unfolded = self.content.query(f'return_type=="{tm}"&type=="base_term"').terms.values
         elif tm == 'obj':
           unfolded = self.get_all_objs().terms.values
         else:
@@ -383,7 +376,6 @@ def clist_to_df(clist):
     }), ignore_index=True)
   return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
 
-# %%
 pm_init = clist_to_df([
   getColor, setColor, eqColor,
   getSaturation, setSaturation, eqSaturation,
@@ -400,4 +392,19 @@ pm_init = clist_to_df([
   S1, S3, S3, S4,
 ])
 # pm_init.to_csv('data/pm_init.csv')
-pm = Program_lib(pm_init)
+pl = Program_lib(pm_init)
+
+# %%
+t = [['obj', 'obj'], 'obj']
+rf = pl.bfs(t,1)
+# rf
+
+# %%
+data = {
+  'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
+  'recipient': Stone(Yellow,S3,Square,S3,Dotted,S1),
+  'result': Stone(Red,S3,Square,S3,Dotted,S1)
+}
+rc = pl.filter_program(rf, data)
+
+# %%
