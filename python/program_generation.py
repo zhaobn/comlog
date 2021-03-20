@@ -32,29 +32,12 @@ class Program_lib_light:
           'type': [et['type']],
           'count': [1]
         }))
+
 class Program_lib(Program_lib_light):
   def __init__(self, df):
     Program_lib_light.__init__(self, df)
     self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'type': 'ERROR'}
     self.SET_MARKERS = set(list(self.content[self.content['type']=='base_term'].return_type))
-
-  # def add(self, entry_list):
-  #   entry_list = secure_list(entry_list)
-  #   for et in entry_list:
-  #     # check existence
-  #     if isinstance(et, dict) == 0:
-  #       et = term_to_dict(et)
-  #     found_terms = self.content.query('terms=="'+et['terms']+'"&arg_types=="'+et['arg_types']+'"&return_type=="'+et['return_type']+'"&type=="'+et['type']+'"')
-  #     if len(found_terms) > 0:
-  #       self.content.at[found_terms.index.values[0],'count'] += 1
-  #     else:
-  #       self.content.append(pd.DataFrame({
-  #         'terms': [et['terms']],
-  #         'arg_types': [et['arg_types']],
-  #         'return_type': [et['return_type']],
-  #         'type': [et['type']],
-  #         'count': [1]
-  #       }))
 
   # List all the possile stones (w flat prior)
   def get_all_objs(self):
@@ -430,4 +413,6 @@ data = {
 }
 rc = pl.filter_program(rf, data)
 
+# %%
+pl.generate_program(t)
 # %%

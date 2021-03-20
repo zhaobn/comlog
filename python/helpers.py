@@ -12,7 +12,7 @@ def print_name(mylist):
       named_list = print_name(x)
       retlist.append(named_list)
     else:
-      retlist.append(x.name)
+      retlist.append(str(x) if isinstance(x, bool) else x.name)
   return retlist
 
 # Return a list
