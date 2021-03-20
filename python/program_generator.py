@@ -8,87 +8,32 @@ from math import log
 from itertools import product as itertools_product
 
 from base_terms import *
-from list_helpers import args_to_string, names_to_string
+from helpers import args_to_string, names_to_string, term_to_dict
 
 # %%
 class Program_lib:
-  def __init__(self, program_list = [], base_list = []):
-    self.content = pd.DataFrame({
-      'terms': pd.Series([], dtype='str'),
-      'arg_types': pd.Series([], dtype='str'),
-      'return_type': pd.Series([], dtype='str'),
-      'count': pd.Series([], dtype='int'),
-      'name': pd.Series([], dtype='str')
-    })
-    self.base_terms = copy(self.content)
-    self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'name': 'ERROR'}
-    if len(program_list) > 0: self.add(program_list)
-    if len(base_list) > 0: self.add_bases(base_list)
-    self.SET_MARKERS = set(list(self.base_terms.return_type))
+  def __init__(self, df):
+    self.content = df
+    self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'type': 'ERROR'}
+    self.SET_MARKERS = set(list(self.content[self.content['type']=='base_term'].return_type))
 
   def add(self, entry_list):
     entry_list = secure_list(entry_list)
     for et in entry_list:
-      if isinstance(et, dict):
-        # sampled from program lib
-        terms = et['terms']
-        arg_types = et['arg_types']
-        return_type = et['return_type']
-        name = et['name'] if 'name' in et else ''
-      elif et.ctype == 'primitive':
-        terms = et.name
-        arg_types = args_to_string(et.arg_type)
-        return_type = et.return_type
-        name = et.name
-      else:
-        print('Adding to program lib: Bad entry type!')
-        pass
       # check existence
-      program_found = self.content.query(f'terms == "{terms}" & arg_types == "{arg_types}" & return_type == "{return_type}"')
-      if program_found.empty:
-        # entry is new to lib, add to lib
-        df_et = pd.DataFrame({
-          'terms': pd.Series([terms], dtype='str'),
-          'arg_types': pd.Series([arg_types], dtype='str'),
-          'return_type': pd.Series([return_type], dtype='str'),
-          'count': pd.Series([1], dtype='int'),
-          'name': pd.Series([name], dtype='str')
-        })
-        self.content = self.content.append(df_et, ignore_index=True)
+      if isinstance(et, dict) == 0:
+        et = term_to_dict(et)
+      found_terms = self.content.query('terms=="'+et['terms']+'"&arg_types=="'+et['arg_types']+'"&return_type=="'+et['return_type']+'"&type=="'+et['type']+'"')
+      if len(found_terms) > 0:
+        self.content.at[found_terms.index.values[0],'count'] += 1
       else:
-        assert len(program_found) == 1, 'Duplicated entries in program lib!'
-        idx = program_found.index[0]
-        self.content.at[idx, 'count'] += 1
-
-  def add_bases(self, base_list):
-    base_list = secure_list(base_list)
-    for bt in base_list:
-      if isinstance(bt, dict):
-        # sampled from program generation
-        terms = bt['terms']
-        return_type = bt['return_type']
-      elif isinstance(bt, bool):
-        terms = 'True' if bt == True else 'False'
-        return_type = 'bool'
-      else:
-        terms = bt.name
-        return_type = bt.ctype
-      # check existence
-      found = self.base_terms.query(f'return_type == "{return_type}" & terms == "{terms}"')
-      if found.empty:
-        self.base_terms = self.base_terms.append(pd.DataFrame({
-          'terms': pd.Series([terms], dtype='str'),
-          'arg_types': pd.Series([''], dtype='str'),
-          'return_type': pd.Series([return_type], dtype='str'),
-          'count': pd.Series([1], dtype='int'),
-          'name': pd.Series([terms], dtype='str'),
-        }), ignore_index=True)
-      elif len(found) > 1:
-        print('Duplicated base terms!'); exit
-      else:
-        self.base_terms.at[found.index[0], 'count'] += 1
-
-    # List all possible stones (w flat prior)
+        self.content.append(pd.DataFrame({
+          'terms': [et['terms']],
+          'arg_types': [et['arg_types']],
+          'return_type': [et['return_type']],
+          'type': [et['type']],
+          'count': [1]
+        }))
 
   # List all the possile stones (w flat prior)
   def get_all_objs(self):
@@ -417,46 +362,42 @@ class Program_lib:
     programs_df = self.bfs(type_signature, depth)
     return self.filter_program(programs_df, data)
 
-
-pl = Program_lib(
-  program_list=[
-    getColor, setColor, eqColor,
-    getSaturation, setSaturation, eqSaturation,
-    getShape, setShape, eqShape,
-    getSize, setSize, eqSize,
-    getPattern, setPattern, eqPattern,
-    getDensity, setDensity, eqDensity,
-    eqObject, ifElse, {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'name': 'I'}
-   ],
-  base_list=[
-    True, False,
-    Red, Yellow, Blue,
-    Square, Triangle, Circle,
-    Dotted, Plain,
-    S1, S3, S3, S4
-  ])
-
-data = {
-  'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
-  'recipient': Stone(Yellow,S3,Square,S3,Dotted,S1),
-  'result': Stone(Red,S3,Square,S3,Dotted,S1)
-}
+# %%
+def clist_to_df(clist):
+  df = pd.DataFrame({
+    'terms': [],
+    'arg_types': [],
+    'return_type': [],
+    'type': [],
+    'count': [],
+  })
+  for et in secure_list(clist):
+    if isinstance(et, dict) == 0:
+      et = term_to_dict(et)
+    df = df.append(pd.DataFrame({
+      'terms': [et['terms']],
+      'arg_types': [et['arg_types']],
+      'return_type': [et['return_type']],
+      'type': [et['type']],
+      'count': [1]
+    }), ignore_index=True)
+  return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
 
 # %%
-t = [['obj', 'obj'], 'obj']
-rf = pl.bfs(t,1)
-# rf
-
-# %%
-rc = pl.filter_program(rf, data)
-
-# # %% Tests
-# pl.generate_program([['obj'], 'obj'], alpha=0.1, d=0.2)
-# s = eval(pl.sample_base('obj')['terms'])
-# t = eval(pl.sample_base('obj')['terms'])
-# Program([SC, [CS, [BB, ifElse, eqObject], I], I]).run([t,t]).name
-# Program([B, [setColor, Stone(Yellow,S1,Triangle,S2,Plain,S4)], getColor]).run(s).name
-# Program([B, [setShape, Stone(Red,S2,Circle,S3,Dotted,S4)], [B, getShape, [B, [setPattern, Stone(Blue,S2,Square,S2,Plain,S4)], getPattern]]]).run(s).name
-# Program([BK,[setColor,Stone(Red,S1,Circle,S1,Dotted,S1)],getColor]).run([s,t]).name
-
-# %%
+pm_init = clist_to_df([
+  getColor, setColor, eqColor,
+  getSaturation, setSaturation, eqSaturation,
+  getShape, setShape, eqShape,
+  getSize, setSize, eqSize,
+  getPattern, setPattern, eqPattern,
+  getDensity, setDensity, eqDensity,
+  eqObject, ifElse,
+  {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
+  True, False,
+  Red, Yellow, Blue,
+  Square, Triangle, Circle,
+  Dotted, Plain,
+  S1, S3, S3, S4,
+])
+# pm_init.to_csv('data/pm_init.csv')
+pm = Program_lib(pm_init)
