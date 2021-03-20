@@ -11,11 +11,9 @@ from base_terms import *
 from helpers import args_to_string, names_to_string, term_to_dict
 
 # %%
-class Program_lib:
+class Program_lib_light:
   def __init__(self, df):
     self.content = df
-    self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'type': 'ERROR'}
-    self.SET_MARKERS = set(list(self.content[self.content['type']=='base_term'].return_type))
 
   def add(self, entry_list):
     entry_list = secure_list(entry_list)
@@ -27,13 +25,36 @@ class Program_lib:
       if len(found_terms) > 0:
         self.content.at[found_terms.index.values[0],'count'] += 1
       else:
-        self.content.append(pd.DataFrame({
+        self.content = self.content.append(pd.DataFrame({
           'terms': [et['terms']],
           'arg_types': [et['arg_types']],
           'return_type': [et['return_type']],
           'type': [et['type']],
           'count': [1]
         }))
+class Program_lib(Program_lib_light):
+  def __init__(self, df):
+    Program_lib_light.__init__(self, df)
+    self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'type': 'ERROR'}
+    self.SET_MARKERS = set(list(self.content[self.content['type']=='base_term'].return_type))
+
+  # def add(self, entry_list):
+  #   entry_list = secure_list(entry_list)
+  #   for et in entry_list:
+  #     # check existence
+  #     if isinstance(et, dict) == 0:
+  #       et = term_to_dict(et)
+  #     found_terms = self.content.query('terms=="'+et['terms']+'"&arg_types=="'+et['arg_types']+'"&return_type=="'+et['return_type']+'"&type=="'+et['type']+'"')
+  #     if len(found_terms) > 0:
+  #       self.content.at[found_terms.index.values[0],'count'] += 1
+  #     else:
+  #       self.content.append(pd.DataFrame({
+  #         'terms': [et['terms']],
+  #         'arg_types': [et['arg_types']],
+  #         'return_type': [et['return_type']],
+  #         'type': [et['type']],
+  #         'count': [1]
+  #       }))
 
   # List all the possile stones (w flat prior)
   def get_all_objs(self):
@@ -112,8 +133,8 @@ class Program_lib:
       pattern = self.sample_base('pat', add)
       pattern_scale = self.sample_base('int', add)
       sampled_props = [ color, color_scale, shape, shape_scale, pattern, pattern_scale ]
-      stone = 'Stone(' + ','.join([p['name'] for p in sampled_props]) + ')'
-      return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'name': stone}
+      stone = 'Stone(' + ','.join([p['terms'] for p in sampled_props]) + ')'
+      return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'type': 'base_term'}
     else:
       bases = self.content.query(f'return_type=="{type}"&type=="base_term"')
       if bases is None or bases.empty:
@@ -169,7 +190,8 @@ class Program_lib:
           program_dict = {
             'terms': names_to_string(terms),
             'arg_types': args_to_string(type_signature[0]),
-            'return_type': type_signature[1]
+            'return_type': type_signature[1],
+            'type': 'program',
           }
           # add to program lib
           if add:
@@ -199,7 +221,8 @@ class Program_lib:
       return {
         'terms': names_to_string(terms),
         'arg_types': candidate['arg_types'],
-        'return_type': candidate['return_type']
+        'return_type': candidate['return_type'],
+        'type': 'program',
       }
 
   # enumeration
@@ -397,7 +420,7 @@ pl = Program_lib(pm_init)
 # %%
 t = [['obj', 'obj'], 'obj']
 rf = pl.bfs(t,1)
-# rf
+rf
 
 # %%
 data = {

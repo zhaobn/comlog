@@ -3,7 +3,7 @@
 from pandas.core.common import flatten
 
 ####################### Custom imports ###############################
-from list_helpers import secure_list, copy_list, print_name
+from helpers import secure_list, copy_list, print_name
 
 ####################### Main body #####################################
 class Base:
