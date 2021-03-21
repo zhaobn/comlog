@@ -5,11 +5,12 @@ pd.set_option('mode.chained_assignment', None)
 
 from base_terms import *
 from helpers import secure_list, names_to_string, print_name
-from program_generation import Program_lib_light, Program_lib, data
+from program_generation import Program_lib_light, Program_lib
 
 # %% Basic setup
 pms = pd.read_csv('data/rc_cp.csv', index_col=0)
-pl = Program_lib(pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False))
+pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
+pl = Program_lib(pm_init)
 
 # t = [['obj', 'obj'], 'obj']
 # pl.generate_program(t)
@@ -38,7 +39,7 @@ def get_sub_programs(terms):
   if len(terms) < 2:
     return sub_programs
   else:
-    left_index = 1 if len(terms) == 3 else 2
+    left_index = 1 if len(terms) == 3 else 0
     right_index = 2 if len(terms) == 3 else 1
     if len(secure_list(terms[right_index])) > 1:
       program_dict = {
@@ -52,15 +53,78 @@ def get_sub_programs(terms):
     sub_programs += get_sub_programs(secure_list(terms[left_index]))
     sub_programs += get_sub_programs(secure_list(terms[right_index]))
     return sub_programs
-
-tm = '[SK, [B, setDensity, [C, [B, setSize, I], S3]], getSize]'
+# tm = '[SK,[B,setDensity,[C,[B,setSize,I],S3]],getSize]'
 # x = get_sub_programs(tm)
 
 def extract_programs(terms):
-  df_bp = get_base_primitives(terms)
-  df_pm = pd.DataFrame(get_sub_programs(terms))
-  df_pm = df_pm.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
-  df = df_bp.append(df_pm)
+  terms_eval = eval(terms) if isinstance(terms, str) else terms
+  terms_str = terms if isinstance(terms, str) else print_name(terms)
+  df = pd.DataFrame({
+    'terms': [ terms_str ],
+    'arg_types': [ '_'.join(['obj'] * terms_eval[0].n_arg) ],
+    'return_type': [ find_ret_type(terms_eval) ],
+    'type': [ 'program' ],
+    'count': [ 1 ],
+  })
+  df = df.append(get_base_primitives(terms_eval))
+  df_pm = pd.DataFrame(get_sub_programs(terms_eval))
+  if len(df_pm) > 0:
+    df_pm = df_pm.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
+    df = df.append(df_pm)
   return df
+# extract_programs(tm)
 
-extract_programs(tm)
+def extract(df):
+  ret_df = pd.DataFrame({'terms':[],'arg_types':[],'return_type':[],'type':[],'count':[]})
+  for i in range(len(df)):
+    terms = df.at[i,'terms']
+    extracted = extract_programs(terms)
+    ret_df = pd.concat([ret_df, extracted]).groupby(['terms', 'arg_types', 'return_type','type'], as_index=False)['count'].sum()
+  return ret_df
+# x = extract(pms)
+
+# %%
+data_list = [
+  {
+    'agent': Stone(Red,S3,Triangle,S4,Dotted,S1),
+    'recipient': Stone(Blue,S1,Square,S3,Dotted,S1),
+    'result': Stone(Red,S1,Square,S3,Dotted,S1)
+  },
+  {
+    'agent': Stone(Yellow,S4,Circle,S4,Dotted,S1),
+    'recipient': Stone(Yellow,S1,Circle,S3,Plain,S4),
+    'result': Stone(Yellow,S1,Circle,S4,Plain,S4)
+  },
+  {
+    'agent': Stone(Yellow,S4,Circle,S3,Plain,S1),
+    'recipient': Stone(Blue,S4,Triangle,S1,Dotted,S3),
+    'result': Stone(Yellow,S4,Triangle,S4,Dotted,S3)
+  },
+  {
+    'agent': Stone(Blue,S1,Triangle,S3,Plain,S3),
+    'recipient': Stone(Red,S3,Circle,S1,Plain,S3),
+    'result': Stone(Blue,S3,Square,S1,Dotted,S1)
+  },
+]
+
+# %%
+t = [['obj', 'obj'], 'obj']
+extracted = []
+enum_programs = pl.bfs(t,1)
+filtered_programs = pl.filter_program(enum_programs, data_list[0]) # 77
+extracted.append(extract(filtered_programs))
+
+pm_updated = pd.concat([ pm_init, extracted[0] ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
+plt = Program_lib(pm_updated)
+enum_programs = plt.bfs(t,1) # 23307
+filtered_programs = plt.filter_program(enum_programs, data_list[1]) # 77
+
+# %%
+iter = 10000
+for i in range(iter):
+  for d in data_list:
+    pl = Program_lib(pm_init)
+    enum_programs = pl.bfs(t,1)
+    filtered_programs = pl.filter_program(enum_programs, data_list[0]) # 77
+    extracted.append(extract(filtered_programs))
+    pm_init = pd.concat([ pm_init, extracted[0] ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
