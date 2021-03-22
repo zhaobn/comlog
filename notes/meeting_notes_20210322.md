@@ -9,7 +9,7 @@
   - Ignore `ifElse (eqObject, stone1, stone2) ret1 ret2` programs - not useful and too many. However we do keep all the `ifElse (eqObject, stone1, I) ret1 ret2` kind of programs (because comparing an argument to a specific stone is meaningful)
   - Placeholders do improve efficienct a lot. From 22k programs => 132 frames => 77 (meaningful) consistent programs
   - **TODO**: do placeholder replacement for composite programs (where a subtree is another program)
-- **Program extractor**: extract base terms, primitives, sub programs, get corresponding type signature & count
+- **Program extractor**: extract base terms, primitives, sub programs, get corresponding type signature & count. N.b. specific stones are not stored. Shall we?
 - Draft EC process: loop through data point, do BFS, filter consistent programs, extract and add to library
 
 ## Discussion points
