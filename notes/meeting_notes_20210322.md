@@ -10,6 +10,7 @@
 ## Discussion points
 
 - Prior prob
+- Df gets too large need an efficent way to read & write
 - Run synthetic data experiments (on Eddie & hopefully Ebby). For now, the BFS result for the second data point (using generated programs in the program library) is pretty huge. Will consider using placeholder in this process.
   - Downweighting
   - Practical truncation
