@@ -28,6 +28,7 @@ shp = Placeholder('shp')
 pat = Placeholder('pat')
 int = Placeholder('int')
 obj = Placeholder('obj')
+pgm = Placeholder('pgm')
 
 # Primitives
 getColor = Primitive('getColor', 'obj', 'col', get_color)

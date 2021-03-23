@@ -210,20 +210,24 @@ class Program_lib(Program_lib_light):
 
   # enumeration
   def bfs(self, type_signature, depth = 0):
-    programs_df = pd.DataFrame({'terms': [], 'is_set': []})
+    programs_df = pd.DataFrame({'terms': [], 'log_prob': []})
     arg_types, ret_type = type_signature
     # when no arg is provided, return all the base terms
     if len(arg_types) < 1:
-      programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'is_set': [1]}))
+      programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'log_prob': [1]}))
       return programs_df
     else:
       # find direct matches
       ret_terms = self.get_cached_program(type_signature)
       if ret_terms is not None:
-        programs_df['terms'] = ret_terms['terms']
-        programs_df['is_set'] = 0
-        # total = sum(ret_terms['count'])
-        # programs_df['log_prob'] = ret_terms.apply(lambda row: log(row['count']/total), axis = 1)
+        prims = ret_terms.query('type=="primitive"')
+        prims_append = pd.DataFrame({'terms': [], 'log_prob': []})
+        if len(prims) > 0:
+          prims_append['terms'] = prims['terms']
+          prims_append['log_prob'] = 1 # Dirichlet
+          programs_df = pd.concat([programs_df, prims_append])
+        if len(ret_terms) > len(prims_append):
+          programs_df = programs_df.append(pd.DataFrame({'terms': ['pgm'], 'log_prob': [1]}))
       # return direct matches
       if depth < 1:
         return programs_df
@@ -248,7 +252,7 @@ class Program_lib(Program_lib_light):
 
   def expand(self, left_term, left_arg_types, free_index, args, depth):
     if free_index < 0:
-      return pd.DataFrame({'terms': [ left_term ], 'is_set': [0]})
+      return pd.DataFrame({'terms': [ left_term ], 'log_prob': [0]})
     else:
       if len(args) < 1:
         left = self.expand(left_term, left_arg_types, free_index-1, [], depth)
@@ -256,7 +260,7 @@ class Program_lib(Program_lib_light):
         return self.combine_terms(left, right)
       else:
         routers = self.get_all_routers(args, free_index-1)
-        terms_df = pd.DataFrame({'terms': [], 'is_set': []})
+        terms_df = pd.DataFrame({'terms': [], 'log_prob': []})
         for rt in routers:
           routed_args = eval(rt).run({'left': [], 'right': []}, args)
           left = self.expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
@@ -283,9 +287,9 @@ class Program_lib(Program_lib_light):
     else:
       combined['terms'] = '[' + router + ',' + combined['left_terms'] + ',' + combined['right_terms'] + ']'
       # combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob'] + router_lp
-    combined = combined.astype({'left_is_set': 'int32', 'right_is_set': 'int32'})
-    combined['is_set'] = combined['left_is_set'] | combined['right_is_set']
-    return combined[['terms', 'is_set']]
+    combined = combined.astype({'left_log_prob': 'int32', 'right_log_prob': 'int32'})
+    combined['log_prob'] = combined['left_log_prob'] | combined['right_log_prob']
+    return combined[['terms', 'log_prob']]
 
   @staticmethod
   def get_all_routers(arg_list, free_index):
@@ -298,11 +302,11 @@ class Program_lib(Program_lib_light):
         routers.append(''.join(r))
       return routers
 
-  def unfold_program(self, terms, is_set):
+  def unfold_program(self, terms, log_prob):
     # Ignore 'eqObject],obj],obj]' terms
     if 'eqObject],obj],obj]' in terms:
       return pd.DataFrame({'terms': []})
-    elif is_set == False:
+    elif log_prob == False:
       return pd.DataFrame({'terms': [ terms ]}) # log_prob?
     else:
       programs_list = []
@@ -350,7 +354,7 @@ class Program_lib(Program_lib_light):
   def filter_program(self, df, data):
     filtered = pd.DataFrame({'terms': [], 'consistent': []})
     for i in range(len(df)):
-      to_check = self.unfold_program(df.iloc[i].at['terms'], df.iloc[i].at['is_set'])
+      to_check = self.unfold_program(df.iloc[i].at['terms'], df.iloc[i].at['log_prob'])
       if len(to_check) > 0:
         to_check['consistent'] = to_check.apply(lambda row: self.check_program(row['terms'], data), axis=1)
         filtered = filtered.append(to_check.loc[to_check['consistent']==1], ignore_index=True)
@@ -361,7 +365,6 @@ class Program_lib(Program_lib_light):
     programs_df = self.bfs(type_signature, depth)
     return self.filter_program(programs_df, data)
 
-# %%
 def clist_to_df(clist):
   df = pd.DataFrame({
     'terms': [],
@@ -378,7 +381,7 @@ def clist_to_df(clist):
       'arg_types': [et['arg_types']],
       'return_type': [et['return_type']],
       'type': [et['type']],
-      'count': [1]
+      'count': [0]
     }), ignore_index=True)
   return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
 
@@ -395,7 +398,7 @@ pm_init = clist_to_df([
   Red, Yellow, Blue,
   Square, Triangle, Circle,
   Dotted, Plain,
-  S1, S3, S3, S4,
+  S1, S2, S3, S4,
 ])
 # pm_init.to_csv('data/pm_init.csv')
 pl = Program_lib(pm_init)
