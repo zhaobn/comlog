@@ -1,5 +1,6 @@
 # %%
 ####################### General imports ###############################
+from numpy import place
 from pandas.core.common import flatten
 
 ####################### Custom imports ###############################
@@ -57,7 +58,15 @@ class Placeholder:
   ctype = 'placeholder'
   def __init__(self, name):
     self.name = name
-  def __str__(self): return self.name
+  def __str__(self): return f'{self.name}'
+
+class PM(Placeholder): # Programholder
+  def __init__(self, type_sig, name='pgm'):
+    Placeholder.__init__(self, name)
+    self.arg_types = type_sig[0]
+    self.return_type = type_sig[1]
+  def __str__(self):
+    return f'{self.name} {self.arg_types} -> {self.return_type}'
 
 class Primitive:
   ctype = 'primitive'
