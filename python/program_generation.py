@@ -233,7 +233,8 @@ class Program_lib(Program_lib_light):
           prims_append['log_prob'] = self.log_dir(list(prims_append['count']))
           programs_df = pd.concat([programs_df, prims_append[['terms', 'log_prob']]])
         if len(ret_terms) > len(prims_append):
-          programs_df = programs_df.append(pd.DataFrame({'terms': [f'PM({str(type_signature)})'], 'log_prob': [1]}))
+          pm_typesig = args_to_string(arg_types) + '_' + ret_type
+          programs_df = programs_df.append(pd.DataFrame({'terms': [f'PM("{pm_typesig}")'], 'log_prob': [1]}))
       # return direct matches
       if depth < 1:
         return programs_df
@@ -327,6 +328,11 @@ class Program_lib(Program_lib_light):
           unfolded = self.get_all_objs()
           unfolded_terms = list(unfolded['terms'])
           unfolded_lps = list(unfolded['log_prob'])
+        elif 'PM' in tm:
+          pm = eval(tm)
+          unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"&type=="program"')
+          unfolded_terms = list(unfolded['terms'])
+          unfolded_lps = self.log_dir(list(unfolded['count']))
         else:
           unfolded_terms = [tm]
           unfolded_lps = [log_prob]
@@ -338,6 +344,7 @@ class Program_lib(Program_lib_light):
         true_cond_terms = programs_list.copy()
         true_cond_lps = log_probs_list.copy()
         true_cond_terms[bi] = ['True]']
+        true_cond_lps[bi] = [log(0.5)]
         if len(true_cond_terms[bi+2]) > 1:
           true_cond_terms[bi+2] = ['obj]']
           true_cond_lps[bi+2] = [0]
@@ -346,6 +353,7 @@ class Program_lib(Program_lib_light):
         false_cond_terms = programs_list.copy()
         false_cond_lps = log_probs_list.copy()
         false_cond_terms[bi] = ['False]']
+        false_cond_lps[bi] = [log(0.5)]
         if len(false_cond_terms[bi+1]) > 1:
           false_cond_terms[bi+1] = ['obj]']
           false_cond_lps[bi+1] = [0]
@@ -359,8 +367,7 @@ class Program_lib(Program_lib_light):
     programs_list = list(itertools_product(*terms_list))
     programs_list = [','.join(p) for p in programs_list]
     log_probs_list = list(itertools_product(*lp_list))
-    print(log_probs_list)
-    log_probs_list = [(i+j) for (i,j) in log_probs_list]
+    log_probs_list = [sum(x) for x in log_probs_list]
     return pd.DataFrame({'terms': programs_list, 'log_prob': log_probs_list})
 
   @staticmethod
@@ -375,7 +382,7 @@ class Program_lib(Program_lib_light):
       if len(to_check) > 0:
         to_check['consistent'] = to_check.apply(lambda row: self.check_program(row['terms'], data), axis=1)
         filtered = filtered.append(to_check.loc[to_check['consistent']==1], ignore_index=True)
-    return filtered[['terms']]
+    return filtered[['terms', 'log_prob']]
 
   # Combined function
   def bfs_filter(self, type_signature, depth, data):

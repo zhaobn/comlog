@@ -63,8 +63,9 @@ class Placeholder:
 class PM(Placeholder): # Programholder
   def __init__(self, type_sig, name='pgm'):
     Placeholder.__init__(self, name)
-    self.arg_types = type_sig[0]
-    self.return_type = type_sig[1]
+    types = type_sig.split('_')
+    self.arg_types = '' if len(types) == 1 else types[:-1]
+    self.return_type = types[-1]
   def __str__(self):
     return f'{self.name} {self.arg_types} -> {self.return_type}'
 
