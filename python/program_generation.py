@@ -12,8 +12,9 @@ from helpers import args_to_string, names_to_string, term_to_dict
 
 # %%
 class Program_lib_light:
-  def __init__(self, df):
+  def __init__(self, df, dir_alpha=0.1):
     self.content = df
+    self.DIR_ALPHA = dir_alpha
 
   def add(self, entry_list):
     entry_list = secure_list(entry_list)
@@ -41,7 +42,7 @@ class Program_lib(Program_lib_light):
 
   # List all the possile stones (w flat prior)
   def get_all_objs(self):
-    stones_df = pd.DataFrame({'terms': [], 'log_prob': []})
+    stones_df = pd.DataFrame({'terms': []})
     colors_df = self.content.query('return_type=="col"&type=="base_term"')
     shapes_df = self.content.query('return_type=="shp"&type=="base_term"')
     patterns_df = self.content.query('return_type=="pat"&type=="base_term"')
@@ -69,7 +70,8 @@ class Program_lib(Program_lib_light):
                   ints_df.iloc[pi].at['count'],
                 ]
                 stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}))
-    return stones_df
+    stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
+    return stones_df[['terms', 'log_prob']]
 
   def get_cached_program(self, type_signature):
     arg_t, ret_t = type_signature
@@ -208,13 +210,12 @@ class Program_lib(Program_lib_light):
         'type': 'program',
       }
 
-  @staticmethod
-  def log_dir(count_vec, alpha):
-    dir_prob = [ i+alpha-1 for i in count_vec]
+  def log_dir(self, count_vec):
+    dir_prob = [ i+self.DIR_ALPHA-1 for i in count_vec]
     return [ log(i/sum(dir_prob)) for i in dir_prob]
 
   # enumeration
-  def bfs(self, type_signature, depth = 0, alpha=0.1):
+  def bfs(self, type_signature, depth = 0):
     programs_df = pd.DataFrame({'terms': [], 'log_prob': []})
     arg_types, ret_type = type_signature
     # when no arg is provided, return all the base terms
@@ -229,7 +230,7 @@ class Program_lib(Program_lib_light):
         prims_append = pd.DataFrame({'terms': [], 'log_prob': []})
         if len(prims) > 0:
           prims_append = prims[['terms','count']]
-          prims_append['log_prob'] = self.log_dir(list(prims_append['count']), alpha)
+          prims_append['log_prob'] = self.log_dir(list(prims_append['count']))
           programs_df = pd.concat([programs_df, prims_append[['terms', 'log_prob']]])
         if len(ret_terms) > len(prims_append):
           programs_df = programs_df.append(pd.DataFrame({'terms': [f'PM({str(type_signature)})'], 'log_prob': [1]}))
@@ -310,46 +311,57 @@ class Program_lib(Program_lib_light):
   def unfold_program(self, terms, log_prob):
     # Ignore 'eqObject],obj],obj]' terms
     if 'eqObject],obj],obj]' in terms:
-      return pd.DataFrame({'terms': []})
-    elif log_prob == False:
-      return pd.DataFrame({'terms': [ terms ]}) # log_prob?
+      return pd.DataFrame({'terms': [], 'log_prob': []})
     else:
       programs_list = []
+      log_probs_list = []
       term_list = terms.split(',')
       for i in range(len(term_list)):
         t = term_list[i]
         tm = t.strip('[]')
         if tm in list(self.SET_MARKERS):
-          unfolded = self.content.query(f'return_type=="{tm}"&type=="base_term"').terms.values
+          unfolded = self.content.query(f'return_type=="{tm}"&type=="base_term"')
+          unfolded_terms = list(unfolded['terms'])
+          unfolded_lps = self.log_dir(list(unfolded['count']))
         elif tm == 'obj':
-          unfolded = self.get_all_objs().terms.values
+          unfolded = self.get_all_objs()
+          unfolded_terms = list(unfolded['terms'])
+          unfolded_lps = list(unfolded['log_prob'])
         else:
-          unfolded = [tm]
-        unfolds = [t.replace(tm, u) for u in unfolded]
-        programs_list.append(unfolds)
+          unfolded_terms = [tm]
+          unfolded_lps = [log_prob]
+        programs_list.append([t.replace(tm, u) for u in unfolded_terms])
+        log_probs_list.append(unfolded_lps)
       if 'bool]' in term_list: # TODO: do this recursively if there are more than one plain bool
         bi = term_list.index('bool]')
         # Compress the True conditions
-        true_conditions = programs_list.copy()
-        true_conditions[bi] = ['True]']
-        if len(true_conditions[bi+2]) > 1:
-          true_conditions[bi+2] = ['obj]']
-        true_programs = self.iter_compose_programs(true_conditions)
+        true_cond_terms = programs_list.copy()
+        true_cond_lps = log_probs_list.copy()
+        true_cond_terms[bi] = ['True]']
+        if len(true_cond_terms[bi+2]) > 1:
+          true_cond_terms[bi+2] = ['obj]']
+          true_cond_lps[bi+2] = [0]
+        true_programs = self.iter_compose_programs(true_cond_terms, true_cond_lps)
         # Compress the False conditions
-        false_conditions = programs_list.copy()
-        false_conditions[bi] = ['False]']
-        if len(false_conditions[bi+1]) > 1:
-          false_conditions[bi+1] = ['obj]']
-        false_programs = self.iter_compose_programs(false_conditions)
+        false_cond_terms = programs_list.copy()
+        false_cond_lps = log_probs_list.copy()
+        false_cond_terms[bi] = ['False]']
+        if len(false_cond_terms[bi+1]) > 1:
+          false_cond_terms[bi+1] = ['obj]']
+          false_cond_lps[bi+1] = [0]
+        false_programs = self.iter_compose_programs(false_cond_terms, false_cond_lps)
         return true_programs.append(false_programs)
       else:
-        return self.iter_compose_programs(programs_list)
+        return self.iter_compose_programs(programs_list, log_probs_list)
 
   @staticmethod
-  def iter_compose_programs(terms_list):
+  def iter_compose_programs(terms_list, lp_list):
     programs_list = list(itertools_product(*terms_list))
     programs_list = [','.join(p) for p in programs_list]
-    return pd.DataFrame({'terms': programs_list})
+    log_probs_list = list(itertools_product(*lp_list))
+    print(log_probs_list)
+    log_probs_list = [(i+j) for (i,j) in log_probs_list]
+    return pd.DataFrame({'terms': programs_list, 'log_prob': log_probs_list})
 
   @staticmethod
   def check_program(terms, data):
