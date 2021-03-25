@@ -208,8 +208,13 @@ class Program_lib(Program_lib_light):
         'type': 'program',
       }
 
+  @staticmethod
+  def log_dir(count_vec, alpha):
+    dir_prob = [ i+alpha-1 for i in count_vec]
+    return [ log(i/sum(dir_prob)) for i in dir_prob]
+
   # enumeration
-  def bfs(self, type_signature, depth = 0):
+  def bfs(self, type_signature, depth = 0, alpha=0.1):
     programs_df = pd.DataFrame({'terms': [], 'log_prob': []})
     arg_types, ret_type = type_signature
     # when no arg is provided, return all the base terms
@@ -223,11 +228,11 @@ class Program_lib(Program_lib_light):
         prims = ret_terms.query('type=="primitive"')
         prims_append = pd.DataFrame({'terms': [], 'log_prob': []})
         if len(prims) > 0:
-          prims_append['terms'] = prims['terms']
-          prims_append['log_prob'] = 1 # Dirichlet
-          programs_df = pd.concat([programs_df, prims_append])
+          prims_append = prims[['terms','count']]
+          prims_append['log_prob'] = self.log_dir(list(prims_append['count']), alpha)
+          programs_df = pd.concat([programs_df, prims_append[['terms', 'log_prob']]])
         if len(ret_terms) > len(prims_append):
-          programs_df = programs_df.append(pd.DataFrame({'terms': ['pgm'], 'log_prob': [1]}))
+          programs_df = programs_df.append(pd.DataFrame({'terms': [f'PM({str(type_signature)})'], 'log_prob': [1]}))
       # return direct matches
       if depth < 1:
         return programs_df
@@ -247,7 +252,7 @@ class Program_lib(Program_lib_light):
             left = self.expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
             right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
             if len(left) > 0 and len(right) > 0:
-              programs_df = programs_df.append(self.combine_terms(left, right, rt)) # log(1/len(routers))
+              programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
         return programs_df
 
   def expand(self, left_term, left_arg_types, free_index, args, depth):
@@ -266,7 +271,7 @@ class Program_lib(Program_lib_light):
           left = self.expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
           right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
           if len(left) > 0 and len(right) > 0:
-            terms_df = terms_df.append(self.combine_terms(left, right, rt)) # log(1/len(routers))
+            terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
       return terms_df
 
   @staticmethod
@@ -277,18 +282,18 @@ class Program_lib(Program_lib_light):
     return df
 
   @staticmethod
-  def combine_terms(left_df, right_df, router = ''): #router_lp = 0
+  def combine_terms(left_df, right_df, router = '', router_lp = 0):
     left_df = left_df.add_prefix('left_'); left_df['key'] = 0
     right_df = right_df.add_prefix('right_'); right_df['key'] = 0
     combined = left_df.merge(right_df, how='outer')
     if len(router) < 1:
       combined['terms'] = '[' + combined['left_terms'] + ',' + combined['right_terms'] + ']'
-      # combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob']
+      combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob']
     else:
       combined['terms'] = '[' + router + ',' + combined['left_terms'] + ',' + combined['right_terms'] + ']'
-      # combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob'] + router_lp
-    combined = combined.astype({'left_log_prob': 'int32', 'right_log_prob': 'int32'})
-    combined['log_prob'] = combined['left_log_prob'] | combined['right_log_prob']
+      combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob'] + router_lp
+    # combined = combined.astype({'left_log_prob': 'int32', 'right_log_prob': 'int32'})
+    # combined['log_prob'] = combined['left_log_prob'] | combined['right_log_prob']
     return combined[['terms', 'log_prob']]
 
   @staticmethod
