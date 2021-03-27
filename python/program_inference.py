@@ -8,7 +8,7 @@ from helpers import secure_list, names_to_string, print_name
 from program_generation import Program_lib_light, Program_lib
 
 # %% Basic setup
-pms = pd.read_csv('data/rc_cp.csv', index_col=0)
+pms = pd.read_csv('data/rc.csv', index_col=0)
 pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
 pl = Program_lib(pm_init)
 
@@ -74,14 +74,14 @@ def extract_programs(terms):
   return df
 # extract_programs(tm)
 
-def extract(df):
+def extract(df, top_n=1):
   ret_df = pd.DataFrame({'terms':[],'arg_types':[],'return_type':[],'type':[],'count':[]})
-  for i in range(len(df)):
-    terms = df.at[i,'terms']
+  to_add = df.sort_values(['log_prob'], ascending=False).head(top_n)
+  for i in range(len(to_add)):
+    terms = to_add.iloc[i].terms
     extracted = extract_programs(terms)
     ret_df = pd.concat([ret_df, extracted]).groupby(['terms', 'arg_types', 'return_type','type'], as_index=False)['count'].sum()
   return ret_df
-# x = extract(pms)
 
 # %%
 data_list = [
@@ -110,14 +110,21 @@ data_list = [
 # %%
 t = [['obj', 'obj'], 'obj']
 extracted = []
+
+# For the first data point
 enum_programs = pl.bfs(t,1)
 filtered_programs = pl.filter_program(enum_programs, data_list[0]) # 77
-extracted.append(extract(filtered_programs))
+extracted.append(extract(filtered_programs, 1))
 
 pm_updated = pd.concat([ pm_init, extracted[0] ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
 plt = Program_lib(pm_updated)
-enum_programs = plt.bfs(t,1) # 23307
-filtered_programs = plt.filter_program(enum_programs, data_list[1]) # 77
+enum_programs_2 = plt.bfs(t,1) # 239
+filtered_programs_2 = plt.filter_program(enum_programs_2, data_list[1]) # 77
+
+
+
+
+
 
 # %%
 iter = 10000

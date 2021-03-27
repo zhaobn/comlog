@@ -78,8 +78,9 @@ class Program_lib(Program_lib_light):
     matched_pms = self.content.query(f'arg_types=="{args_to_string(arg_t)}"&return_type=="{ret_t}"&type!="base_term"')
     return matched_pms if not matched_pms.empty else None
 
-  def get_matched_program(self, return_type):
-    matched_pms = self.content.query(f'return_type=="{return_type}"&type!="base_term"')
+  def get_matched_program(self, return_type, filter_pm=False):
+    filter_program = '&type!="program"' if filter_pm else ''
+    matched_pms = self.content.query(f'return_type=="{return_type}"&type!="base_term"{filter_program}')
     return matched_pms if not matched_pms.empty else None
 
   def sample_program(self, p_source, add=False, weight_col = 'count'):
@@ -240,9 +241,7 @@ class Program_lib(Program_lib_light):
         return programs_df
       # enumerate recursively
       else:
-        left_trees = self.get_matched_program(ret_type)
-        left_trees = left_trees.drop(programs_df.index) # exclude direct matches
-        left_trees = self.exclude_identity(left_trees) # Identity function cannot go to the left
+        left_trees = self.get_matched_program(ret_type, True)
         for i in left_trees.index:
           left_terms = left_trees.at[i, 'terms']
           left_arg_types = left_trees.at[i, 'arg_types'].split('_')
@@ -301,13 +300,13 @@ class Program_lib(Program_lib_light):
   @staticmethod
   def get_all_routers(arg_list, free_index):
     assert len(arg_list) > 0, 'No arguments for router!'
+    routers = []
     if free_index < 0:
-      return 'B' * len(arg_list)
+      routers.append('B' * len(arg_list))
     else:
-      routers = []
       for r in list(itertools_product(['C', 'B', 'S', 'K'], repeat=len(arg_list))):
         routers.append(''.join(r))
-      return routers
+    return routers
 
   def unfold_program(self, terms, log_prob):
     # Ignore 'eqObject],obj],obj]' terms
@@ -442,4 +441,15 @@ rc = pl.filter_program(rf, data)
 
 # %%
 pl.generate_program(t)
+# %% debug
+pm2 = pd.read_csv('data/pm_updated.csv', index_col=0, na_filter=False)
+pl2 = Program_lib(pm2)
+
+y = pl2.bfs(t, 1)
+
+# %%
+enum_programs_2 = pd.read_csv('debug.csv', index_col=0, na_filter=False)
+
+x = pl2.filter_program(y, data)
+
 # %%
