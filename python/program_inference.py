@@ -118,12 +118,9 @@ extracted.append(extract(filtered_programs, 1))
 
 pm_updated = pd.concat([ pm_init, extracted[0] ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
 plt = Program_lib(pm_updated)
-enum_programs_2 = plt.bfs(t,1) # 239
+enum_programs_2 = plt.bfs(t,1) # 173
 filtered_programs_2 = plt.filter_program(enum_programs_2, data_list[1]) # 77
-
-
-
-
+extracted.append(extract(filtered_programs_2, 1))
 
 
 # %%
