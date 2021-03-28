@@ -16,6 +16,7 @@ Triangle = Shape('Triangle')
 Stripy = Pattern('Stripy')
 Dotted = Pattern('Dotted')
 Plain = Pattern('Plain')
+Checkered = Pattern('Checkered')
 
 S1 = Scale('S1')
 S2 = Scale('S2')
