@@ -24,9 +24,9 @@
 - Does it still make sense to loop through learning data multiple times (if we are only keeping the top n)?
 - Ready to run on potential experiment designs
 
-## Manuscript submission
+## Manuscript submission ([CB&B](https://www.springer.com/journal/42113/submission-guidelines))
 
 - Use "entities" or stick with "objects"?
-- Model names. We have UnCala (universal causal laws), LoCaLa (local causal laws) and LoCaLaPro for now.
+- Model names. We have **UnCaLa** (universal causal laws), **LoCaLa** (local causal laws) and **LoCaLaPro** for now.
 - Template choice - two column or single column for submission?
 - Additional info: funding, consent, conflicts of interest, suggested reviewers
