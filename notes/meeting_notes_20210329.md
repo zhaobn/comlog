@@ -29,4 +29,4 @@
 - Use "entities" or stick with "objects"?
 - Model names. We have **UnCaLa** (universal causal laws), **LoCaLa** (local causal laws) and **LoCaLaPro** for now.
 - Template choice - two column or single column for submission?
-- Additional info: funding, consent, conflicts of interest, suggested reviewers
+- [Additional info](https://docs.google.com/document/d/1TWOqpus6UPS3F8BwIZsfX3abD5ZFdlDQkMYbHKE6MwE/edit?usp=sharing): funding, consent, conflicts of interest, suggested reviewers
