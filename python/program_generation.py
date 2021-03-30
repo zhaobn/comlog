@@ -431,8 +431,8 @@ class Program_lib(Program_lib_light):
 
 # pm_init.to_csv('data/pm_init_cut.csv')
 # %%
-pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
-pl = Program_lib(pm_init, 10)
+# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
+# pl = Program_lib(pm_init, 10)
 # t = [['obj', 'obj'], 'obj']
 # pl.generate_program(t)
 # rf = pl.bfs(t,1)
