@@ -23,3 +23,10 @@
 - One performance improve I can make if we are happy with only keeping top n programs: ignore folded programs if `log_prob` is too low (not worthy)
 - Does it still make sense to loop through learning data multiple times (if we are only keeping the top n)?
 - Ready to run on potential experiment designs
+
+## Manuscript submission ([CB&B](https://www.springer.com/journal/42113/submission-guidelines))
+
+- Use "entities" or stick with "objects"?
+- Model names. We have **UnCaLa** (universal causal laws), **LoCaLa** (local causal laws) and **LoCaLaPro** for now.
+- Template choice - two column or single column for submission?
+- [Additional info](https://docs.google.com/document/d/1TWOqpus6UPS3F8BwIZsfX3abD5ZFdlDQkMYbHKE6MwE/edit?usp=sharing): funding, consent, conflicts of interest, suggested reviewers
