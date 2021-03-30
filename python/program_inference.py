@@ -1,11 +1,12 @@
 
 # %%
+from math import exp
 import pandas as pd
 from pandas.core import frame
 pd.set_option('mode.chained_assignment', None)
 
 from base_terms import *
-from helpers import secure_list, names_to_string, print_name
+from helpers import secure_list, names_to_string, print_name, normalize, softmax
 from program_generation import Program_lib_light, Program_lib
 
 # %%
@@ -53,7 +54,7 @@ def extract_programs(terms):
   terms_eval = eval(terms) if isinstance(terms, str) else terms
   terms_str = terms if isinstance(terms, str) else print_name(terms)
   df = pd.DataFrame({
-    'terms': [ terms_str ],
+    'terms': [ strip_terms_spaces(terms_str) ],
     'arg_types': [ '_'.join(['obj'] * terms_eval[0].n_arg) ],
     'return_type': [ find_ret_type(terms_eval) ],
     'type': [ 'program' ],
@@ -67,42 +68,50 @@ def extract_programs(terms):
   return df
 # extract_programs(tm)
 
-def extract(df, top_n=1):
+def extract(df, top_n=1, sample=True, base=0):
   ret_df = pd.DataFrame({'terms':[],'arg_types':[],'return_type':[],'type':[],'count':[]})
-  to_add = df.sort_values(['log_prob'], ascending=False).head(top_n)
+  if sample == 1:
+    df['prob'] = df.apply(lambda row: exp(row['log_prob']), axis=1)
+    df['prob'] = normalize(df['prob']) if base == 0 else softmax(df['prob'], base)
+    to_add = df.sample(n=top_n, weights='prob')
+  else:
+    to_add = df.sort_values(['log_prob'], ascending=False).head(top_n)
   for i in range(len(to_add)):
     terms = to_add.iloc[i].terms
     extracted = extract_programs(terms)
     ret_df = pd.concat([ret_df, extracted]).groupby(['terms', 'arg_types', 'return_type','type'], as_index=False)['count'].sum()
   return ret_df
 
+def strip_terms_spaces(terms_str):
+  return ','.join([tm.strip() for tm in terms_str.split(',')])
+
 # %%
 data_list = [
   {
-    'agent': Stone(Red,S3,Triangle,S4,Dotted,S1),
-    'recipient': Stone(Blue,S1,Square,S3,Dotted,S1),
-    'result': Stone(Red,S1,Square,S3,Dotted,S1)
+    'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
+    'recipient': Stone(Yellow,S1,Square,S2,Dotted,S2),
+    'result': Stone(Red,S1,Square,S1,Dotted,S2)
   },
   {
-    'agent': Stone(Yellow,S4,Circle,S4,Dotted,S1),
-    'recipient': Stone(Yellow,S1,Circle,S3,Plain,S4),
-    'result': Stone(Yellow,S1,Circle,S4,Plain,S4)
+    'agent': Stone(Yellow,S2,Square,S2,Dotted,S1),
+    'recipient': Stone(Red,S1,Triangle,S1,Plain,S2),
+    'result': Stone(Yellow,S1,Triangle,S2,Plain,S2)
   },
   {
-    'agent': Stone(Yellow,S4,Circle,S3,Plain,S1),
-    'recipient': Stone(Blue,S4,Triangle,S1,Dotted,S3),
-    'result': Stone(Yellow,S4,Triangle,S4,Dotted,S3)
+    'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
+    'recipient': Stone(Yellow,S2,Square,S1,Dotted,S1),
+    'result': Stone(Yellow,S2,Square,S2,Dotted,S1)
   },
   {
-    'agent': Stone(Blue,S2,Triangle,S3,Plain,S3),
-    'recipient': Stone(Red,S3,Circle,S1,Plain,S3),
-    'result': Stone(Blue,S3,Circle,S2,Plain,S3)
+    'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
+    'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
+    'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
   },
 ]
 t = [['obj', 'obj'], 'obj']
 
 # %%
-pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
+pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
 
 extracted = [None] * len(data_list)
 filtered = [None] * len(data_list)
@@ -117,7 +126,7 @@ for i in range(len(data_list)):
   filtered_programs = pl.filter_program(enum_programs, data_list[i])
   filtered[i] = filtered_programs
   print(f'Filtered: {len(filtered_programs)} programs')
-  extracted[i] = extract(filtered_programs, 2)
+  extracted[i] = extract(filtered_programs)
   print(extracted[i])
   pm_init = pd.concat([ pm_init, extracted[i] ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
 
@@ -146,8 +155,6 @@ learned_lib = pd.read_csv('all.csv', index_col=0, na_filter=False)
 pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
 learned_lib = pd.concat([ pm_init, learned_lib ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
 
-def strip_terms_spaces(terms_str):
-  return ','.join([tm.strip() for tm in terms_str.split(',')])
 # # strip_terms_spaces(learned_lib.terms.values[19])
 
 # learned_lib['terms'] = learned_lib.apply(lambda row: strip_terms_spaces(row['terms']), axis=1)
@@ -171,4 +178,7 @@ extracted['terms'] = extracted.apply(lambda row: strip_terms_spaces(row['terms']
 print(extracted)
 pm_init = pd.concat([ learned_lib, extracted ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
 
+# %%
+n2 = pd.read_csv('data/loop_n2.csv', index_col=0, na_filter=False)
+inc = pd.read_csv('data/loop_all.csv', index_col=0, na_filter=False)
 # %%

@@ -1,6 +1,7 @@
 
 ####################### General imports ###############################
 from copy import copy
+from math import exp
 
 
 # Get human-readable translation of a list of objects
@@ -33,6 +34,17 @@ def args_to_string(arg_list):
 # Stringify a list of term names for dataframe evaluation
 def names_to_string(names_list):
   return str(names_list).replace("'", '')
+
+# Normalize a list
+def normalize(mylist):
+  total = sum(mylist)
+  return [ l/total for l in mylist ]
+
+# Apply softmax on a list
+def softmax(mylist, base):
+  exp_list = [ exp(l*base) for l in mylist ]
+  total = sum(exp_list)
+  return [ el/total for el in exp_list ]
 
 # Term a term object into dict
 def term_to_dict(term):
