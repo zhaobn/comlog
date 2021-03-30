@@ -35,8 +35,8 @@ class Program_lib_light:
         }))
 
 class Program_lib(Program_lib_light):
-  def __init__(self, df):
-    Program_lib_light.__init__(self, df)
+  def __init__(self, df, dir_alpha=0.1):
+    Program_lib_light.__init__(self, df, dir_alpha)
     self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'type': 'ERROR'}
     self.SET_MARKERS = set(list(self.content[self.content['type']=='base_term'].return_type))
 
@@ -430,9 +430,12 @@ class Program_lib(Program_lib_light):
 # ])
 
 # pm_init.to_csv('data/pm_init_cut.csv')
-
-# pl = Program_lib(pm_init)
+# %%
+pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
+pl = Program_lib(pm_init, 10)
 # t = [['obj', 'obj'], 'obj']
 # pl.generate_program(t)
 # rf = pl.bfs(t,1)
 # rf
+
+# %%
