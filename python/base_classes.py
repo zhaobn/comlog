@@ -47,10 +47,7 @@ class Stone:
     self.density = p_scale
   @property
   def name(self): # Human-readable
-    return (
-      self.color.name + str(self.saturation.name) + '_'
-      + self.shape.name + str(self.size.name) + '_'
-      + self.pattern.name + str(self.density.name))
+    return f'Stone({self.color.name},{self.saturation.name},{self.shape.name},{self.size.name},{self.pattern.name},{self.density.name})'
   def __str__(self):
     return self.name
 

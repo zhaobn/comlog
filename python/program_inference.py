@@ -1,8 +1,7 @@
 
 # %%
-from math import exp
+import math
 import pandas as pd
-from pandas.core import frame
 pd.set_option('mode.chained_assignment', None)
 
 from base_terms import *
@@ -11,18 +10,14 @@ from program_generation import Program_lib_light, Program_lib
 
 # %%
 class Gibbs_sampler:
-  def __init__(self, programs, dir_alpha, data_list, down_weight, iteration, burnin):
-    self.cur_programs = programs
-    self.dir_alpha = dir_alpha
+  def __init__(self, program_lib, data_list, iteration, burnin, down_weight=1):
+    self.cur_programs = program_lib.content
+    self.dir_alpha = program_lib.DIR_ALPHA
     self.data = data_list
     self.dw = down_weight
     self.iter = iteration
     self.burnin = burnin
     self.extraction_history = [[None] * len(data_list)] * iteration
-
-  @property
-  def program_lib(self):
-    return Program_lib(self.cur_programs, self.dir_alpha)
 
   @staticmethod
   def find_ret_type(terms):
@@ -36,11 +31,12 @@ class Gibbs_sampler:
 
   def get_base_primitives(self, terms):
     df = Program_lib_light(pd.DataFrame({'terms': [], 'arg_types': [], 'return_type': [], 'type': [], 'count': []}))
+    bases = set(list(self.cur_programs[self.cur_programs['type']=='base_term'].return_type))
     if isinstance(terms, str):
       terms = eval(terms)
     tm_list = list(pd.core.common.flatten(terms))
     for t in tm_list:
-      if isinstance(t, bool) == 0 and t.ctype in (list(self.program_lib.SET_MARKERS) + ['primitive']):
+      if isinstance(t, bool) == 0 and t.ctype in (list(bases) + ['primitive']):
         df.add(t)
     return df.content
 
@@ -70,7 +66,7 @@ class Gibbs_sampler:
     terms_eval = eval(terms) if isinstance(terms, str) else terms
     terms_str = terms if isinstance(terms, str) else print_name(terms)
     df = pd.DataFrame({
-      'terms': [ self.strip_terms_spaces(terms_str) ],
+      'terms': [ terms_str ],
       'arg_types': [ '_'.join(['obj'] * terms_eval[0].n_arg) ],
       'return_type': [ self.find_ret_type(terms_eval) ],
       'type': [ 'program' ],
@@ -86,7 +82,7 @@ class Gibbs_sampler:
   def extract(self, df, top_n=1, sample=True, base=0):
     ret_df = pd.DataFrame({'terms':[],'arg_types':[],'return_type':[],'type':[],'count':[]})
     if sample == 1:
-      df['prob'] = df.apply(lambda row: exp(row['log_prob']), axis=1)
+      df['prob'] = df.apply(lambda row: math.exp(row['log_prob']), axis=1)
       df['prob'] = normalize(df['prob']) if base == 0 else softmax(df['prob'], base)
       to_add = df.sample(n=top_n, weights='prob')
     else:
@@ -94,21 +90,38 @@ class Gibbs_sampler:
     for i in range(len(to_add)):
       terms = to_add.iloc[i].terms
       extracted = self.extract_programs(terms)
-      ret_df = pd.concat([ret_df, extracted]).groupby(['terms', 'arg_types', 'return_type','type'], as_index=False)['count'].sum()
-    return ret_df
+      ret_df = pd.concat([ret_df, extracted])
+      ret_df['terms'] = ret_df.apply(lambda row: x.strip_terms_spaces(row['terms']), axis=1)
+    return ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
 
   def run(self, type_sig=[['obj', 'obj'], 'obj']):
     for i in range(self.iter):
       print(f'Running {i+1}/{self.iter} ({round(100*(i+1)/self.iter, 2)}%):')
       for j in range(len(self.data)):
-        data = self.data[:(j+1)] if i < 1 else self.data
-        pl = Program_lib(self.cur_programs, self.dir_alpha)
-        print(f'-------- {j}-th data --------')
-        filtered = pl.bfs_filter(type_sig, 1, data)
+        print(f'---- {j+1}-th out of {len(self.data)} ----')
+        if i < 1:
+          # incrementally
+          data = self.data[:(j+1)]
+          pms = self.cur_programs
+        else:
+          # Use full batch
+          data = self.data
+          # Remove previously-extracted counts
+          pms = pd.merge(self.cur_programs, self.extraction_history[i-1][j], on=['terms', 'arg_types', 'return_type', 'type'], how='outer')
+          pms = pms.fillna(0)
+          pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw ranges 0 to 1
+          pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count']]
+        pl = Program_lib(pms, self.dir_alpha)
+        enumed = pl.bfs(type_sig, 1)
+        filtered = pl.filter_program(enumed, data)
+        if len(filtered) < 1:
+          print('No programs found, filtering again with single input...')
+          filtered = pl.filter_program(enumed, self.data[j])
         extracted = self.extract(filtered, 1)
         print(extracted)
         self.extraction_history[i][j] = extracted
         self.cur_programs = pd.concat([ self.cur_programs, extracted ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
+
 # %%
 data_list = [
   {
@@ -134,6 +147,7 @@ data_list = [
 ]
 
 pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
-Gibbs_sampler(pm_init, 0.1, data_list, 0, 1, 0).run()
+x = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=5, burnin=0)
+x.run()
 
 # %%
