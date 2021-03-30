@@ -6,7 +6,7 @@ pd.set_option('mode.chained_assignment', None)
 
 from base_terms import *
 from helpers import secure_list, names_to_string, print_name, normalize, softmax
-from program_generation import Program_lib_light, Program_lib
+from program_lib import Program_lib_light, Program_lib
 
 # %%
 class Gibbs_sampler:
@@ -91,7 +91,7 @@ class Gibbs_sampler:
       terms = to_add.iloc[i].terms
       extracted = self.extract_programs(terms)
       ret_df = pd.concat([ret_df, extracted])
-      ret_df['terms'] = ret_df.apply(lambda row: x.strip_terms_spaces(row['terms']), axis=1)
+      ret_df['terms'] = ret_df.apply(lambda row: self.strip_terms_spaces(row['terms']), axis=1)
     return ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
 
   def run(self, type_sig=[['obj', 'obj'], 'obj']):
@@ -121,33 +121,3 @@ class Gibbs_sampler:
         print(extracted)
         self.extraction_history[i][j] = extracted
         self.cur_programs = pd.concat([ self.cur_programs, extracted ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
-
-# %%
-data_list = [
-  {
-    'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
-    'recipient': Stone(Yellow,S1,Square,S2,Dotted,S2),
-    'result': Stone(Red,S1,Square,S1,Dotted,S2)
-  },
-  {
-    'agent': Stone(Yellow,S2,Square,S2,Dotted,S1),
-    'recipient': Stone(Red,S1,Triangle,S1,Plain,S2),
-    'result': Stone(Yellow,S1,Triangle,S2,Plain,S2)
-  },
-  {
-    'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-    'recipient': Stone(Yellow,S2,Square,S1,Dotted,S1),
-    'result': Stone(Yellow,S2,Square,S2,Dotted,S1)
-  },
-  {
-    'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-    'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
-    'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
-  },
-]
-
-pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
-x = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=5, burnin=0)
-x.run()
-
-# %%

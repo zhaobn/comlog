@@ -8,7 +8,7 @@ from math import log
 from itertools import product as itertools_product
 
 from base_terms import *
-from helpers import args_to_string, names_to_string, term_to_dict
+from helpers import args_to_string, names_to_string, term_to_dict, secure_list
 
 # %%
 class Program_lib_light:
@@ -32,7 +32,7 @@ class Program_lib_light:
           'return_type': [et['return_type']],
           'type': [et['type']],
           'count': [1]
-        }))
+        }), ignore_index=True)
 
 class Program_lib(Program_lib_light):
   def __init__(self, df, dir_alpha=0.1):
@@ -69,7 +69,7 @@ class Program_lib(Program_lib_light):
                   patterns_df.iloc[p].at['count'],
                   ints_df.iloc[pi].at['count'],
                 ]
-                stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}))
+                stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
     stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
     return stones_df[['terms', 'log_prob']]
 
@@ -101,8 +101,8 @@ class Program_lib(Program_lib_light):
     else:
       return self.sample_program(cached, add)
 
-  def sample_matched_program(self, return_type, add=False):
-    matched = self.get_matched_program(return_type)
+  def sample_matched_program(self, return_type, filter_pm = False, add=False):
+    matched = self.get_matched_program(return_type, filter_pm)
     if matched is None:
       print('No match found!')
       return self.ERROR_TERM
@@ -164,7 +164,7 @@ class Program_lib(Program_lib_light):
           return base_term
         else:
           # generate new program
-          left = self.sample_matched_program(ret_t, add)
+          left = self.sample_matched_program(ret_t, True, add)
           left_args = left['arg_types'].split('_')
           free_index = len(left_args) - 2
           router = self.sample_router(arg_t, free_index)
@@ -221,7 +221,7 @@ class Program_lib(Program_lib_light):
     arg_types, ret_type = type_signature
     # when no arg is provided, return all the base terms
     if len(arg_types) < 1:
-      programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'log_prob': [1]}))
+      programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'log_prob': [1]}), ignore_index=True)
       return programs_df
     else:
       # find direct matches
@@ -235,7 +235,7 @@ class Program_lib(Program_lib_light):
           programs_df = pd.concat([programs_df, prims_append[['terms', 'log_prob']]])
         if len(ret_terms) > len(prims_append):
           pm_typesig = args_to_string(arg_types) + '_' + ret_type
-          programs_df = programs_df.append(pd.DataFrame({'terms': [f'PM("{pm_typesig}")'], 'log_prob': [1]}))
+          programs_df = programs_df.append(pd.DataFrame({'terms': [f'PM("{pm_typesig}")'], 'log_prob': [1]}), ignore_index=True)
       # return direct matches
       if depth < 1:
         return programs_df
@@ -253,7 +253,7 @@ class Program_lib(Program_lib_light):
             left = self.expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
             right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
             if len(left) > 0 and len(right) > 0:
-              programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
+              programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))), ignore_index=True)
         return programs_df
 
   def expand(self, left_term, left_arg_types, free_index, args, depth):
@@ -391,51 +391,3 @@ class Program_lib(Program_lib_light):
   def bfs_filter(self, type_signature, depth, data):
     programs_df = self.bfs(type_signature, depth)
     return self.filter_program(programs_df, data)
-
-# %%
-# def clist_to_df(clist):
-#   df = pd.DataFrame({
-#     'terms': [],
-#     'arg_types': [],
-#     'return_type': [],
-#     'type': [],
-#     'count': [],
-#   })
-#   for et in secure_list(clist):
-#     if isinstance(et, dict) == 0:
-#       et = term_to_dict(et)
-#     df = df.append(pd.DataFrame({
-#       'terms': [et['terms']],
-#       'arg_types': [et['arg_types']],
-#       'return_type': [et['return_type']],
-#       'type': [et['type']],
-#       'count': [0]
-#     }), ignore_index=True)
-#   return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
-
-# pm_init = clist_to_df([
-#   getColor, setColor, eqColor,
-#   getSaturation, setSaturation, eqSaturation,
-#   getShape, setShape, eqShape,
-#   getSize, setSize, eqSize,
-#   getPattern, setPattern, eqPattern,
-#   getDensity, setDensity, eqDensity,
-#   eqObject, ifElse,
-#   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
-#   True, False,
-#   Red, Yellow, #Blue,
-#   Square, Triangle, #Circle,
-#   Dotted, Plain, #Stripy, Checkered,
-#   S1, S2, #S3, S4,
-# ])
-
-# pm_init.to_csv('data/pm_init_cut.csv')
-# %%
-# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
-# pl = Program_lib(pm_init, 10)
-# t = [['obj', 'obj'], 'obj']
-# pl.generate_program(t)
-# rf = pl.bfs(t,1)
-# rf
-
-# %%
