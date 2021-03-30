@@ -393,73 +393,46 @@ class Program_lib(Program_lib_light):
     return self.filter_program(programs_df, data)
 
 # %%
-def clist_to_df(clist):
-  df = pd.DataFrame({
-    'terms': [],
-    'arg_types': [],
-    'return_type': [],
-    'type': [],
-    'count': [],
-  })
-  for et in secure_list(clist):
-    if isinstance(et, dict) == 0:
-      et = term_to_dict(et)
-    df = df.append(pd.DataFrame({
-      'terms': [et['terms']],
-      'arg_types': [et['arg_types']],
-      'return_type': [et['return_type']],
-      'type': [et['type']],
-      'count': [0]
-    }), ignore_index=True)
-  return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
+# def clist_to_df(clist):
+#   df = pd.DataFrame({
+#     'terms': [],
+#     'arg_types': [],
+#     'return_type': [],
+#     'type': [],
+#     'count': [],
+#   })
+#   for et in secure_list(clist):
+#     if isinstance(et, dict) == 0:
+#       et = term_to_dict(et)
+#     df = df.append(pd.DataFrame({
+#       'terms': [et['terms']],
+#       'arg_types': [et['arg_types']],
+#       'return_type': [et['return_type']],
+#       'type': [et['type']],
+#       'count': [0]
+#     }), ignore_index=True)
+#   return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
 
-pm_init = clist_to_df([
-  getColor, setColor, eqColor,
-  getSaturation, setSaturation, eqSaturation,
-  getShape, setShape, eqShape,
-  getSize, setSize, eqSize,
-  getPattern, setPattern, eqPattern,
-  getDensity, setDensity, eqDensity,
-  eqObject, ifElse,
-  {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
-  True, False,
-  Red, Yellow, Blue,
-  Square, Triangle, Circle,
-  Dotted, Plain, Stripy, Checkered,
-  S1, S2, S3, S4,
-])
-# pm_init.to_csv('data/pm_init.csv')
-pl = Program_lib(pm_init)
-# # pl.generate_program(t)
+# pm_init = clist_to_df([
+#   getColor, setColor, eqColor,
+#   getSaturation, setSaturation, eqSaturation,
+#   getShape, setShape, eqShape,
+#   getSize, setSize, eqSize,
+#   getPattern, setPattern, eqPattern,
+#   getDensity, setDensity, eqDensity,
+#   eqObject, ifElse,
+#   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
+#   True, False,
+#   Red, Yellow, #Blue,
+#   Square, Triangle, #Circle,
+#   Dotted, Plain, #Stripy, Checkered,
+#   S1, S2, #S3, S4,
+# ])
 
-# # %%
+# pm_init.to_csv('data/pm_init_cut.csv')
+
+# pl = Program_lib(pm_init)
 # t = [['obj', 'obj'], 'obj']
+# pl.generate_program(t)
 # rf = pl.bfs(t,1)
 # rf
-
-# # %%
-# data_list = [
-#   {
-#     'agent': Stone(Red,S3,Triangle,S4,Dotted,S1),
-#     'recipient': Stone(Blue,S1,Square,S3,Dotted,S1),
-#     'result': Stone(Red,S1,Square,S3,Dotted,S1)
-#   },
-#   {
-#     'agent': Stone(Yellow,S4,Circle,S4,Dotted,S1),
-#     'recipient': Stone(Yellow,S1,Circle,S3,Plain,S4),
-#     'result': Stone(Yellow,S1,Circle,S4,Plain,S4)
-#   },
-#   {
-#     'agent': Stone(Yellow,S4,Circle,S3,Plain,S1),
-#     'recipient': Stone(Blue,S4,Triangle,S1,Dotted,S3),
-#     'result': Stone(Yellow,S4,Triangle,S4,Dotted,S3)
-#   },
-#   {
-#     'agent': Stone(Blue,S2,Triangle,S3,Plain,S3),
-#     'recipient': Stone(Red,S3,Circle,S1,Plain,S3),
-#     'result': Stone(Blue,S3,Circle,S2,Plain,S3)
-#   },
-# ]
-
-# x = pl.filter_program(rf, [data_list[0], data_list[1]])
-# x
