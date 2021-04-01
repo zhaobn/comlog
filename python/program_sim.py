@@ -35,8 +35,17 @@ def sim_for_all(data_list, program_lib, n, softmax_base=0):
     ret_df = pd.merge(ret_df, preds, on='terms', how='left')
   return ret_df
 
+# Trun str objects to objects
+def objstr_to_stone(obj):
+  ret_obj = {}
+  ret_obj['agent'] = eval(obj['agent'])
+  ret_obj['recipient'] = eval(obj['recipient'])
+  if len(obj) > 2:
+    ret_obj['result'] = eval(obj['result'])
+  return ret_obj
+
 # # %%
-# post_lib = pd.read_csv('data/test.csv', index_col=0, na_filter=False)
+# post_lib = pd.read_csv('data/post_demo.csv', index_col=0, na_filter=False)
 # pl = Program_lib(post_lib)
 
 # sim_for_all([
