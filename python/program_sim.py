@@ -28,7 +28,7 @@ def sim_preds(partial_data, program_lib, n, softmax_base=0):
 # sim_preds(data, pl, 100)
 
 def sim_for_all(data_list, program_lib, n, softmax_base=0):
-  ret_df = ret_df = program_lib.get_all_objs()[['terms']]
+  ret_df = program_lib.get_all_objs()[['terms']]
   for i in range(len(data_list)):
     preds = sim_preds(data_list[i], program_lib, n, softmax_base)
     preds = preds.rename(columns={"count": f"count_{i+1}", "prob": f"prob_{i+1}"})
