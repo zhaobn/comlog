@@ -1,6 +1,5 @@
 # %%
 ####################### General imports ###############################
-from numpy import place
 from pandas.core.common import flatten
 
 ####################### Custom imports ###############################
@@ -135,5 +134,3 @@ class Program:
         return [ func_term ] + args_term
     else:
       return self.terms # Base types
-
-# %%
