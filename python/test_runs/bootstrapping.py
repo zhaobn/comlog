@@ -94,3 +94,10 @@ preds.to_csv(f'{main_path}preds.csv')
 #   gen_data.append(data)
 # with open(gdata_path, 'w') as outfile:
 #   json.dump(gen_data, outfile)
+
+# %%
+with open(tdata_path) as json_file:
+  training_data = json.load(json_file)
+  # training_data = [objstr_to_stone(d) for d in json.load(json_file)]
+
+# %%

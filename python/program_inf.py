@@ -94,7 +94,7 @@ class Gibbs_sampler:
       ret_df['terms'] = ret_df.apply(lambda row: self.strip_terms_spaces(row['terms']), axis=1)
     return ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
 
-  def run(self, type_sig=[['obj', 'obj'], 'obj'], logging=True, save_prefix=''):
+  def run(self, type_sig=[['obj', 'obj'], 'obj'], top_n=1, sample=True, base=0, logging=True, save_prefix=''):
     for i in range(self.iter):
       print(f'Running {i+1}/{self.iter} ({round(100*(i+1)/self.iter, 2)}%):') if logging else None
       for j in range(len(self.data)):
@@ -117,7 +117,7 @@ class Gibbs_sampler:
         if len(filtered) < 1:
           print('No programs found, filtering again with single input...') if logging else None
           filtered = pl.filter_program(enumed, self.data[j])
-        extracted = self.extract(filtered, 1)
+        extracted = self.extract(filtered, top_n, sample, base)
         print(extracted) if logging else None
         self.extraction_history[i][j] = extracted
         self.cur_programs = pd.concat([ self.cur_programs, extracted ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
@@ -150,4 +150,4 @@ class Gibbs_sampler:
 
 # pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
 # x = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=5, burnin=0)
-# x.run(save_prefix='test_data/test')
+# x.run(save_prefix='test_data/test', sample=False, top_n=2)
