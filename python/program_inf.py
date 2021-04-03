@@ -18,6 +18,7 @@ class Gibbs_sampler:
     self.iter = iteration
     self.burnin = burnin
     self.extraction_history = [[None] * len(data_list)] * iteration
+    self.filtering_history = [[0] * len(data_list)] * iteration
 
   @staticmethod
   def find_ret_type(terms):
@@ -117,6 +118,9 @@ class Gibbs_sampler:
         if len(filtered) < 1:
           print('No programs found, filtering again with single input...') if logging else None
           filtered = pl.filter_program(enumed, self.data[j])
+        else:
+          self.filtering_history[i][j] = 1
+        pd.DataFrame.from_records(self.filtering_history).to_csv(f'{save_prefix}filter_hist.csv') if len(save_prefix) > 0 else None
         extracted = self.extract(filtered, top_n, sample, base)
         print(extracted) if logging else None
         self.extraction_history[i][j] = extracted
@@ -124,30 +128,34 @@ class Gibbs_sampler:
         if len(save_prefix) > 0:
           padding = len(str(self.iter))
           self.cur_programs.to_csv(f'{save_prefix}_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-# # %%
-# data_list = [
-#   {
-#     'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
-#     'recipient': Stone(Yellow,S1,Square,S2,Dotted,S2),
-#     'result': Stone(Red,S1,Square,S1,Dotted,S2)
-#   },
-#   {
-#     'agent': Stone(Yellow,S2,Square,S2,Dotted,S1),
-#     'recipient': Stone(Red,S1,Triangle,S1,Plain,S2),
-#     'result': Stone(Yellow,S1,Triangle,S2,Plain,S2)
-#   },
-#   {
-#     'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-#     'recipient': Stone(Yellow,S2,Square,S1,Dotted,S1),
-#     'result': Stone(Yellow,S2,Square,S2,Dotted,S1)
-#   },
-#   {
-#     'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-#     'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
-#     'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
-#   },
-# ]
+# %%
+data_list = [
+  {
+    'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
+    'recipient': Stone(Yellow,S1,Square,S2,Dotted,S2),
+    'result': Stone(Red,S1,Square,S1,Dotted,S2)
+  },
+  {
+    'agent': Stone(Yellow,S2,Square,S2,Dotted,S1),
+    'recipient': Stone(Red,S1,Triangle,S1,Plain,S2),
+    'result': Stone(Yellow,S1,Triangle,S2,Plain,S2)
+  },
+  {
+    'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
+    'recipient': Stone(Yellow,S2,Square,S1,Dotted,S1),
+    'result': Stone(Yellow,S2,Square,S2,Dotted,S1)
+  },
+  {
+    'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
+    'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
+    'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
+  },
+]
 
-# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
-# x = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=5, burnin=0)
-# x.run(save_prefix='test_data/test', sample=False, top_n=2)
+pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
+
+x = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=2, burnin=0)
+x.run(save_prefix='test_data/test', sample=False, top_n=2)
+
+
+# %%
