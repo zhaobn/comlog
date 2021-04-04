@@ -19,5 +19,5 @@
 ## Problems
 
 - First attempt: batch processing cannot get a program that is consistent with all observations (depth=1) => falls back to filtering with single data point
-- Second attempt: `ifElse` not returning meaningful boolean condition checks => use a local depth = 1 for the boolean condition
+- Second attempt: `ifElse` not returning meaningful boolean condition checks => use a local `depth = 1` for the boolean condition
 - `MemoryExceed` error. Remove too complicated unfoldings?
