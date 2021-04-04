@@ -10,13 +10,15 @@ from program_lib import Program_lib_light, Program_lib
 
 # %%
 class Gibbs_sampler:
-  def __init__(self, program_lib, data_list, iteration, burnin=0, down_weight=1):
+  def __init__(self, program_lib, data_list, iteration, burnin=0, down_weight=1, iter_start=0, data_start=0):
     self.cur_programs = program_lib.content
     self.dir_alpha = program_lib.DIR_ALPHA
     self.data = data_list
     self.dw = down_weight
     self.iter = iteration
     self.burnin = burnin
+    self.iter_start = iter_start
+    self.data_start = data_start
     self.extraction_history = [[None] * len(data_list)] * iteration
     self.filtering_history = [[0] * len(data_list)] * iteration
 
@@ -96,9 +98,11 @@ class Gibbs_sampler:
     return ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
 
   def run(self, type_sig=[['obj', 'obj'], 'obj'], top_n=1, sample=True, base=0, logging=True, save_prefix=''):
-    for i in range(self.iter):
+
+    for i in range(self.iter_start, self.iter):
       print(f'Running {i+1}/{self.iter} ({round(100*(i+1)/self.iter, 2)}%):') if logging else None
-      for j in range(len(self.data)):
+      data_start = 0 if i > self.iter_start else self.data_start
+      for j in range(data_start, len(self.data)):
         print(f'---- {j+1}-th out of {len(self.data)} ----') if logging else None
         if i < 1:
           # incrementally
@@ -108,10 +112,14 @@ class Gibbs_sampler:
           # Use full batch
           data = self.data
           # Remove previously-extracted counts
-          pms = pd.merge(self.cur_programs, self.extraction_history[i-1][j], on=['terms', 'arg_types', 'return_type', 'type'], how='outer')
-          pms = pms.fillna(0)
-          pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw ranges 0 to 1
-          pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count']]
+          previous = self.extraction_history[i-1][j]
+          if previous is not None:
+            pms = pd.merge(self.cur_programs, previous, on=['terms', 'arg_types', 'return_type', 'type'], how='outer')
+            pms = pms.fillna(0)
+            pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw ranges 0 to 1
+            pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count']]
+          else:
+            pms = self.cur_programs
         pl = Program_lib(pms, self.dir_alpha)
         enumed = pl.bfs(type_sig, 1)
         filtered = pl.filter_program(enumed, data)
@@ -128,34 +136,31 @@ class Gibbs_sampler:
         if len(save_prefix) > 0:
           padding = len(str(self.iter))
           self.cur_programs.to_csv(f'{save_prefix}_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-# %%
-data_list = [
-  {
-    'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
-    'recipient': Stone(Yellow,S1,Square,S2,Dotted,S2),
-    'result': Stone(Red,S1,Square,S1,Dotted,S2)
-  },
-  {
-    'agent': Stone(Yellow,S2,Square,S2,Dotted,S1),
-    'recipient': Stone(Red,S1,Triangle,S1,Plain,S2),
-    'result': Stone(Yellow,S1,Triangle,S2,Plain,S2)
-  },
-  {
-    'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-    'recipient': Stone(Yellow,S2,Square,S1,Dotted,S1),
-    'result': Stone(Yellow,S2,Square,S2,Dotted,S1)
-  },
-  {
-    'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-    'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
-    'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
-  },
-]
+# # %%
+# data_list = [
+#   {
+#     'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
+#     'recipient': Stone(Yellow,S1,Square,S2,Dotted,S2),
+#     'result': Stone(Red,S1,Square,S1,Dotted,S2)
+#   },
+#   {
+#     'agent': Stone(Yellow,S2,Square,S2,Dotted,S1),
+#     'recipient': Stone(Red,S1,Triangle,S1,Plain,S2),
+#     'result': Stone(Yellow,S1,Triangle,S2,Plain,S2)
+#   },
+#   {
+#     'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
+#     'recipient': Stone(Yellow,S2,Square,S1,Dotted,S1),
+#     'result': Stone(Yellow,S2,Square,S2,Dotted,S1)
+#   },
+#   {
+#     'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
+#     'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
+#     'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
+#   },
+# ]
 
-pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
+# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
 
-x = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=2, burnin=0)
-x.run(save_prefix='test_data/test', sample=False, top_n=2)
-
-
-# %%
+# x = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=2, burnin=0)
+# x.run(save_prefix='test_data/test', sample=False, top_n=2)

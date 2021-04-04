@@ -18,7 +18,7 @@ gdata_path = main_path + 'gen.json'
 N_T_TASK = 30
 N_L_TASK = 5
 N_G_TASK = 10
-pm_init = pd.read_csv('../data/pm_init.csv', index_col=0, na_filter=False)
+# pm_init = pd.read_csv('../data/pm_init.csv', index_col=0, na_filter=False)
 
 # %% Run experiments
 with open(tdata_path) as json_file:
@@ -31,9 +31,11 @@ with open(gdata_path) as json_file:
   gen_data = [objstr_to_stone(d) for d in json.load(json_file)]
 
 # Training
-pt = Gibbs_sampler(Program_lib(pm_init), training_data, iteration=10000)
+pm_init = pd.read_csv(f'{main_path}/training/pm_00002_00030.csv', index_col=0, na_filter=False)
+pt = Gibbs_sampler(Program_lib(pm_init), training_data, iteration=10000, iter_start=1, data_start=29)
 pt.run(save_prefix=f'{main_path}training/pm')
 
+# %%
 # Learning
 pl = Gibbs_sampler(Program_lib(pt.cur_programs), learning_data, iteration=10000)
 pl.run(save_prefix=f'{main_path}learning/pm')
