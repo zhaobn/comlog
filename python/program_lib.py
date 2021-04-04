@@ -251,7 +251,8 @@ class Program_lib(Program_lib_light):
           for rt in routers:
             routed_args = eval(rt).run({'left': [], 'right': []}, arg_types)
             left = self.expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
-            right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
+            depth = depth if (left_terms == 'ifElse' and free_index == 0) else depth-1
+            right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth)
             if len(left) > 0 and len(right) > 0:
               programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))), ignore_index=True)
         return programs_df
@@ -270,7 +271,8 @@ class Program_lib(Program_lib_light):
         for rt in routers:
           routed_args = eval(rt).run({'left': [], 'right': []}, args)
           left = self.expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
-          right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
+          depth = depth if (left_term == 'ifElse' and free_index == 0) else depth-1
+          right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth)
           if len(left) > 0 and len(right) > 0:
             terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
       return terms_df
@@ -423,18 +425,26 @@ class Program_lib(Program_lib_light):
 #   eqObject, ifElse,
 #   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
 #   True, False,
-#   Red, Yellow, #Blue,
-#   Square, Triangle, #Circle,
-#   Dotted, Plain, #Stripy, Checkered,
-#   S1, S2, #S3, S4,
+#   Red, Yellow, Blue,
+#   Square, Triangle, Circle,
+#   Dotted, Plain, Stripy, Checkered,
+#   S1, S2, S3, S4,
 # ])
 
-# pm_init.to_csv('data/pm_init_cut.csv')
+# pm_init.to_csv('data/pm_init.csv')
 
 # # %%
-# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
+# pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
 # pl = Program_lib(pm_init, 0.1)
 # t = [['obj', 'obj'], 'obj']
 # pl.generate_program(t)
 # rf = pl.bfs(t,1)
 # rf
+
+# # %%
+# data = {
+#     'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
+#     'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
+#     'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
+# }
+# pl.filter_program(rf,data)

@@ -1,4 +1,4 @@
-
+# %%
 ####################### Custom imports ###############################
 from base_classes import *
 from base_methods import *
@@ -35,26 +35,32 @@ pgm = Placeholder('pgm')
 getColor = Primitive('getColor', 'obj', 'col', get_color)
 setColor = Primitive('setColor', ['obj', 'col'], 'obj', set_color)
 eqColor = Primitive('eqColor', ['col', 'col'], 'bool', eq_color)
+# objEqColor = Primitive('objEqColor', ['obj', 'col'], 'bool', obj_eq_color)
 
 getShape = Primitive('getShape', 'obj', 'shp', get_shape)
 setShape = Primitive('setShape', ['obj', 'shp'], 'obj', set_shape)
 eqShape = Primitive('eqShape', ['shp', 'shp'], 'bool', eq_shape)
+# objEqShape = Primitive('objEqShape', ['obj', 'shp'], 'bool', obj_eq_shape)
 
 getPattern = Primitive('getPattern', 'obj', 'pat', get_pattern)
 setPattern = Primitive('setPattern', ['obj', 'pat'], 'obj', set_pattern)
 eqPattern = Primitive('eqPattern', ['pat', 'pat'], 'bool', eq_pattern)
+# objEqPattern = Primitive('objEqPattern', ['obj', 'pat'], 'bool', obj_eq_pattern)
 
 getSaturation = Primitive('getSaturation', 'obj', 'int', get_saturation)
 setSaturation = Primitive('setSaturation', ['obj', 'int'], 'obj', set_saturation)
 eqSaturation = Primitive('eqSaturation', ['int', 'int'], 'bool', eq_saturation)
+# objEqSaturation = Primitive('objEqSaturation', ['obj', 'int'], 'bool', obj_eq_saturation)
 
 getSize = Primitive('getSize', 'obj', 'int', get_size)
 setSize = Primitive('setSize', ['obj', 'int'], 'obj', set_size)
 eqSize = Primitive('eqSize', ['int', 'int'], 'bool', eq_size)
+# objEqSize = Primitive('objEqSize', ['obj', 'int'], 'bool', obj_eq_size)
 
 getDensity = Primitive('getDensity', 'obj', 'int', get_density)
 setDensity = Primitive('setDensity', ['obj', 'int'], 'obj', set_density)
 eqDensity = Primitive('eqDensity', ['int', 'int'], 'bool', eq_density)
+# objEqDensity = Primitive('objEqDensity', ['obj', 'int'], 'bool', obj_eq_density)
 
 eqObject = Primitive('eqObject', [ 'obj', 'obj' ], 'bool', eq_object)
 ifElse = Primitive('ifElse', ['bool', 'obj', 'obj'], 'obj', if_else)
