@@ -13,6 +13,7 @@
   |------|----------------------|-------------------|
   | Rule | If red, take A shape | Saturation ~ size |
   | Data | Fixed size           | Non-red agents    |
+
   conditions: independent, mixed, sequence 1, sequence 2
 
 ## Problems
