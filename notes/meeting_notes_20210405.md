@@ -14,10 +14,10 @@
   | Rule | If red, take A shape | Saturation ~ size |
   | Data | Fixed size           | Non-red agents    |
 
-  conditions: independent, mixed, sequence 1, sequence 2
+  Conditions: independent, mixed, sequence 1, sequence 2
 
 ## Problems
 
 - First attempt: batch processing cannot get a program that is consistent with all observations (depth=1) => falls back to filtering with single data point
-- Second attempt: `ifElse` not returning meaningful boolean condition checks => use a local depth = 1 for the boolean condition
-- MemoryExceed error
+- Second attempt: `ifElse` not returning meaningful boolean condition checks => use a local `depth = 1` for the boolean condition
+- `MemoryExceed` error. Remove too complicated unfoldings?
