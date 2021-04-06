@@ -394,6 +394,46 @@ class Program_lib(Program_lib_light):
     programs_df = self.bfs(type_signature, depth)
     return self.filter_program(programs_df, data)
 
+  # New filter function: unfold a frame and filter at the same time
+  def beam_unfold(self, frame, log_prob, data):
+    filtered = pd.DataFrame({'terms': [], 'log_prob': []})
+    frame_str = frame if isinstance(frame, str) else str(frame)
+    if frame_str[:2] == 'PM':
+      pm = eval(frame_str)
+      pm_list = self.get_cached_program([pm.arg_types, pm.return_type])
+      pm_list['log_prob'] = self.log_dir(pm_list['count'])
+      for i in range(len(pm_list)):
+        filtered = filtered.append(self.beam_unfold(pm_list.iloc[i].terms, pm_list.iloc[i].log_prob, data), as_index=False)
+    elif 'ifElse' in frame_str:
+      # do something
+      return 1
+    else:
+      programs_list = []
+      log_probs_list = []
+      term_list = frame_str.split(',')
+      for i in range(len(term_list)):
+        t = term_list[i]
+        tm = t.strip('[]')
+        if tm in list(self.SET_MARKERS):
+          unfolded = self.content.query(f'return_type=="{tm}"&type=="base_term"')
+          unfolded_terms = list(unfolded['terms'])
+          unfolded_lps = self.log_dir(list(unfolded['count']))
+        elif tm == 'obj':
+          unfolded = self.get_all_objs()
+          unfolded_terms = list(unfolded['terms'])
+          unfolded_lps = list(unfolded['log_prob'])
+        elif 'PM' in tm:
+          pm = eval(tm)
+          unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"&type=="program"')
+          unfolded_terms = list(unfolded['terms'])
+          unfolded_lps = self.log_dir(list(unfolded['count']))
+        else:
+          unfolded_terms = [tm]
+          unfolded_lps = [log_prob]
+        programs_list.append([t.replace(tm, u) for u in unfolded_terms])
+        log_probs_list.append(unfolded_lps)
+      return self.iter_compose_programs(programs_list, log_probs_list)
+
 # # %%
 # def clist_to_df(clist):
 #   df = pd.DataFrame({
@@ -433,13 +473,13 @@ class Program_lib(Program_lib_light):
 
 # pm_init.to_csv('data/pm_init.csv')
 
-# # %%
-# pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
-# pl = Program_lib(pm_init, 0.1)
-# t = [['obj', 'obj'], 'obj']
+# %%
+pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
+pl = Program_lib(pm_init, 0.1)
+t = [['obj', 'obj'], 'obj']
 # pl.generate_program(t)
 # rf = pl.bfs(t,1)
-# rf
+rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
 
 # # %%
 # data = {
