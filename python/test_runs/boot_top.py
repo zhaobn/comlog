@@ -12,6 +12,7 @@ from program_sim import *
 
 # %% Task configs
 main_path = '../test_data/bootstrapping_top/'
+save_path = main_path + 'top_2/'
 tdata_path = main_path + 'training.json'
 ldata_path = main_path + 'learning.json'
 gdata_path = main_path + 'gen.json'
@@ -32,12 +33,12 @@ with open(gdata_path) as json_file:
 
 # Training
 pt = Gibbs_sampler(Program_lib(pm_init), training_data, iteration=2)
-pt.run(save_prefix=f'{main_path}training/pm', sample=False, top_n=2)
+pt.run(save_prefix=f'{save_path}training/pm', sample=False, top_n=2)
 
 # Learning
 pl = Gibbs_sampler(Program_lib(pt.cur_programs), learning_data, iteration=2)
-pl.run(save_prefix=f'{main_path}learning/pm', sample=False, top_n=2)
+pl.run(save_prefix=f'{save_path}learning/pm', sample=False, top_n=2)
 
 # Prediction
 preds = sim_for_all(gen_data, Program_lib(pl.cur_programs), 10000)
-preds.to_csv(f'{main_path}preds.csv')
+preds.to_csv(f'{save_path}preds.csv')
