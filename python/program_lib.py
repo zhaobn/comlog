@@ -461,21 +461,19 @@ class Program_lib(Program_lib_light):
 
 # pm_init.to_csv('data/pm_init.csv')
 
-# %%
-pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
-pl = Program_lib(pm_init, 0.1)
-t = [['obj', 'obj'], 'obj']
-# pl.generate_program(t)
-# rf = pl.bfs(t,1)
-rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
+# # %%
+# pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
+# pl = Program_lib(pm_init, 0.1)
+# t = [['obj', 'obj'], 'obj']
+# # pl.generate_program(t)
+# # rf = pl.bfs(t,1)
+# rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
 
-# %%
-data = {
-  'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-  'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
-  'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
-}
-pl = Program_lib(pm_init, 0.1)
-pl.filter_program(rf,data)
-
-# %%
+# # %%
+# data = {
+#   'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
+#   'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
+#   'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
+# }
+# pl = Program_lib(pm_init, 0.1)
+# x = pl.filter_program(rf,data)
