@@ -34,73 +34,71 @@ with open(gdata_path) as json_file:
 # Training
 pm_init = pd.read_csv('../data/pm_init.csv', index_col=0, na_filter=False)
 pt = Gibbs_sampler(Program_lib(pm_init), training_data, iteration=1000)
-pt.run(save_prefix=f'{save_path}training/pm')
+pt.run(save_prefix=f'{save_path}training/pm', top_n=5)
 
 # %%
 # Learning
 pl = Gibbs_sampler(Program_lib(pt.cur_programs), learning_data, iteration=10000)
-pl.run(save_prefix=f'{save_path}learning/pm')
+pl.run(save_prefix=f'{save_path}learning/pm', top_n=5)
 
 # Prediction
 preds = sim_for_all(gen_data, Program_lib(pl.cur_programs), 10000)
 preds.to_csv(f'{save_path}preds.csv')
 
 
-# %% Generate data
-pl = Program_lib(pm_init)
+# # %% Generate data
+# pl = Program_lib(pm_init)
 
-training_rule = Program([
-  CS,[
-    SB,[B,
-      ifElse,[C,[B,eqColor,[B,getColor,I]],Red]],[SC,
-        [BB,setShape,[BC,[B,setSize,I],[B,getSaturation,I]]],
-        [B,getShape,I]
-      ],
-    ],
-  I])
+# training_rule = Program([
+#   CS,[
+#     SB,[B,
+#       ifElse,[C,[B,eqColor,[B,getColor,I]],Red]],[SC,
+#         [BB,setShape,[BC,[B,setSize,I],[B,getSaturation,I]]],
+#         [B,getShape,I]
+#       ],
+#     ],
+#   I])
 
-learning_rule = Program([
-  CS,[
-    SB,[B,
-      ifElse,[C,[B,eqColor,[B,getColor,I]],Blue]],[SC,
-        [BB,setPattern,[BC,[B,setSize,I],[B,getSaturation,I]]],
-        [B,getPattern,I]
-      ],
-    ],
-  I])
+# learning_rule = Program([
+#   CS,[
+#     SB,[B,
+#       ifElse,[C,[B,eqColor,[B,getColor,I]],Blue]],[SC,
+#         [BB,setPattern,[BC,[B,setSize,I],[B,getSaturation,I]]],
+#         [B,getPattern,I]
+#       ],
+#     ],
+#   I])
 
-training_data = []
-for _ in range(N_T_TASK):
-  data = {}
-  data['agent'] = pl.sample_base('obj')['terms']
-  data['recipient'] = pl.sample_base('obj')['terms']
-  data['result'] = training_rule.run([eval(data['agent']), eval(data['recipient'])]).name
-  training_data.append(data)
-with open(tdata_path, 'w') as outfile:
-  json.dump(training_data, outfile)
+# training_data = []
+# for _ in range(N_T_TASK):
+#   data = {}
+#   data['agent'] = pl.sample_base('obj')['terms']
+#   data['recipient'] = pl.sample_base('obj')['terms']
+#   data['result'] = training_rule.run([eval(data['agent']), eval(data['recipient'])]).name
+#   training_data.append(data)
+# with open(tdata_path, 'w') as outfile:
+#   json.dump(training_data, outfile)
 
-learning_data = []
-for _ in range(N_L_TASK):
-  data = {}
-  data['agent'] = pl.sample_base('obj')['terms']
-  data['recipient'] = pl.sample_base('obj')['terms']
-  data['result'] = learning_rule.run([eval(data['agent']), eval(data['recipient'])]).name
-  learning_data.append(data)
-with open(ldata_path, 'w') as outfile:
-  json.dump(learning_data, outfile)
+# learning_data = []
+# for _ in range(N_L_TASK):
+#   data = {}
+#   data['agent'] = pl.sample_base('obj')['terms']
+#   data['recipient'] = pl.sample_base('obj')['terms']
+#   data['result'] = learning_rule.run([eval(data['agent']), eval(data['recipient'])]).name
+#   learning_data.append(data)
+# with open(ldata_path, 'w') as outfile:
+#   json.dump(learning_data, outfile)
 
-gen_data = []
-for _ in range(N_G_TASK):
-  data = {}
-  data['agent'] = pl.sample_base('obj')['terms']
-  data['recipient'] = pl.sample_base('obj')['terms']
-  gen_data.append(data)
-with open(gdata_path, 'w') as outfile:
-  json.dump(gen_data, outfile)
+# gen_data = []
+# for _ in range(N_G_TASK):
+#   data = {}
+#   data['agent'] = pl.sample_base('obj')['terms']
+#   data['recipient'] = pl.sample_base('obj')['terms']
+#   gen_data.append(data)
+# with open(gdata_path, 'w') as outfile:
+#   json.dump(gen_data, outfile)
 
 # # %%
 # with open(tdata_path) as json_file:
 #   training_data = json.load(json_file)
 #   # training_data = [objstr_to_stone(d) for d in json.load(json_file)]
-
-# %%

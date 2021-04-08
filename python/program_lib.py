@@ -408,12 +408,11 @@ class Program_lib(Program_lib_light):
       to_unfold = df.iloc[i].at['terms']
       print(f'Unfolding {to_unfold}')
       to_check = self.unfold_program(df.iloc[i].at['terms'], df.iloc[i].at['log_prob'], data)
-      print(to_check)
       if len(to_check) > 0:
         for i in range(len(data)):
           to_check[f'consistent_{i}'] = to_check.apply(lambda row: self.check_program(row['terms'], data[i]), axis=1)
         passed_pm = to_check.query(query_string)
-        print(passed_pm)
+        print(f'passed: {len(passed_pm)}')
         filtered = filtered.append(passed_pm[['terms', 'log_prob']], ignore_index=True)
     return filtered
 
