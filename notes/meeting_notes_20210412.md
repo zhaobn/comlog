@@ -2,11 +2,10 @@
 
 ## Current status
 
-- Complete runs take a long time: ~20min for one iteration
+- Complete runs take a long time: ~20min for checking one data point
 - Ground truth is quite complicated, haven't been able to get it for now (actually wasn't able to complete a full run)
-  - Batch processing fails to find a rule that is consistent with all the observations
-  - Order matters?
-  - Given enough iterations it might work, just that I wasn't able to let the Gibbs sampler run long enough
+  - Batch processing fails to find a rule that is consistent with all the observations (this may be solved if I can actually run a long chain)
+  - Order matters (it might not order if I'd able to run a long chain)?
 
 ## Plan
 
