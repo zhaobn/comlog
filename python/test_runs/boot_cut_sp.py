@@ -102,3 +102,7 @@ preds.to_csv(f'{save_path}preds.csv')
 # with open(tdata_path) as json_file:
 #   training_data = json.load(json_file)
 #   # training_data = [objstr_to_stone(d) for d in json.load(json_file)]
+
+
+# pt = Gibbs_sampler(Program_lib(pm_init), [objstr_to_stone(training_data[8])], iteration=1)
+# x=pt.run(ample=False, top_n=5)
