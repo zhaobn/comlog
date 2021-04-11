@@ -2,7 +2,7 @@
 
 ## From two weeks ago:
 
-- Complete runs
+- Finished implementing complete runs
 - Generalization tests:
   |               | Training                                | Learning                                      |
   |---------------|-----------------------------------------|-----------------------------------------------|
