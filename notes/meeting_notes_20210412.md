@@ -1,6 +1,6 @@
 # Meeting notes (2021-04-12)
 
-## From last week:
+## From two weeks ago:
 
 - Complete runs
 - Generalization tests:
