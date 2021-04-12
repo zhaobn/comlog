@@ -35,4 +35,3 @@
 - Carefully design data
 - Let the normative model run as long as it needs
 - Try making it more efficient: keep all the one-step per datapoint consistent programs in a big lookup table and run Gibbs iteration on them?
-- Process model online update?
