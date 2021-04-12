@@ -35,3 +35,7 @@
 - Carefully design data
 - Let the normative model run as long as it needs
 - Try making it more efficient: keep all the one-step per datapoint consistent programs in a big lookup table and run Gibbs iteration on them?
+- Process account online update:
+  - For the first data point, compute sub-programs for `diff(recipient, result)`, add to lib, and construct a candidate program pool, pick a salient one
+  - Check the next data point with the current salient program. If consistent, stick with it; if not, check the rest of the canndidate pool, pick a consistent one; if everything in the pool fails, construct a new pool as in previous step, and separate the two pool with a `ifElse` condition
+  - Repeat
