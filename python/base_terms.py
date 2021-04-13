@@ -30,8 +30,39 @@ pat = Placeholder('pat')
 int = Placeholder('int')
 obj = Placeholder('obj')
 pgm = Placeholder('pgm')
+prm = Placeholder('prm')
 
 # Primitives
+# For bases
+isRed = Primitive('isRed', ['obj'], 'bool', lambda x: x[0].color.name=='Red')
+isYellow = Primitive('isYellow', ['obj'], 'bool', lambda x: x[0].color.name=='Yellow')
+isBlue = Primitive('isBlue', ['obj'], 'bool', lambda x: x[0].color.name=='Blue')
+
+isCircle = Primitive('isCircle', ['obj'], 'bool', lambda x: x[0].shape.name=='Circle')
+isSquare = Primitive('isSquare', ['obj'], 'bool', lambda x: x[0].shape.name=='Square')
+isTriangle = Primitive('isTriangle', ['obj'], 'bool', lambda x: x[0].shape.name=='Triangle')
+
+isStripy = Primitive('isStripy', ['obj'], 'bool', lambda x: x[0].pattern.name=='Stripy')
+isDotted = Primitive('isDotted', ['obj'], 'bool', lambda x: x[0].pattern.name=='Dotted')
+isPlain = Primitive('isPlain', ['obj'], 'bool', lambda x: x[0].pattern.name=='Plain')
+isCheckered = Primitive('isCheckered', ['obj'], 'bool', lambda x: x[0].pattern.name=='Checkered')
+
+isS1Sat = Primitive('isS1Sat', ['obj'], 'bool', lambda x: x[0].saturation.name=='S1')
+isS2Sat = Primitive('isS2Sat', ['obj'], 'bool', lambda x: x[0].saturation.name=='S2')
+isS3Sat = Primitive('isS3Sat', ['obj'], 'bool', lambda x: x[0].saturation.name=='S3')
+isS4Sat = Primitive('isS4Sat', ['obj'], 'bool', lambda x: x[0].saturation.name=='S4')
+
+isS1Size = Primitive('isS1Size', ['obj'], 'bool', lambda x: x[0].size.name=='S1')
+isS2Size = Primitive('isS2Size', ['obj'], 'bool', lambda x: x[0].size.name=='S2')
+isS3Size = Primitive('isS3Size', ['obj'], 'bool', lambda x: x[0].size.name=='S3')
+isS4Size = Primitive('isS4Size', ['obj'], 'bool', lambda x: x[0].size.name=='S4')
+
+isS1Den = Primitive('isS1Den', ['obj'], 'bool', lambda x: x[0].density.name=='S1')
+isS2Den = Primitive('isS2Den', ['obj'], 'bool', lambda x: x[0].density.name=='S2')
+isS3Den = Primitive('isS3Den', ['obj'], 'bool', lambda x: x[0].density.name=='S3')
+isS4Den = Primitive('isS4Den', ['obj'], 'bool', lambda x: x[0].density.name=='S4')
+
+# Functional
 getColor = Primitive('getColor', 'obj', 'col', get_color)
 setColor = Primitive('setColor', ['obj', 'col'], 'obj', set_color)
 eqColor = Primitive('eqColor', ['col', 'col'], 'bool', eq_color)
@@ -89,3 +120,5 @@ KB = ComRouter([K, B])
 KC = ComRouter([K, C])
 KS = ComRouter([K, S])
 KK = ComRouter([K, K])
+
+# %%

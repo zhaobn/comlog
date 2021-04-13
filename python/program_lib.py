@@ -251,8 +251,8 @@ class Program_lib(Program_lib_light):
           for rt in routers:
             routed_args = eval(rt).run({'left': [], 'right': []}, arg_types)
             left = self.expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
-            depth = depth if (left_terms == 'ifElse' and free_index == 0) else depth-1
-            right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth)
+            # depth = depth if (left_terms == 'ifElse' and free_index == 0) else depth-1
+            right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
             if len(left) > 0 and len(right) > 0:
               programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))), ignore_index=True)
         return programs_df
@@ -271,8 +271,8 @@ class Program_lib(Program_lib_light):
         for rt in routers:
           routed_args = eval(rt).run({'left': [], 'right': []}, args)
           left = self.expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
-          depth = depth if (left_term == 'ifElse' and free_index == 0) else depth-1
-          right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth)
+          # depth = depth if (left_term == 'ifElse' and free_index == 0) else depth-1
+          right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
           if len(left) > 0 and len(right) > 0:
             terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
       return terms_df
@@ -443,6 +443,12 @@ class Program_lib(Program_lib_light):
 #   return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
 
 # pm_init = clist_to_df([
+#   isRed, isBlue, isYellow,
+#   isCircle, isSquare, isTriangle,
+#   isStripy, isDotted, isPlain, isCheckered,
+#   isS1Sat, isS2Sat, isS3Sat, isS4Sat,
+#   isS1Size, isS2Size, isS3Size, isS4Size,
+#   isS1Den, isS2Den, isS3Den, isS4Den,
 #   getColor, setColor, eqColor,
 #   getSaturation, setSaturation, eqSaturation,
 #   getShape, setShape, eqShape,
@@ -460,12 +466,12 @@ class Program_lib(Program_lib_light):
 
 # pm_init.to_csv('data/pm_init.csv')
 
-# # %%
-# pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
-# pl = Program_lib(pm_init, 0.1)
-# t = [['obj', 'obj'], 'obj']
-# # pl.generate_program(t)
-# # rf = pl.bfs(t,1)
+# %%
+pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
+pl = Program_lib(pm_init, 0.1)
+t = [['obj', 'obj'], 'obj']
+# pl.generate_program(t)
+rf = pl.bfs(t,1)
 # rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
 
 # # %%
@@ -476,3 +482,5 @@ class Program_lib(Program_lib_light):
 # }
 # pl = Program_lib(pm_init, 0.1)
 # x = pl.filter_program(rf,data)
+
+# %%
