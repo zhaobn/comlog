@@ -323,7 +323,8 @@ class Program_lib(Program_lib_light):
       'eqShape,shp],shp]',
       'eqSize,int],int]',
       'eqPattern,pat],pat]',
-      'eqDensity,int],int]'
+      'eqDensity,int],int]',
+      'ifElse,bool',
     ]
     # Filter out plain boolean distribution
     if any(x in terms for x in to_ignore):
