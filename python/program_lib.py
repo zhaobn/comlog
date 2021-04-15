@@ -422,7 +422,7 @@ class Program_lib(Program_lib_light):
     programs_df = self.bfs(type_signature, depth)
     return self.filter_program(programs_df, data)
 
-# # %%
+# %%
 # def clist_to_df(clist):
 #   df = pd.DataFrame({
 #     'terms': [],
@@ -451,12 +451,12 @@ class Program_lib(Program_lib_light):
 #   isS1Size, isS2Size, isS3Size, isS4Size,
 #   isS1Den, isS2Den, isS3Den, isS4Den,
 #   getColor, setColor, eqColor,
-#   getSaturation, setSaturation, eqSaturation,
+#   getSaturation, setSaturation,
 #   getShape, setShape, eqShape,
-#   getSize, setSize, eqSize,
+#   getSize, setSize,
 #   getPattern, setPattern, eqPattern,
-#   getDensity, setDensity, eqDensity,
-#   eqObject, ifElse,
+#   getDensity, setDensity,
+#   eqInt, eqObject, ifElse,
 #   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
 #   True, False,
 #   Red, Yellow, Blue,
