@@ -117,7 +117,10 @@ ep_results['total'] = len(all_objs)**3
 ep_results['covered'] = 0
 
 for i in range(len(ep_results)):
-  covered = get_covered(ep_results.at[i,'terms'], all_objs, all_objs, all_objs)
+  cur_term = ep_results.at[i,'terms']
+  print(f'Checking {i+1}/{len(ep_results)}: {cur_term}')
+  covered = get_covered(cur_term, all_objs, all_objs, all_objs)
+  print(f'=> {covered}')
   ep_results.at[i, 'covered'] = covered
   ep_results.to_csv('ep_results.csv')
 
