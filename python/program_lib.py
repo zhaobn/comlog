@@ -422,7 +422,7 @@ class Program_lib(Program_lib_light):
     programs_df = self.bfs(type_signature, depth)
     return self.filter_program(programs_df, data)
 
-# %%
+# # %%
 # def clist_to_df(clist):
 #   df = pd.DataFrame({
 #     'terms': [],
@@ -464,16 +464,38 @@ class Program_lib(Program_lib_light):
 #   Dotted, Plain, Stripy, Checkered,
 #   S1, S2, S3, S4,
 # ])
-
 # pm_init.to_csv('data/pm_init.csv')
 
-# %%
-pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
-pl = Program_lib(pm_init, 0.1)
-t = [['obj', 'obj'], 'obj']
-# pl.generate_program(t)
-rf = pl.bfs(t,1)
-# rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
+# pm_init_cut = clist_to_df([
+#   True, False,
+#   Red, Yellow, Blue,
+#   Square, Triangle, Circle,
+#   Dotted, Plain, Stripy,
+#   S1, S2,
+#   isRed, isBlue, isYellow,
+#   isCircle, isSquare, isTriangle,
+#   isStripy, isDotted, isPlain, isCheckered,
+#   isS1Sat, isS2Sat,
+#   isS1Size, isS2Size,
+#   isS1Den, isS2Den,#
+#   getColor, setColor, eqColor,
+#   getSaturation, setSaturation,
+#   getShape, setShape, eqShape,
+#   getSize, setSize,
+#   getPattern, setPattern, eqPattern,
+#   getDensity, setDensity,
+#   eqInt, eqObject, ifElse,
+#   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
+# ])
+# pm_init_cut.to_csv('data/pm_init_cut.csv')
+
+# # %%
+# pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
+# pl = Program_lib(pm_init, 0.1)
+# t = [['obj', 'obj'], 'obj']
+# # pl.generate_program(t)
+# rf = pl.bfs(t,1)
+# # rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
 
 # # %%
 # data = {
