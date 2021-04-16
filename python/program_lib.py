@@ -241,7 +241,7 @@ class Program_lib(Program_lib_light):
         return programs_df
       # enumerate recursively
       else:
-        left_trees = self.get_matched_program(ret_type, True)
+        left_trees = self.get_matched_program(ret_type, False)
         for i in left_trees.index:
           left_terms = left_trees.at[i, 'terms']
           left_arg_types = left_trees.at[i, 'arg_types'].split('_')
@@ -489,7 +489,7 @@ class Program_lib(Program_lib_light):
 # ])
 # pm_init_cut.to_csv('data/pm_init_cut.csv')
 
-# # %%
+# %%
 # pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
 # pl = Program_lib(pm_init, 0.1)
 # t = [['obj', 'obj'], 'obj']

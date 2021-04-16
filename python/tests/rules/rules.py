@@ -3,41 +3,42 @@
 import pandas as pd
 import sys
 sys.path.append('..')
+sys.path.append('../..')
 from base_terms import *
 from base_classes import Program
 from program_lib import Program_lib
 from helpers import secure_list
 
 # %%
-pm_init = pd.read_csv('../data/pm_init_cut.csv', index_col=0, na_filter=False)
+pm_init = pd.read_csv('../../data/pm_init_cut.csv', index_col=0, na_filter=False)
 pl = Program_lib(pm_init, 0.1)
 
-# # %% Get all the rules
-# rule_terms = [
-#   '[KK,I,Stone(Red,S1,Circle,S1,Dotted,S1)]',
-#   '[KC,[B,setColor,I],Red]',
-#   '[KC,[B,setColor,[C,[B,setSize,I],S1]],Red]',
-#   '[BC,[B,setColor,I],[B,getColor,I]]',
-#   '[SC,[BB,setColor,[BC,[B,setSize,I],[B,getSize,I]]],[B,getColor,I]]',
-#   '[SC,[BB,setColor,[BC,[B,setSize,I],[B,getSaturation,I]]],[B,getColor,I]]'
-# ]
-# cond_terms = [
-#   '[CS,[SB,[B,ifElse,[B,isRed,I]],PM],I]',
-#   '[CS,[SB,[B,ifElse,[B,isRed,I]],[CS,[SB,[B,ifElse,[B,isDotted,I]],PM],I]],I]',
-#   '[CS,[BS,[B,ifElse,[B,isRed,I]],PM],I]',
-#   '[CS,[BS,[B,ifElse,[B,isRed,I]],[CS,[BS,[B,ifElse,[B,isDotted,I]],PM],I]],I]',
-#   '[CS,[SB,[B,ifElse,[B,isRed,I]],[CS,[BS,[B,ifElse,[B,isBlue,I]],PM],I]],I]',
-#   '[CS,[SB,[B,ifElse,[B,isRed,I]],[CS,[BS,[B,ifElse,[B,isDotted,I]],PM],I]],I]',
-#   '[CS,[SS,[BB,ifElse,[CB,[B,eqShape,[B,getShape,I]],[B,getShape,I]]],PM],I]',
-#   '[CS,[SS,[BB,ifElse,[CB,[B,eqInt,[B,getSize,I]],[B,getSaturation,I]]],PM],I]',
-# ]
-# cond_rule_terms = []
-# for c in cond_terms:
-#   for r in rule_terms:
-#     cond_rule_terms.append(c.replace('PM',r))
+# %% Get all the rules
+rule_terms = [
+  '[KK,I,Stone(Red,S1,Circle,S1,Dotted,S1)]',
+  '[KC,[B,setColor,I],Red]',
+  '[KC,[B,setColor,[C,[B,setSize,I],S1]],Red]',
+  '[BC,[B,setColor,I],[B,getColor,I]]',
+  '[SC,[BB,setColor,[BC,[B,setSize,I],[B,getSize,I]]],[B,getColor,I]]',
+  '[SC,[BB,setColor,[BC,[B,setSize,I],[B,getSaturation,I]]],[B,getColor,I]]'
+]
+cond_terms = [
+  '[CS,[SB,[B,ifElse,[B,isRed,I]],PM],I]',
+  '[CS,[SB,[B,ifElse,[B,isRed,I]],[CS,[SB,[B,ifElse,[B,isDotted,I]],PM],I]],I]',
+  '[CS,[BS,[B,ifElse,[B,isRed,I]],PM],I]',
+  '[CS,[BS,[B,ifElse,[B,isRed,I]],[CS,[BS,[B,ifElse,[B,isDotted,I]],PM],I]],I]',
+  '[CS,[SB,[B,ifElse,[B,isRed,I]],[CS,[BS,[B,ifElse,[B,isBlue,I]],PM],I]],I]',
+  '[CS,[SB,[B,ifElse,[B,isRed,I]],[CS,[BS,[B,ifElse,[B,isDotted,I]],PM],I]],I]',
+  '[CS,[SS,[BB,ifElse,[CB,[B,eqShape,[B,getShape,I]],[B,getShape,I]]],PM],I]',
+  '[CS,[SS,[BB,ifElse,[CB,[B,eqInt,[B,getSize,I]],[B,getSaturation,I]]],PM],I]',
+]
+cond_rule_terms = []
+for c in cond_terms:
+  for r in rule_terms:
+    cond_rule_terms.append(c.replace('PM',r))
 
-# rules = pd.DataFrame({'terms':rule_terms+cond_rule_terms})
-# rules.to_csv('../data/rules.csv')
+rules = pd.DataFrame({'terms':rule_terms+cond_rule_terms})
+rules.to_csv('rules.csv')
 
 # %% Calculate prior
 def get_lp(term, pos, plib=pl):
@@ -80,8 +81,8 @@ def get_log_prior(terms, plib=pl):
   else:
     return get_lp(left_term, 'left', plib)+get_lp(right_term, 'right', plib)
 
-# rules['log_prob'] = rules.apply(lambda row: get_log_prior(row['terms']), axis=1)
-# rules.to_csv('../data/rules.csv')
+rules['log_prob'] = rules.apply(lambda row: get_log_prior(row['terms']), axis=1)
+rules.to_csv('rules.csv')
 
 # %% Measure entropy
 # rules = pd.read_csv('../data/rules.csv', index_col=0, na_filter=False)
@@ -104,29 +105,28 @@ def get_covered(term, agents, recipients, results):
   return covered
 # get_covered('[KK,I,Stone(Red,S1,Circle,S1,Dotted,S1)]', all_objs, all_objs, all_objs)
 
-# # %%
-# rules = pd.read_csv('../data/rules.csv', index_col=0, na_filter=False)
-# ep_results = rules.copy()
-# ep_results = ep_results.reset_index(drop=True)
+# %%
+rules = pd.read_csv('rules.csv', index_col=0, na_filter=False)
+ep_results = rules.copy()
+ep_results = ep_results.reset_index(drop=True)
 
-# pm_init = pd.read_csv('../data/pm_init_cut.csv', index_col=0, na_filter=False)
-# pl = Program_lib(pm_init, 0.1)
-# all_objs = list(pl.get_all_objs().terms)
-
-# ep_results['total'] = len(all_objs)**3
-# ep_results['covered'] = 0
-
-# for i in range(len(ep_results)):
-#   cur_term = ep_results.at[i,'terms']
-#   print(f'Checking {i+1}/{len(ep_results)}: {cur_term}')
-#   covered = get_covered(cur_term, all_objs, all_objs, all_objs)
-#   print(f'=> {covered}')
-#   ep_results.at[i, 'covered'] = covered
-#   ep_results.to_csv('ep_results.csv')
-
-# %% Test for fun
-terms = [SS,[SB,[B,ifElse,[B,isRed,I]],[KC,[B,setColor,I],Red]],[CS,[SB,[B,ifElse,[B,isDotted,I]],[KC,[B,setShape,I],Circle]],I]]
+pm_init = pd.read_csv('../../data/pm_init_cut.csv', index_col=0, na_filter=False)
+pl = Program_lib(pm_init, 0.1)
 all_objs = list(pl.get_all_objs().terms)
-x = get_covered(terms, all_objs, all_objs, all_objs)
-print(x)
-pd.DataFrame({'covered':[x]}).to_csv('x.csv')
+
+ep_results['total'] = len(all_objs)**3
+ep_results['covered'] = 0
+
+for i in range(len(ep_results)):
+  cur_term = ep_results.at[i,'terms']
+  print(f'Checking {i+1}/{len(ep_results)}: {cur_term}')
+  covered = get_covered(cur_term, all_objs, all_objs, all_objs)
+  print(f'=> {covered}')
+  ep_results.at[i, 'covered'] = covered
+  ep_results.to_csv('ep_results.csv')
+
+# # %% Test for fun
+# terms = [SS,[SB,[B,ifElse,[B,isRed,I]],[KC,[B,setColor,I],Red]],[CS,[SB,[B,ifElse,[B,isDotted,I]],[KC,[B,setShape,I],Circle]],I]]
+# all_objs = list(pl.get_all_objs().terms)
+# x = get_covered(terms, all_objs, all_objs, all_objs)
+# print(x)
