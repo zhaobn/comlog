@@ -247,7 +247,7 @@ class Program_lib(Program_lib_light):
           left_arg_types = left_trees.at[i, 'arg_types'].split('_')
           free_index = len(left_arg_types)-1
           # get routers
-          routers = self.get_all_routers(arg_types, free_index)
+          routers = self.get_all_routers(arg_types, left_arg_types, free_index)
           for rt in routers:
             routed_args = eval(rt).run({'left': [], 'right': []}, arg_types)
             left = self.expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
@@ -266,7 +266,7 @@ class Program_lib(Program_lib_light):
         right = self.bfs([[],left_arg_types[free_index]], depth-1)
         return self.combine_terms(left, right)
       else:
-        routers = self.get_all_routers(args, free_index-1)
+        routers = self.get_all_routers(args, left_arg_types, free_index-1)
         terms_df = pd.DataFrame({'terms': [], 'log_prob': []})
         for rt in routers:
           routed_args = eval(rt).run({'left': [], 'right': []}, args)
@@ -300,14 +300,18 @@ class Program_lib(Program_lib_light):
     return combined[['terms', 'log_prob']]
 
   @staticmethod
-  def get_all_routers(arg_list, free_index):
+  def get_all_routers(arg_list, left_arg_list, free_index):
     assert len(arg_list) > 0, 'No arguments for router!'
+    candidates = ['B']
+    if free_index >= 0:
+      candidates.append('K')
+    if free_index >= 0 and len(arg_list) <= len(left_arg_list):
+      candidates.append('C')
+      candidates.append('S')
+
     routers = []
-    if free_index < 0:
-      routers.append('B' * len(arg_list))
-    else:
-      for r in list(itertools_product(['C', 'B', 'S', 'K'], repeat=len(arg_list))):
-        routers.append(''.join(r))
+    for r in list(itertools_product(candidates, repeat=len(arg_list))):
+      routers.append(''.join(r))
     return routers
 
   @staticmethod
