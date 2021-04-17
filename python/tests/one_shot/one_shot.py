@@ -25,3 +25,9 @@ for i in range(len(data)):
   }
   df = pl.filter_program(frames, task_data_fmt)
   df.to_csv(f'ran_{i}.csv')
+
+# %%
+for i in range(6):
+  exec(f'ran_{i} = pd.read_csv("ran_{i}.csv", index_col=0)')
+
+# %%
