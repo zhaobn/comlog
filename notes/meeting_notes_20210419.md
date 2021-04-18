@@ -38,7 +38,7 @@ Target rule: Red agents make the recipient red
 
 ### Compositions
 
-Group 1: Red agents make the recipient square
+**Group 1**: Red agents make the recipient square
 
 |   | Agent                                | Recipient                            | Result                              |
 |---|--------------------------------------|--------------------------------------|-------------------------------------|
@@ -49,7 +49,7 @@ Group 1: Red agents make the recipient square
 | 5 | Stone(Blue,S1,Square,S1,Dotted,S1)   | Stone(Blue,S1,Circle,S1,Plain,S2)    | Stone(Blue,S1,Circle,S1,Plain,S2)   |
 | 6 | Stone(Blue,S1,Circle,S1,Plain,S2)    | Stone(Blue,S2,Square,S1,Dotted,S2)   | Stone(Blue,S2,Square,S1,Dotted,S2)  |
 
-Group 2: Redness determine recipients' size
+**Group 2**: Redness determine recipients' size
 
 |   | Agent                              | Recipient                           | Result                              |
 |---|------------------------------------|-------------------------------------|-------------------------------------|
@@ -60,10 +60,15 @@ Group 2: Redness determine recipients' size
 | 5 | Stone(Blue,S1,Square,S1,Dotted,S1) | Stone(Blue,S1,Circle,S1,Plain,S2)   | Stone(Blue,S1,Circle,S1,Plain,S2)   |
 | 6 | Stone(Blue,S1,Circle,S1,Plain,S2)  | Stone(Blue,S2,Square,S1,Dotted,S2)  | Stone(Blue,S2,Square,S1,Dotted,S2)  |
 
-**(Sub-)Programs won**:
+(Sub-)Programs won:
 
 - `[C,[B,setSize,I],S2]`
 - `[BC,[B,setSize,I],getSaturation]`
 - `[BC,[B,setSize,[C,[B,setSize,I],S2]],getSaturation]`
 
-Group mix: mix data from Group 1 and Group 2, learn altogether
+**Group mix**: mix data from Group 1 and Group 2, learn altogether
+
+## Follow-up
+
+- Ideas to collect data on "complexity of inference"
+- Experiments that emphasize on sub-program reuse
