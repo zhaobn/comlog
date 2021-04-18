@@ -241,7 +241,7 @@ class Program_lib(Program_lib_light):
         return programs_df
       # enumerate recursively
       else:
-        left_trees = self.get_matched_program(ret_type, False)
+        left_trees = self.get_matched_program(ret_type, True)
         for i in left_trees.index:
           left_terms = left_trees.at[i, 'terms']
           left_arg_types = left_trees.at[i, 'arg_types'].split('_')

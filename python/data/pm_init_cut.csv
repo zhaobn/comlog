@@ -3,7 +3,7 @@
 1,Circle,,shp,base_term,1.0
 2,Dotted,,pat,base_term,1.0
 3,False,,bool,base_term,1.0
-4,I,obj,obj,program,1.0
+4,I,obj,obj,primitive,1.0
 5,Plain,,pat,base_term,1.0
 6,Red,,col,base_term,1.0
 7,S1,,int,base_term,1.0
@@ -47,3 +47,4 @@
 45,setSaturation,obj_int,obj,primitive,1.0
 46,setShape,obj_shp,obj,primitive,1.0
 47,setSize,obj_int,obj,primitive,1.0
+48,I,obj,obj,program,1.0

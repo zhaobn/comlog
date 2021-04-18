@@ -2,6 +2,7 @@
 # %%
 import math
 import pandas as pd
+from pandas.core.frame import DataFrame
 pd.set_option('mode.chained_assignment', None)
 
 from base_terms import *
@@ -43,6 +44,27 @@ class Gibbs_sampler:
         df.add(t)
     return df.content
 
+  def refactor_router_K(self, pm_dict):
+    terms_list = eval(pm_dict['terms'])
+    if isinstance(terms_list, list):
+      router_str =  terms_list[0].name
+      n_dropped = router_str.count('K')
+      if n_dropped > 0 and n_dropped < len(router_str):
+        new_router = eval(terms_list[0].name.replace('K', ''))
+        new_terms = names_to_string(print_name([new_router]+terms_list[1:]))
+        new_arg = ['obj'] * (len(pm_dict['arg_types'].split('_'))-n_dropped)
+        return {
+            'terms': self.strip_terms_spaces(new_terms),
+            'arg_types': '_'.join(new_arg),
+            'return_type': pm_dict['return_type'],
+            'type': 'program',
+            'count': 1,
+        }
+      else:
+        return None
+    else:
+      return None
+
   def get_sub_programs(self, terms):
     sub_programs = []
     if isinstance(terms, str):
@@ -64,6 +86,13 @@ class Gibbs_sampler:
       sub_programs += self.get_sub_programs(secure_list(terms[left_index]))
       sub_programs += self.get_sub_programs(secure_list(terms[right_index]))
       return sub_programs
+
+  @staticmethod
+  def is_all_K(terms):
+    terms_eval = eval(terms) if isinstance(terms, str) else terms
+    terms_str = print_name(terms_eval)
+    first_router = terms_str[0]
+    return first_router == 'K'*len(first_router)
 
   def extract_programs(self, terms):
     terms_eval = eval(terms) if isinstance(terms, str) else terms
@@ -95,6 +124,12 @@ class Gibbs_sampler:
       extracted = self.extract_programs(terms)
       ret_df = pd.concat([ret_df, extracted])
       ret_df['terms'] = ret_df.apply(lambda row: self.strip_terms_spaces(row['terms']), axis=1)
+      programs = extracted.query('type=="program"')
+      if len(programs) > 0:
+        for j in range(len(programs)):
+          refactored = self.refactor_router_K(extracted.iloc[j].to_dict())
+          if refactored is not None:
+            ret_df = pd.concat([ret_df, pd.DataFrame([refactored])])
     return ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
 
   def run(self, type_sig=[['obj', 'obj'], 'obj'], top_n=1, sample=True, base=0, logging=True, save_prefix=''):
@@ -125,16 +160,18 @@ class Gibbs_sampler:
         filtered = pl.filter_program(enumed, data)
         if len(filtered) < 1:
           print('No programs found, filtering again with single input...') if logging else None
+          self.filtering_history[i][j] = 0
           filtered = pl.filter_program(enumed, self.data[j])
         else:
           self.filtering_history[i][j] = 1
-        pd.DataFrame.from_records(self.filtering_history).to_csv(f'{save_prefix}filter_hist.csv') if len(save_prefix) > 0 else None
         extracted = self.extract(filtered, top_n, sample, base)
         print(extracted) if logging else None
         self.extraction_history[i][j] = extracted
         self.cur_programs = pd.concat([ self.cur_programs, extracted ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
         if len(save_prefix) > 0:
           padding = len(str(self.iter))
+          filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+          pd.DataFrame.from_records(self.filtering_history).to_csv(f'{save_prefix}filter_hist.csv')
           self.cur_programs.to_csv(f'{save_prefix}_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
 # # %%
 # data_list = [
@@ -162,5 +199,5 @@ class Gibbs_sampler:
 
 # pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
 
-# x = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=2, burnin=0)
-# x.run(save_prefix='test_data/test', sample=False, top_n=2)
+# g = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=2, burnin=0)
+# g.run(save_prefix='test_data/test', sample=False, top_n=2)
