@@ -33,8 +33,8 @@ Target rule: Red agents make the recipient red
 | 2 | Stone(Yellow,S1,Circle,S2,Dotted,S1) | Stone(Yellow,S2,Square,S1,Plain,S1) | Stone(Yellow,S2,Square,S1,Plain,S1) |
 | 3 | Stone(Red,S1, Square,S1,Dotted,S2)   | Stone(Blue,S2,Square,S2,Dotted,S2)  | Stone(Red,S2,Square,S2,Dotted,S2)   |
 | 4 | Stone(Red,S2,Circle,S1,Plain,S1)     | Stone(Blue,S1,Circle,S1,Plain,S2)   | Stone(Red,S1,Circle,S1,Plain,S2)    |
-| 5 | Stone(Blue,S1,Square,S1,Dotted,S1)   | Stone(Blue,S1,Circle,S1,Plain,S2)   | Stone(Blue,S1,Circle,S1,Plain,S2)   |
-| 6 | Stone(Blue,S2,Circle,S1,Plain,S2)    | Stone(Blue,S2,Square,S2,Dotted,S2)  | Stone(Blue,S2,Square,S2,Dotted,S2)  |
+| 5 | Stone(Blue,S1,Square,S1,Dotted,S1)   | Stone(Yellow,S1,Circle,S1,Plain,S2) | Stone(Yellow,S1,Circle,S1,Plain,S2) |
+| 6 | Stone(Yellow,S2,Circle,S1,Plain,S2)    | Stone(Blue,S2,Square,S2,Dotted,S2)| Stone(Blue,S2,Square,S2,Dotted,S2)  |
 
 ### Compositions
 
