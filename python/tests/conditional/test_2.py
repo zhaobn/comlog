@@ -12,8 +12,6 @@ from program_sim import *
 
 # %%
 data = pd.read_csv('design.csv', index_col=0)
-data = data.head(2)
-
 task_data = []
 for i in range(len(data)):
   tdata = data.iloc[i].to_dict()
@@ -27,4 +25,4 @@ for i in range(len(data)):
 # %%
 pm_init = pd.read_csv('../../data/pm_init_cut.csv', index_col=0, na_filter=False)
 pt = Gibbs_sampler(Program_lib(pm_init, 0.1), task_data, iteration=1)
-pt.run(save_prefix='test_1/pm', top_n=6, sample=False)
+pt.run(save_prefix='test_2/pm', top_n=4, sample=False)
