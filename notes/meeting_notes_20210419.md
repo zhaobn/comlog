@@ -60,4 +60,10 @@ Group 2: Redness determine recipients' size
 | 5 | Stone(Blue,S1,Square,S1,Dotted,S1) | Stone(Blue,S1,Circle,S1,Plain,S2)   | Stone(Blue,S1,Circle,S1,Plain,S2)   |
 | 6 | Stone(Blue,S1,Circle,S1,Plain,S2)  | Stone(Blue,S2,Square,S1,Dotted,S2)  | Stone(Blue,S2,Square,S1,Dotted,S2)  |
 
+**(Sub-)Programs won**:
+
+- `[C,[B,setSize,I],S2]`
+- `[BC,[B,setSize,I],getSaturation]`
+- `[BC,[B,setSize,[C,[B,setSize,I],S2]],getSaturation]`
+
 Group mix: mix data from Group 1 and Group 2, learn altogether
