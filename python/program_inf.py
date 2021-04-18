@@ -52,10 +52,9 @@ class Gibbs_sampler:
       if n_dropped > 0 and n_dropped < len(router_str):
         new_router = eval(terms_list[0].name.replace('K', ''))
         new_terms = names_to_string(print_name([new_router]+terms_list[1:]))
-        new_arg = ['obj'] * (len(pm_dict['arg_types'].split('_'))-n_dropped)
         return {
             'terms': self.strip_terms_spaces(new_terms),
-            'arg_types': '_'.join(new_arg),
+            'arg_types': '_'.join(['obj']*new_router.n_arg),
             'return_type': pm_dict['return_type'],
             'type': 'program',
             'count': 1,
