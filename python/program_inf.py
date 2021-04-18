@@ -126,7 +126,7 @@ class Gibbs_sampler:
       programs = extracted.query('type=="program"')
       if len(programs) > 0:
         for j in range(len(programs)):
-          refactored = self.refactor_router_K(extracted.iloc[j].to_dict())
+          refactored = self.refactor_router_K(programs.iloc[j].to_dict())
           if refactored is not None:
             ret_df = pd.concat([ret_df, pd.DataFrame([refactored])])
     return ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
