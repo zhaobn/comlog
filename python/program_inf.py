@@ -76,7 +76,7 @@ class Gibbs_sampler:
       if len(secure_list(terms[right_index])) > 1:
         program_dict = {
           'terms': names_to_string(print_name(terms[right_index])),
-          'arg_types': '_'.join(['obj'] * terms[0].n_arg),
+          'arg_types': '_'.join(['obj'] * terms[right_index][0].n_arg),
           'return_type': self.find_ret_type(terms[right_index]),
           'type': 'program',
           'count': 1,
@@ -172,6 +172,7 @@ class Gibbs_sampler:
           filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
           pd.DataFrame.from_records(self.filtering_history).to_csv(f'{save_prefix}filter_hist.csv')
           self.cur_programs.to_csv(f'{save_prefix}_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+
 # # %%
 # data_list = [
 #   {
@@ -197,6 +198,11 @@ class Gibbs_sampler:
 # ]
 
 # pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
-
 # g = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=2, burnin=0)
-# g.run(save_prefix='test_data/test', sample=False, top_n=2)
+# # g.run(save_prefix='test_data/test', sample=False, top_n=2)
+
+# filtered = pd.read_csv('tests/composition/phase_1/pm_filtered_1_2.csv', index_col=0, na_filter=False)
+# extracted = g.extract(filtered, 6, False)
+# print(extracted)
+
+# %%
