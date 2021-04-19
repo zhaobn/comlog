@@ -16,7 +16,7 @@
 14,Yellow,,col,base_term,1.0
 15,"[B,I,[C,[B,setShape,I],Square]]",obj,obj,program,1.0
 16,"[BB,I,[KC,[B,setShape,I],Square]]",obj_obj,obj,program,1.0
-17,"[C,[B,setShape,I],Square]",obj,obj,program,3.0
+17,"[C,[B,setShape,I],Square]",obj,obj,program,4.0
 18,"[C,[B,setShape,I],Square]",obj_obj,obj,program,1.0
 19,"[KB,I,[C,[B,setShape,I],Square]]",obj_obj,obj,program,1.0
 20,"[KC,[B,setShape,I],Square]",obj_obj,obj,program,4.0
