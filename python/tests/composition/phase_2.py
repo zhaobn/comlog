@@ -31,3 +31,5 @@ pt.run(save_prefix='phase_2/pm', top_n=4, sample=False)
 # %%
 for i in range(6):
   exec(f'pm_{i+1} = pd.read_csv("phase_2/pm_1_{i+1}.csv", index_col=0, keep_default_na=False)')
+
+final_filter = pd.read_csv("phase_2/pm_filtered_1_6.csv", index_col=0, na_filter=False)

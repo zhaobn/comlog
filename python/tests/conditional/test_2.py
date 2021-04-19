@@ -26,3 +26,12 @@ for i in range(len(data)):
 pm_init = pd.read_csv('../../data/pm_init_cut.csv', index_col=0, na_filter=False)
 pt = Gibbs_sampler(Program_lib(pm_init, 0.1), task_data, iteration=1)
 pt.run(save_prefix='test_2/pm', top_n=4, sample=False)
+
+# %% View results
+for i in range(6):
+  exec(f'cond_{i} = pd.read_csv("test_2/pm_1_{i+1}.csv", index_col=0)')
+
+# %%
+final_filter = pd.read_csv("test_2/pm_filtered_1_6.csv", index_col=0, na_filter=False)
+
+# %%

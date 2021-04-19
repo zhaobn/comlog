@@ -36,6 +36,17 @@ Target rule: Red agents make the recipient red
 | 5 | Stone(Blue,S1,Square,S1,Dotted,S1)   | Stone(Yellow,S1,Circle,S1,Plain,S2) | Stone(Yellow,S1,Circle,S1,Plain,S2) |
 | 6 | Stone(Yellow,S2,Circle,S1,Plain,S2)    | Stone(Blue,S2,Square,S2,Dotted,S2)| Stone(Blue,S2,Square,S2,Dotted,S2)  |
 
+Final filtered:
+
+- `[CS,[SB,[B,ifElse,isRed],[BC,[B,setColor,I],getColor]],I]` (log prob -39.06)
+- `[CS,[CB,[B,ifElse,isRed],[C,[B,setColor,I],Red]],I]` (log prob -39.23)
+- `[CS,[SB,[B,ifElse,isRed],[BB,I,[BC,[B,setColor,I],getColor]]],I]` (log prob -40.03)
+
+(Sub-)Programs won:
+
+- `[BC,[B,setColor,I],getColor]`
+- `[BB,I,[BC,[B,setColor,I],getColor]]`
+
 ### Compositions
 
 **Group 1**: Red agents make the recipient square
@@ -59,6 +70,12 @@ Target rule: Red agents make the recipient red
 | 4 | Stone(Red,S1,Triangle,S1,Plain,S2) | Stone(Yellow,S2,Square,S2,Plain,S1) | Stone(Yellow,S2,Square,S1,Plain,S1) |
 | 5 | Stone(Blue,S1,Square,S1,Dotted,S1) | Stone(Blue,S1,Circle,S1,Plain,S2)   | Stone(Blue,S1,Circle,S1,Plain,S2)   |
 | 6 | Stone(Blue,S1,Circle,S1,Plain,S2)  | Stone(Blue,S2,Square,S1,Dotted,S2)  | Stone(Blue,S2,Square,S1,Dotted,S2)  |
+
+Final filtered:
+
+- `[BC,[B,setSize,I],getSaturation]` (log prob -1.07)
+- `[BC,[B,setSize,[C,[B,setSize,I],S2]],getSaturation]` (log prob -1.07)
+- `[BB,I,[BC,[B,setSize,I],getSaturation]]` (log prob -1.85)
 
 (Sub-)Programs won:
 
