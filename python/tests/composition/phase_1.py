@@ -27,3 +27,10 @@ for i in range(len(data)):
 pm_init = pd.read_csv('../../data/pm_init_cut.csv', index_col=0, na_filter=False)
 pt = Gibbs_sampler(Program_lib(pm_init, 0.1), task_data, iteration=1)
 pt.run(save_prefix='phase_1/pm', top_n=4, sample=False)
+
+# %% debug
+pm_init = pd.read_csv('phase_1/pm_1_1.csv', index_col=0, na_filter=False)
+pt = Gibbs_sampler(Program_lib(pm_init, 0.1), task_data[1:], iteration=1)
+pt.run(save_prefix='debug/pm', top_n=4, sample=False)
+
+# %%
