@@ -1,0 +1,17 @@
+,terms,log_prob
+0,"[CC,[SB,[B,ifElse,isS1Sat],[CS,[CB,[B,ifElse,isBlue],I],[C,[B,setShape,I],Square]]],Stone(Yellow,S2,Square,S2,Plain,S1)]",-50.66208285955052
+1,"[CC,[SB,[B,ifElse,isS1Sat],[SS,[CB,[B,ifElse,isBlue],I],[BB,I,[KC,[B,setShape,I],Square]]]],Stone(Yellow,S2,Square,S2,Plain,S1)]",-50.66208285955052
+2,"[CC,[SB,[B,ifElse,isS1Sat],[SS,[CB,[B,ifElse,isBlue],I],[KB,I,[C,[B,setShape,I],Square]]]],Stone(Yellow,S2,Square,S2,Plain,S1)]",-50.66208285955052
+3,"[CC,[SB,[B,ifElse,isS1Sat],[SS,[CB,[B,ifElse,isBlue],I],[KC,[B,setShape,I],Square]]],Stone(Yellow,S2,Square,S2,Plain,S1)]",-50.66208285955052
+4,"[SB,[C,[B,ifElse,isS2Sat],Stone(Yellow,S2,Square,S2,Plain,S1)],[CS,[CB,[B,ifElse,isBlue],I],[C,[B,setShape,I],Square]]]",-43.73061105395106
+5,"[SB,[C,[B,ifElse,isS2Sat],Stone(Yellow,S2,Square,S2,Plain,S1)],[SS,[CB,[B,ifElse,isBlue],I],[BB,I,[KC,[B,setShape,I],Square]]]]",-43.73061105395106
+6,"[SB,[C,[B,ifElse,isS2Sat],Stone(Yellow,S2,Square,S2,Plain,S1)],[SS,[CB,[B,ifElse,isBlue],I],[KB,I,[C,[B,setShape,I],Square]]]]",-43.73061105395106
+7,"[SB,[C,[B,ifElse,isS2Sat],Stone(Yellow,S2,Square,S2,Plain,S1)],[SS,[CB,[B,ifElse,isBlue],I],[KC,[B,setShape,I],Square]]]",-43.73061105395106
+8,"[SS,[CK,[B,ifElse,isS2Sat],Stone(Yellow,S2,Square,S2,Plain,S1)],[CS,[CB,[B,ifElse,isBlue],I],[C,[B,setShape,I],Square]]]",-50.662082859550516
+9,"[SS,[CK,[B,ifElse,isS2Sat],Stone(Yellow,S2,Square,S2,Plain,S1)],[SS,[CB,[B,ifElse,isBlue],I],[BB,I,[KC,[B,setShape,I],Square]]]]",-50.662082859550516
+10,"[SS,[CK,[B,ifElse,isS2Sat],Stone(Yellow,S2,Square,S2,Plain,S1)],[SS,[CB,[B,ifElse,isBlue],I],[KB,I,[C,[B,setShape,I],Square]]]]",-50.662082859550516
+11,"[SS,[CK,[B,ifElse,isS2Sat],Stone(Yellow,S2,Square,S2,Plain,S1)],[SS,[CB,[B,ifElse,isBlue],I],[KC,[B,setShape,I],Square]]]",-50.662082859550516
+12,"[SC,[BB,setSize,[CS,[CB,[B,ifElse,isBlue],I],[C,[B,setShape,I],Square]]],getSaturation]",-16.891975815091683
+13,"[SC,[BB,setSize,[SS,[CB,[B,ifElse,isBlue],I],[BB,I,[KC,[B,setShape,I],Square]]]],getSaturation]",-16.891975815091683
+14,"[SC,[BB,setSize,[SS,[CB,[B,ifElse,isBlue],I],[KB,I,[C,[B,setShape,I],Square]]]],getSaturation]",-16.891975815091683
+15,"[SC,[BB,setSize,[SS,[CB,[B,ifElse,isBlue],I],[KC,[B,setShape,I],Square]]],getSaturation]",-16.891975815091683
