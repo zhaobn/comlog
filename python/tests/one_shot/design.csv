@@ -1,7 +1,0 @@
-Agent,Recipient,Result
-"Stone(Red,S1,Circle,S1,Dotted,S1)","Stone(Red,S1,Circle,S1,Dotted,S1)","Stone(Red,S1,Circle,S1,Dotted,S1)"
-"Stone(Red,S1,Circle,S1,Dotted,S1)","Stone(Blue,S1,Circle,S1,Dotted,S1)","Stone(Red,S1,Circle,S1,Dotted,S1)"
-"Stone(Yellow,S1,Circle,S1,Dotted,S1)","Stone(Blue,S1,Circle,S1,Dotted,S1)","Stone(Red,S1,Circle,S1,Dotted,S1)"
-"Stone(Red,S1,Circle,S1,Dotted,S1)","Stone(Blue,S2,Square,S1,Plain,S2)","Stone(Red,S2,Square,S1,Plain,S2)"
-"Stone(Yellow,S1,Circle,S1,Dotted,S1)","Stone(Blue,S2,Square,S1,Plain,S2)","Stone(Red,S2,Square,S1,Plain,S2)"
-"Stone(Yellow,S2,Triangle,S1,Stripy,S1)","Stone(Blue,S2,Square,S1,Plain,S2)","Stone(Red,S1,Circle,S1,Dotted,S1)"
