@@ -103,12 +103,15 @@ class Gibbs_sampler:
       'type': [ 'program' ],
       'count': [ 1 ],
     })
-    df = df.append(self.get_base_primitives(terms_eval))
-    df_pm = pd.DataFrame(self.get_sub_programs(terms_eval))
-    if len(df_pm) > 0:
-      df_pm = df_pm.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
-      df = df.append(df_pm)
-    return df
+    if self.is_all_K(terms_str):
+      return df
+    else:
+      df = df.append(self.get_base_primitives(terms_eval))
+      df_pm = pd.DataFrame(self.get_sub_programs(terms_eval))
+      if len(df_pm) > 0:
+        df_pm = df_pm.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
+        df = df.append(df_pm)
+      return df
 
   def extract(self, df, top_n=1, sample=True, base=0):
     ret_df = pd.DataFrame({'terms':[],'arg_types':[],'return_type':[],'type':[],'count':[]})

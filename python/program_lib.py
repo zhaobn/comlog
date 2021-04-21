@@ -211,9 +211,12 @@ class Program_lib(Program_lib_light):
         'type': 'program',
       }
 
-  def log_dir(self, count_vec):
-    dir_prob = [ i+self.DIR_ALPHA-1 for i in count_vec]
-    return [ log(i/sum(dir_prob)) for i in dir_prob]
+  def log_dir(self, count_vec, priors = []):
+    if len(priors) == 0:
+      dir_prob = [ i+self.DIR_ALPHA-1 for i in count_vec ]
+    else:
+      dir_prob = [ i+j-1 for i,j in zip(count_vec, priors) ]
+    return [ log(i/sum(dir_prob)) for i in dir_prob ]
 
   # enumeration
   def bfs(self, type_signature, depth = 0):
@@ -361,36 +364,38 @@ class Program_lib(Program_lib_light):
         elif 'PM' in tm:
           pm = eval(tm)
           unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"&type=="program"')
+          unfolded['len_pr'] = unfolded.apply(lambda row: 1/len(list(pd.core.common.flatten(secure_list(eval(row['terms']))))), axis=1)
           unfolded_terms = list(unfolded['terms'])
-          unfolded_lps = self.log_dir(list(unfolded['count']))
+          unfolded_lps = self.log_dir(list(unfolded['count']), list(unfolded['len_pr']))
         else:
           unfolded_terms = [tm]
           unfolded_lps = [log_prob]
         programs_list.append([t.replace(tm, u) for u in unfolded_terms])
         log_probs_list.append(unfolded_lps)
-      if 'bool]' in term_list: # TODO: do this recursively if there are more than one plain bool
-        bi = term_list.index('bool]')
-        # Compress the True conditions
-        true_cond_terms = programs_list.copy()
-        true_cond_lps = log_probs_list.copy()
-        true_cond_terms[bi] = ['True]']
-        true_cond_lps[bi] = [log(0.5)]
-        if len(true_cond_terms[bi+2]) > 1:
-          true_cond_terms[bi+2] = ['obj]']
-          true_cond_lps[bi+2] = [0]
-        true_programs = self.iter_compose_programs(true_cond_terms, true_cond_lps)
-        # Compress the False conditions
-        false_cond_terms = programs_list.copy()
-        false_cond_lps = log_probs_list.copy()
-        false_cond_terms[bi] = ['False]']
-        false_cond_lps[bi] = [log(0.5)]
-        if len(false_cond_terms[bi+1]) > 1:
-          false_cond_terms[bi+1] = ['obj]']
-          false_cond_lps[bi+1] = [0]
-        false_programs = self.iter_compose_programs(false_cond_terms, false_cond_lps)
-        return true_programs.append(false_programs)
-      else:
-        return self.iter_compose_programs(programs_list, log_probs_list)
+      # if 'bool]' in term_list: # TODO: do this recursively if there are more than one plain bool
+      #   bi = term_list.index('bool]')
+      #   # Compress the True conditions
+      #   true_cond_terms = programs_list.copy()
+      #   true_cond_lps = log_probs_list.copy()
+      #   true_cond_terms[bi] = ['True]']
+      #   true_cond_lps[bi] = [log(0.5)]
+      #   if len(true_cond_terms[bi+2]) > 1:
+      #     true_cond_terms[bi+2] = ['obj]']
+      #     true_cond_lps[bi+2] = [0]
+      #   true_programs = self.iter_compose_programs(true_cond_terms, true_cond_lps)
+      #   # Compress the False conditions
+      #   false_cond_terms = programs_list.copy()
+      #   false_cond_lps = log_probs_list.copy()
+      #   false_cond_terms[bi] = ['False]']
+      #   false_cond_lps[bi] = [log(0.5)]
+      #   if len(false_cond_terms[bi+1]) > 1:
+      #     false_cond_terms[bi+1] = ['obj]']
+      #     false_cond_lps[bi+1] = [0]
+      #   false_programs = self.iter_compose_programs(false_cond_terms, false_cond_lps)
+      #   return true_programs.append(false_programs)
+      # else:
+      #   return self.iter_compose_programs(programs_list, log_probs_list)
+      return self.iter_compose_programs(programs_list, log_probs_list)
 
   @staticmethod
   def iter_compose_programs(terms_list, lp_list):
@@ -493,7 +498,7 @@ class Program_lib(Program_lib_light):
 # ])
 # pm_init_cut.to_csv('data/pm_init_cut.csv')
 
-# %%
+# # %%
 # pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
 # pl = Program_lib(pm_init, 0.1)
 # t = [['obj', 'obj'], 'obj']
