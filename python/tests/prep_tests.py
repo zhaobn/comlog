@@ -33,7 +33,6 @@ pm_init = pd.read_csv('../data/pm_init_test.csv', index_col=0, na_filter=False)'
 )
   return text
 
-
 def write(filename, content):
   f = open(f'{filename}.py', 'w')
   f.write(content)
@@ -61,3 +60,28 @@ for condition in conditions.items():
             run = f"\npt.run(save_prefix='{filename}/pm', sample=False, top_n={n})"
             content = imports + read_data(qs_data) + gibbs + run
             write(filename, content)
+
+# %%
+filenames = []
+for condition in conditions.items():
+  for component in components.items():
+    for proc in procs.items():
+      for use_sample in use_samples.items():
+        if use_sample[0] == 'sam':
+          filename = f'{condition[0]}_{component[0]}_{proc[0]}_{use_sample[0]}1'
+          filenames.append(filename)
+        else:
+          for n in top_n:
+            filename = f'{condition[0]}_{component[0]}_{proc[0]}_{use_sample[0]}{str(n)}'
+            filenames.append(filename)
+
+bash_cmds = ''
+for f in filenames:
+  bash_cmds += f"mkdir {f}\n"
+  bash_cmds += f"screen -dmS {f} python {f}.py\n"
+
+f = open('run_tests.sh', 'w')
+f.write(bash_cmds)
+f.close()
+
+# %%
