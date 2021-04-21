@@ -1,0 +1,25 @@
+condition,component,task,agent,recipient,result,target_rule
+1,1,1,"Stone(Red,S3,Circle,S2)","Stone(Yellow,S1,Square,S3)","Stone(Red,S1,Square,S3)",Red A makes R red
+1,1,2,"Stone(Yellow,S3,Circle,S2)","Stone(Red,S1,Square,S3)","Stone(Red,S1,Square,S3)",
+1,1,3,"Stone(Red,S3,Square,S2)","Stone(Blue,S2,Square,S3)","Stone(Red,S2,Square,S3)",
+1,1,4,"Stone(Blue,S3,Square,S2)","Stone(Blue,S2,Square,S3)","Stone(Blue,S2,Square,S3)",
+1,2,1,"Stone(Red,S1,Circle,S2)","Stone(Red,S1,Square,S2)","Stone(Red,S1,Square,S1)",Red A set R's size to the same saturation level of A
+1,2,2,"Stone(Yellow,S2,Triangle,S1)","Stone(Blue,S2,Square,S1)","Stone(Blue,S2,Square,S1)",
+1,2,3,"Stone(Red,S2,Triangle,S1)","Stone(Red,S3,Square,S3)","Stone(Red,S3,Square,S2)",
+1,2,4,"Stone(Blue,S2,Triangle,S1)","Stone(Yellow,S3,Square,S3)","Stone(Yellow,S3,Square,S3)",
+1,3,1,"Stone(Red,S1,Circle,S2)","Stone(Red,S3,Circle,S1)","Stone(Red,S3,Square,S1)",Red A makes R square
+1,3,2,"Stone(Yellow,S3,Square,S3)","Stone(Blue,S2,Triangle,S2)","Stone(Blue,S2,Triangle,S2)",
+1,3,3,"Stone(Red,S2,Triangle,S1)","Stone(Red,S1,Triangle,S2)","Stone(Red,S1,Square,S2)",
+1,3,4,"Stone(Blue,S2,Triangle,S1)","Stone(Yellow,S3,Square,S3)","Stone(Yellow,S3,Square,S3)",
+2,1,1,"Stone(Red,S3,Circle,S2)","Stone(Yellow,S1,Square,S3)","Stone(Red,S1,Square,S3)",Red A makes R red
+2,1,2,"Stone(Yellow,S3,Circle,S2)","Stone(Red,S1,Square,S3)","Stone(Red,S1,Square,S3)",
+2,1,3,"Stone(Red,S3,Square,S2)","Stone(Blue,S2,Square,S3)","Stone(Red,S2,Square,S3)",
+2,1,4,"Stone(Blue,S3,Square,S2)","Stone(Blue,S2,Square,S3)","Stone(Blue,S2,Square,S3)",
+2,2,1,"Stone(Red,S1,Circle,S2)","Stone(Red,S1,Square,S2)","Stone(Red,S1,Square,S1)",All A set R's size to the same saturation level of A
+2,2,2,"Stone(Yellow,S2,Triangle,S1)","Stone(Blue,S2,Square,S1)","Stone(Blue,S2,Square,S2)",
+2,2,3,"Stone(Red,S2,Triangle,S1)","Stone(Red,S3,Square,S3)","Stone(Red,S3,Square,S2)",
+2,2,4,"Stone(Blue,S3,Triangle,S1)","Stone(Yellow,S3,Square,S1)","Stone(Yellow,S3,Square,S3)",
+2,3,1,"Stone(Red,S1,Circle,S2)","Stone(Red,S3,Circle,S1)","Stone(Red,S3,Square,S1)",Circled A makes R square
+2,3,2,"Stone(Yellow,S3,Square,S3)","Stone(Blue,S2,Triangle,S2)","Stone(Blue,S2,Triangle,S2)",
+2,3,3,"Stone(Yellow,S2,Circle,S1)","Stone(Red,S1,Triangle,S2)","Stone(Red,S1,Square,S2)",
+2,3,4,"Stone(Blue,S2,Triangle,S1)","Stone(Yellow,S3,Circle,S3)","Stone(Yellow,S3,Circle,S3)",
