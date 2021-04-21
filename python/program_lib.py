@@ -45,31 +45,31 @@ class Program_lib(Program_lib_light):
     stones_df = pd.DataFrame({'terms': []})
     colors_df = self.content.query('return_type=="col"&type=="base_term"')
     shapes_df = self.content.query('return_type=="shp"&type=="base_term"')
-    patterns_df = self.content.query('return_type=="pat"&type=="base_term"')
+    # patterns_df = self.content.query('return_type=="pat"&type=="base_term"')
     ints_df = self.content.query('return_type=="int"&type=="base_term"')
     for c in range(len(colors_df)):
       for ci in range(len(ints_df)):
         for s in range(len(shapes_df)):
           for si in range(len(ints_df)):
-            for p in range(len(patterns_df)):
-              for pi in range(len(ints_df)):
-                stone_feats = [
-                  colors_df.iloc[c].at['terms'],
-                  ints_df.iloc[ci].at['terms'],
-                  shapes_df.iloc[s].at['terms'],
-                  ints_df.iloc[si].at['terms'],
-                  patterns_df.iloc[p].at['terms'],
-                  ints_df.iloc[pi].at['terms']
-                ]
-                counts = [
-                  colors_df.iloc[c].at['count'],
-                  ints_df.iloc[ci].at['count'],
-                  shapes_df.iloc[s].at['count'],
-                  ints_df.iloc[si].at['count'],
-                  patterns_df.iloc[p].at['count'],
-                  ints_df.iloc[pi].at['count'],
-                ]
-                stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
+            # for p in range(len(patterns_df)):
+            #   for pi in range(len(ints_df)):
+            stone_feats = [
+              colors_df.iloc[c].at['terms'],
+              ints_df.iloc[ci].at['terms'],
+              shapes_df.iloc[s].at['terms'],
+              ints_df.iloc[si].at['terms'],
+              # patterns_df.iloc[p].at['terms'],
+              # ints_df.iloc[pi].at['terms']
+            ]
+            counts = [
+              colors_df.iloc[c].at['count'],
+              ints_df.iloc[ci].at['count'],
+              shapes_df.iloc[s].at['count'],
+              ints_df.iloc[si].at['count'],
+              # patterns_df.iloc[p].at['count'],
+              # ints_df.iloc[pi].at['count'],
+            ]
+            stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
     stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
     return stones_df[['terms', 'log_prob']]
 
@@ -116,9 +116,9 @@ class Program_lib(Program_lib_light):
       color_scale = self.sample_base('int', add)
       shape = self.sample_base('shp', add)
       shape_scale = self.sample_base('int', add)
-      pattern = self.sample_base('pat', add)
-      pattern_scale = self.sample_base('int', add)
-      sampled_props = [ color, color_scale, shape, shape_scale, pattern, pattern_scale ]
+      # pattern = self.sample_base('pat', add)
+      # pattern_scale = self.sample_base('int', add)
+      sampled_props = [ color, color_scale, shape, shape_scale ] #, pattern, pattern_scale ]
       stone = 'Stone(' + ','.join([p['terms'] for p in sampled_props]) + ')'
       return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'type': 'base_term'}
     else:
@@ -431,26 +431,26 @@ class Program_lib(Program_lib_light):
     programs_df = self.bfs(type_signature, depth)
     return self.filter_program(programs_df, data)
 
-# # %%
-# def clist_to_df(clist):
-#   df = pd.DataFrame({
-#     'terms': [],
-#     'arg_types': [],
-#     'return_type': [],
-#     'type': [],
-#     'count': [],
-#   })
-#   for et in secure_list(clist):
-#     if isinstance(et, dict) == 0:
-#       et = term_to_dict(et)
-#     df = df.append(pd.DataFrame({
-#       'terms': [et['terms']],
-#       'arg_types': [et['arg_types']],
-#       'return_type': [et['return_type']],
-#       'type': [et['type']],
-#       'count': [0]
-#     }), ignore_index=True)
-#   return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
+# %%
+def clist_to_df(clist):
+  df = pd.DataFrame({
+    'terms': [],
+    'arg_types': [],
+    'return_type': [],
+    'type': [],
+    'count': [],
+  })
+  for et in secure_list(clist):
+    if isinstance(et, dict) == 0:
+      et = term_to_dict(et)
+    df = df.append(pd.DataFrame({
+      'terms': [et['terms']],
+      'arg_types': [et['arg_types']],
+      'return_type': [et['return_type']],
+      'type': [et['type']],
+      'count': [0]
+    }), ignore_index=True)
+  return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
 
 # pm_init = clist_to_df([
 #   isRed, isBlue, isYellow,
@@ -475,28 +475,23 @@ class Program_lib(Program_lib_light):
 # ])
 # pm_init.to_csv('data/pm_init.csv')
 
-# pm_init_cut = clist_to_df([
-#   True, False,
-#   Red, Yellow, Blue,
-#   Square, Triangle, Circle,
-#   Dotted, Plain, Stripy,
-#   S1, S2,
-#   isRed, isBlue, isYellow,
-#   isCircle, isSquare, isTriangle,
-#   isStripy, isDotted, isPlain, isCheckered,
-#   isS1Sat, isS2Sat,
-#   isS1Size, isS2Size,
-#   isS1Den, isS2Den,#
-#   getColor, setColor, eqColor,
-#   getSaturation, setSaturation,
-#   getShape, setShape, eqShape,
-#   getSize, setSize,
-#   getPattern, setPattern, eqPattern,
-#   getDensity, setDensity,
-#   eqInt, eqObject, ifElse,
-#   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
-# ])
-# pm_init_cut.to_csv('data/pm_init_cut.csv')
+pm_init_test = clist_to_df([
+  True, False,
+  Red, Yellow, Blue,
+  Square, Triangle, Circle,
+  S1, S2, S3,
+  isRed, isBlue, isYellow,
+  isCircle, isSquare, isTriangle,
+  isS1Sat, isS2Sat, isS3Sat,
+  isS1Size, isS2Size, isS3Size,
+  getColor, setColor, eqColor,
+  getSaturation, setSaturation,
+  getShape, setShape, eqShape,
+  getSize, setSize,
+  eqInt, eqObject, ifElse,
+  {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
+])
+pm_init_test.to_csv('data/pm_init_test.csv')
 
 # # %%
 # pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
@@ -506,13 +501,16 @@ class Program_lib(Program_lib_light):
 # rf = pl.bfs(t,1)
 # # rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
 
-# # %%
-# data = {
-#   'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-#   'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
-#   'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
-# }
-# pl = Program_lib(pm_init, 0.1)
-# x = pl.filter_program(rf,data)
+# %%
+data = {
+  'agent': Stone(Yellow,S2,Triangle,S1), # Plain,S1
+  'recipient': Stone(Red,S1,Triangle,S1),
+  'result': Stone(Yellow,S1,Triangle,S2)
+}
+pl = Program_lib(pm_init_test, 0.1)
+t = [['obj', 'obj'], 'obj']
+pl.generate_program(t)
+rf = pl.bfs(t,1)
+x = pl.filter_program(rf,data)
 
 # %%

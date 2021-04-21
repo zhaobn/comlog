@@ -3,7 +3,7 @@
 from pandas.core.common import flatten
 
 ####################### Custom imports ###############################
-from helpers import secure_list, copy_list, print_name
+from helpers import secure_list, copy_list
 
 ####################### Main body #####################################
 class Base:
@@ -36,17 +36,18 @@ class Scale:
   def __str__(self): return str(self.name)
 
 class Stone:
-  def __init__(self, color, c_scale, shape, s_scale, pattern, p_scale):
+  def __init__(self, color, c_scale, shape, s_scale): # pattern, p_scale
     Base.__init__(self,'obj')
     self.color = color
     self.saturation = c_scale
     self.shape = shape
     self.size = s_scale
-    self.pattern = pattern
-    self.density = p_scale
+    # self.pattern = pattern
+    # self.density = p_scale
   @property
   def name(self): # Human-readable
-    return f'Stone({self.color.name},{self.saturation.name},{self.shape.name},{self.size.name},{self.pattern.name},{self.density.name})'
+    # return f'Stone({self.color.name},{self.saturation.name},{self.shape.name},{self.size.name},{self.pattern.name},{self.density.name})'
+    return f'Stone({self.color.name},{self.saturation.name},{self.shape.name},{self.size.name})'
   def __str__(self):
     return self.name
 

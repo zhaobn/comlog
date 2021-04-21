@@ -2,9 +2,9 @@
 # %%
 from base_terms import *
 
-# %%
-s = Stone(Blue, S2, Circle, S2, Dotted, S1)
-t = Stone(Blue, S2, Circle, S2, Dotted, S2)
+# # %%
+# s = Stone(Blue, S2, Circle, S2, Dotted, S1)
+# t = Stone(Blue, S2, Circle, S2, Dotted, S2)
 
 # demo = Program([C, setColor, Yellow])
 # demo = Program([B, [eqColor, Red], getColor])
@@ -21,4 +21,4 @@ t = Stone(Blue, S2, Circle, S2, Dotted, S2)
 
 # Program([CB,[S,[B,ifElse,[C,[B,objEqColor,I],Red]],I],I]).run([s,t]).name
 # Program([KK,I,Stone(Red,S1,Square,S2,Dotted,S3)]).run([s,t]).name
-Program([CS,[SS,[BB,ifElse,[CB,[B,eqInt,[B,getSize,I]],[B,getSaturation,I]]],[KK,I,Stone(Yellow,S1,Square,S2,Dotted,S3)]],I]).run([s,t]).name
+# Program([CS,[SS,[BB,ifElse,[CB,[B,eqInt,[B,getSize,I]],[B,getSaturation,I]]],[KK,I,Stone(Yellow,S1,Square,S2,Dotted,S3)]],I]).run([s,t]).name
