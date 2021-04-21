@@ -1,8 +1,8 @@
 
 # %%
 import math
+import random
 import pandas as pd
-from pandas.core.frame import DataFrame
 pd.set_option('mode.chained_assignment', None)
 
 from base_terms import *
@@ -11,18 +11,18 @@ from program_lib import Program_lib_light, Program_lib
 
 # %%
 class Gibbs_sampler:
-  def __init__(self, program_lib, data_list, iteration, burnin=0, down_weight=1, iter_start=0, data_start=0):
+  def __init__(self, program_lib, data_list, iteration, inc=True, burnin=0, down_weight=1, iter_start=0, data_start=0):
     self.cur_programs = program_lib.content
     self.dir_alpha = program_lib.DIR_ALPHA
     self.data = data_list
     self.dw = down_weight
+    self.inc = inc
     self.iter = iteration
     self.burnin = burnin
     self.iter_start = iter_start
     self.data_start = data_start
-    self.extraction_history = [[None] * len(data_list)] * iteration
-    self.filtering_history = [[0] * len(data_list)] * iteration
-
+    self.extraction_history = [[None] * len(data_list)] * iteration if self.inc == 1 else [None] * iteration
+    self.filtering_history = [[0] * len(data_list)] * iteration if self.inc == 1 else [0] * iteration
   @staticmethod
   def find_ret_type(terms):
     terms = list(pd.core.common.flatten(terms))
@@ -135,74 +135,96 @@ class Gibbs_sampler:
     return ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
 
   def run(self, type_sig=[['obj', 'obj'], 'obj'], top_n=1, sample=True, base=0, logging=True, save_prefix=''):
-
     for i in range(self.iter_start, self.iter):
       print(f'Running {i+1}/{self.iter} ({round(100*(i+1)/self.iter, 2)}%):') if logging else None
       data_start = 0 if i > self.iter_start else self.data_start
-      for j in range(data_start, len(self.data)):
-        print(f'---- {j+1}-th out of {len(self.data)} ----') if logging else None
-        if i < 1:
-          # incrementally
-          data = self.data[:(j+1)]
-          pms = self.cur_programs
-        else:
-          # Use full batch
-          data = self.data
-          # Remove previously-extracted counts
-          previous = self.extraction_history[i-1][j]
-          if previous is not None:
-            pms = pd.merge(self.cur_programs, previous, on=['terms', 'arg_types', 'return_type', 'type'], how='outer')
-            pms = pms.fillna(0)
-            pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw ranges 0 to 1
-            pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count']]
-          else:
+      if self.inc == 1:
+        for j in range(data_start, len(self.data)):
+          print(f'---- {j+1}-th out of {len(self.data)} ----') if logging else None
+          if i < 1:
+            # incrementally
+            data = self.data[:(j+1)]
             pms = self.cur_programs
+          else:
+            # Use full batch
+            data = self.data
+            # Remove previously-extracted counts
+            previous = self.extraction_history[i-1][j]
+            if previous is not None:
+              pms = pd.merge(self.cur_programs, previous, on=['terms', 'arg_types', 'return_type', 'type'], how='outer')
+              pms = pms.fillna(0)
+              pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw ranges 0 to 1
+              pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count']]
+            else:
+              pms = self.cur_programs
+          pl = Program_lib(pms, self.dir_alpha)
+          enumed = pl.bfs(type_sig, 1)
+          filtered = pl.filter_program(enumed, data)
+          if len(filtered) < 1:
+            print('No programs found, filtering again with single input...') if logging else None
+            self.filtering_history[i][j] = 0
+            filtered = pl.filter_program(enumed, self.data[j])
+          else:
+            self.filtering_history[i][j] = 1
+          extracted = self.extract(filtered, top_n, sample, base)
+          print(extracted) if logging else None
+          self.extraction_history[i][j] = extracted
+          self.cur_programs = pd.concat([ self.cur_programs, extracted ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
+          if len(save_prefix) > 0:
+            padding = len(str(self.iter))
+            filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+            pd.DataFrame.from_records(self.filtering_history).to_csv(f'{save_prefix}filter_hist.csv')
+            self.cur_programs.to_csv(f'{save_prefix}_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+      else: # use full batch
+        pms = self.cur_programs
+        data = self.data
         pl = Program_lib(pms, self.dir_alpha)
         enumed = pl.bfs(type_sig, 1)
         filtered = pl.filter_program(enumed, data)
         if len(filtered) < 1:
-          print('No programs found, filtering again with single input...') if logging else None
-          self.filtering_history[i][j] = 0
-          filtered = pl.filter_program(enumed, self.data[j])
+          self.filtering_history[i] = 0
+          print('No programs found, filtering again with random input...') if logging else None
+          rd_idx = random.choice(range(len(data)))
+          filtered = pl.filter_program(enumed, self.data[rd_idx])
         else:
-          self.filtering_history[i][j] = 1
+          self.filtering_history[i] = 1
         extracted = self.extract(filtered, top_n, sample, base)
         print(extracted) if logging else None
-        self.extraction_history[i][j] = extracted
+        self.extraction_history[i] = extracted
         self.cur_programs = pd.concat([ self.cur_programs, extracted ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
         if len(save_prefix) > 0:
           padding = len(str(self.iter))
-          filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+          filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}.csv')
           pd.DataFrame.from_records(self.filtering_history).to_csv(f'{save_prefix}filter_hist.csv')
-          self.cur_programs.to_csv(f'{save_prefix}_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+          self.cur_programs.to_csv(f'{save_prefix}_{str(i+1).zfill(padding)}.csv')
 
-# # %%
-# data_list = [
-#   {
-#     'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
-#     'recipient': Stone(Yellow,S1,Square,S2,Dotted,S2),
-#     'result': Stone(Red,S1,Square,S1,Dotted,S2)
-#   },
-#   {
-#     'agent': Stone(Yellow,S2,Square,S2,Dotted,S1),
-#     'recipient': Stone(Red,S1,Triangle,S1,Plain,S2),
-#     'result': Stone(Yellow,S1,Triangle,S2,Plain,S2)
-#   },
-#   {
-#     'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-#     'recipient': Stone(Yellow,S2,Square,S1,Dotted,S1),
-#     'result': Stone(Yellow,S2,Square,S2,Dotted,S1)
-#   },
-#   {
-#     'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-#     'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
-#     'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
-#   },
-# ]
+# %%
+data_list = [
+  {
+    'agent': Stone(Red,S1,Triangle,S1), #,Dotted,S1),
+    'recipient': Stone(Yellow,S1,Square,S2), #,Dotted,S2),
+    'result': Stone(Red,S1,Square,S1), #,Dotted,S2)
+  },
+  {
+    'agent': Stone(Yellow,S2,Square,S2), #,Dotted,S1),
+    'recipient': Stone(Red,S1,Triangle,S1), #,Plain,S2),
+    'result': Stone(Yellow,S1,Triangle,S2), #,Plain,S2)
+  },
+  {
+    'agent': Stone(Yellow,S2,Triangle,S1), #,Plain,S1),
+    'recipient': Stone(Yellow,S2,Square,S1), #,Dotted,S1),
+    'result': Stone(Yellow,S2,Square,S2), #,Dotted,S1)
+  },
+  {
+    'agent': Stone(Yellow,S2,Triangle,S1), #,Plain,S1),
+    'recipient': Stone(Red,S1,Triangle,S1), #,Plain,S1),
+    'result': Stone(Yellow,S1,Triangle,S2), #,Plain,S1)
+  },
+]
 
-# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
-# g = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=2, burnin=0)
-# # g.run(save_prefix='test_data/test', sample=False, top_n=2)
+pm_init = pd.read_csv('data/pm_init_test.csv', index_col=0, na_filter=False)
+g = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=1, burnin=0, inc=1)
+g.run(save_prefix='test', sample=False, top_n=2)
 
 # filtered = pd.read_csv('tests/composition/phase_1/pm_filtered_1_2.csv', index_col=0, na_filter=False)
 # extracted = g.extract(filtered, 6, False)

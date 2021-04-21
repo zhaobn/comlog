@@ -415,14 +415,14 @@ class Program_lib(Program_lib_light):
     query_string = '&'.join([f'consistent_{i}==1' for i in range(len(data))])
     filtered = pd.DataFrame({'terms': [], 'log_prob': []})
     for i in range(len(df)):
-      to_unfold = df.iloc[i].at['terms']
-      print(f'Unfolding {to_unfold}')
+      # to_unfold = df.iloc[i].at['terms']
+      # print(f'Unfolding {to_unfold}')
       to_check = self.unfold_program(df.iloc[i].at['terms'], df.iloc[i].at['log_prob'], data)
       if len(to_check) > 0:
-        for i in range(len(data)):
-          to_check[f'consistent_{i}'] = to_check.apply(lambda row: self.check_program(row['terms'], data[i]), axis=1)
+        for j in range(len(data)):
+          to_check[f'consistent_{j}'] = to_check.apply(lambda row: self.check_program(row['terms'], data[j]), axis=1)
         passed_pm = to_check.query(query_string)
-        print(f'passed: {len(passed_pm)}')
+        print(f"{i+1}/{len(df)} | Unfolding {df.iloc[i].at['terms']} - {len(passed_pm)} passed")
         filtered = filtered.append(passed_pm[['terms', 'log_prob']], ignore_index=True)
     return filtered
 
@@ -431,26 +431,26 @@ class Program_lib(Program_lib_light):
     programs_df = self.bfs(type_signature, depth)
     return self.filter_program(programs_df, data)
 
-# %%
-def clist_to_df(clist):
-  df = pd.DataFrame({
-    'terms': [],
-    'arg_types': [],
-    'return_type': [],
-    'type': [],
-    'count': [],
-  })
-  for et in secure_list(clist):
-    if isinstance(et, dict) == 0:
-      et = term_to_dict(et)
-    df = df.append(pd.DataFrame({
-      'terms': [et['terms']],
-      'arg_types': [et['arg_types']],
-      'return_type': [et['return_type']],
-      'type': [et['type']],
-      'count': [0]
-    }), ignore_index=True)
-  return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
+# # %%
+# def clist_to_df(clist):
+#   df = pd.DataFrame({
+#     'terms': [],
+#     'arg_types': [],
+#     'return_type': [],
+#     'type': [],
+#     'count': [],
+#   })
+#   for et in secure_list(clist):
+#     if isinstance(et, dict) == 0:
+#       et = term_to_dict(et)
+#     df = df.append(pd.DataFrame({
+#       'terms': [et['terms']],
+#       'arg_types': [et['arg_types']],
+#       'return_type': [et['return_type']],
+#       'type': [et['type']],
+#       'count': [0]
+#     }), ignore_index=True)
+#   return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
 
 # pm_init = clist_to_df([
 #   isRed, isBlue, isYellow,
@@ -475,23 +475,23 @@ def clist_to_df(clist):
 # ])
 # pm_init.to_csv('data/pm_init.csv')
 
-pm_init_test = clist_to_df([
-  True, False,
-  Red, Yellow, Blue,
-  Square, Triangle, Circle,
-  S1, S2, S3,
-  isRed, isBlue, isYellow,
-  isCircle, isSquare, isTriangle,
-  isS1Sat, isS2Sat, isS3Sat,
-  isS1Size, isS2Size, isS3Size,
-  getColor, setColor, eqColor,
-  getSaturation, setSaturation,
-  getShape, setShape, eqShape,
-  getSize, setSize,
-  eqInt, eqObject, ifElse,
-  {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
-])
-pm_init_test.to_csv('data/pm_init_test.csv')
+# pm_init_test = clist_to_df([
+#   True, False,
+#   Red, Yellow, Blue,
+#   Square, Triangle, Circle,
+#   S1, S2, S3,
+#   isRed, isBlue, isYellow,
+#   isCircle, isSquare, isTriangle,
+#   isS1Sat, isS2Sat, isS3Sat,
+#   isS1Size, isS2Size, isS3Size,
+#   getColor, setColor, eqColor,
+#   getSaturation, setSaturation,
+#   getShape, setShape, eqShape,
+#   getSize, setSize,
+#   eqInt, eqObject, ifElse,
+#   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
+# ])
+# pm_init_test.to_csv('data/pm_init_test.csv')
 
 # # %%
 # pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
@@ -501,16 +501,14 @@ pm_init_test.to_csv('data/pm_init_test.csv')
 # rf = pl.bfs(t,1)
 # # rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
 
-# %%
-data = {
-  'agent': Stone(Yellow,S2,Triangle,S1), # Plain,S1
-  'recipient': Stone(Red,S1,Triangle,S1),
-  'result': Stone(Yellow,S1,Triangle,S2)
-}
-pl = Program_lib(pm_init_test, 0.1)
-t = [['obj', 'obj'], 'obj']
-pl.generate_program(t)
-rf = pl.bfs(t,1)
-x = pl.filter_program(rf,data)
-
-# %%
+# # %%
+# data = {
+#   'agent': Stone(Yellow,S2,Triangle,S1), # Plain,S1
+#   'recipient': Stone(Red,S1,Triangle,S1),
+#   'result': Stone(Yellow,S1,Triangle,S2)
+# }
+# pl = Program_lib(pm_init_test, 0.1)
+# t = [['obj', 'obj'], 'obj']
+# pl.generate_program(t)
+# rf = pl.bfs(t,1)
+# x = pl.filter_program(rf,data)
