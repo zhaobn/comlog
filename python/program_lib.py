@@ -530,17 +530,15 @@ class Program_lib(Program_lib_light):
 # rf = pl.bfs(t,1)
 # x = pl.filter_program(rf,data)
 
-# %%
-pm_init = pd.read_csv('data/pm_init_test.csv', index_col=0, na_filter=False)
-data = {
-  'agent': Stone(Yellow,S2,Triangle,S1), # Plain,S1
-  'recipient': Stone(Red,S1,Triangle,S1),
-  'result': Stone(Yellow,S1,Triangle,S2)
-}
-pl = Program_lib(pm_init, 0.1)
-t = [['obj', 'obj'], 'obj']
-# pl.generate_program(t)
-rf = pl.bfs(t,1)
-x = pl.filter_program(rf,data)
-
-# %%
+# # %%
+# pm_init = pd.read_csv('data/pm_init_test.csv', index_col=0, na_filter=False)
+# data = {
+#   'agent': Stone(Yellow,S2,Triangle,S1), # Plain,S1
+#   'recipient': Stone(Red,S1,Triangle,S1),
+#   'result': Stone(Yellow,S1,Triangle,S2)
+# }
+# pl = Program_lib(pm_init, 0.1)
+# t = [['obj', 'obj'], 'obj']
+# # pl.generate_program(t)
+# rf = pl.bfs(t,1)
+# x = pl.filter_program(rf,data)
