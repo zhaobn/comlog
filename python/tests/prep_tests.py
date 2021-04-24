@@ -1,8 +1,8 @@
 # %%
 conditions = { 'r1': 1, 'r2': 2 }
 components = { 'c1': 1, 'c2': 2, 'c3': 3, 'ca': 0 }
-procs = { 'bat': False, 'inc': True} # Gibbs_sampler(inc=)
-use_samples = { 'top': False, 'sam': True } # g.run(sample=)
+procs = { 'bat': False, 'inc': True}
+use_samples = { 'top': False} # 'sam': True
 top_n = [1, 2, 3]
 
 # %%
