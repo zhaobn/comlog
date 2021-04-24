@@ -214,6 +214,8 @@ class Program_lib(Program_lib_light):
   def log_dir(self, count_vec, priors = []):
     if len(priors) == 0:
       dir_prob = [ i+self.DIR_ALPHA-1 for i in count_vec ]
+    elif len(count_vec) == 1:
+      dir_prob = [1]
     else:
       dir_prob = [ i+j-1 for i,j in zip(count_vec, priors) ]
     return [ log(i/sum(dir_prob)) for i in dir_prob ]
@@ -321,6 +323,43 @@ class Program_lib(Program_lib_light):
   def query_log_prob(obj, df):
     return df.query(f'terms=="{obj}"').log_prob.values[0]
 
+  def get_term_prior(self, term):
+    if term.ctype == 'router':
+      return log(1/(4**len(term.name)))
+    elif term.ctype == 'obj':
+      return self.get_all_objs().query(f'terms=="{term.name}"').log_prob.values[0]
+    elif term.ctype in self.SET_MARKERS:
+      prims = self.content.query(f'type=="base_term"&return_type=="{term.ctype}"')
+      prims['log_prob'] = self.log_dir(prims['count'])
+      return prims[prims['terms']==term.name].log_prob.values[0]
+    elif term.ctype == 'primitive' and len(term.name) > 1:
+      prims = self.content.query(f'type=="primitive"&return_type=="{term.return_type}"')
+      prims['log_prob'] = self.log_dir(prims['count'])
+      return prims[prims['terms']==term.name].log_prob.values[0]
+    elif term.name == 'I':
+      prims = self.content.query(f'type=="program"&arg_types=="obj"&return_type=="obj"')
+      prims['log_prob'] = self.log_dir(prims['count'])
+      return prims[prims['terms']=='I'].log_prob.values[0]
+    else:
+      print(f'get_term_prior() receives unclear ctype of {term.name}')
+
+  def get_pm_prior(self, terms):
+    if isinstance(terms, str):
+      terms = eval(terms)
+    term_list = list(pd.core.common.flatten(secure_list(terms)))
+    first_lp = self.get_term_prior(term_list[0])
+    if len(term_list) == 1:
+      return first_lp
+    else:
+      terms_lp = [first_lp]
+      for ti in list(range(len(term_list))[1:]):
+        # Filter out redundent all-B routers infront of a primitive
+        if term_list[ti].ctype == 'primitive' and term_list[ti-1].name.count('K') == len(term_list[ti-1].name):
+          terms_lp.append(0)
+        else:
+          terms_lp.append(self.get_term_prior(term_list[ti]))
+      return sum(terms_lp)
+
   def unfold_program(self, terms, log_prob, data):
     # Preps
     to_ignore = [
@@ -340,7 +379,8 @@ class Program_lib(Program_lib_light):
       pm = eval(terms)
       unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"&type=="program"')
       if len(unfolded) > 0:
-        unfolded['log_prob'] = self.log_dir(unfolded['count'])
+        unfolded['log_prior'] = unfolded.apply(lambda row: self.get_pm_prior(row['terms']), axis=1)
+        unfolded['log_prob'] = self.log_dir(list(unfolded['count']), list(unfolded['log_prior']))
         return unfolded[['terms', 'log_prob']]
       else:
         return pd.DataFrame({'terms': [], 'log_prob': []})
@@ -364,37 +404,14 @@ class Program_lib(Program_lib_light):
         elif 'PM' in tm:
           pm = eval(tm)
           unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"&type=="program"')
-          unfolded['len_pr'] = unfolded.apply(lambda row: 1/len(list(pd.core.common.flatten(secure_list(eval(row['terms']))))), axis=1)
           unfolded_terms = list(unfolded['terms'])
-          unfolded_lps = self.log_dir(list(unfolded['count']), list(unfolded['len_pr']))
+          unfolded['log_prior'] = unfolded.apply(lambda row: self.get_pm_prior(row['terms']), axis=1)
+          unfolded_lps = self.log_dir(list(unfolded['count']), list(unfolded['log_prior']))
         else:
           unfolded_terms = [tm]
           unfolded_lps = [log_prob]
         programs_list.append([t.replace(tm, u) for u in unfolded_terms])
         log_probs_list.append(unfolded_lps)
-      # if 'bool]' in term_list: # TODO: do this recursively if there are more than one plain bool
-      #   bi = term_list.index('bool]')
-      #   # Compress the True conditions
-      #   true_cond_terms = programs_list.copy()
-      #   true_cond_lps = log_probs_list.copy()
-      #   true_cond_terms[bi] = ['True]']
-      #   true_cond_lps[bi] = [log(0.5)]
-      #   if len(true_cond_terms[bi+2]) > 1:
-      #     true_cond_terms[bi+2] = ['obj]']
-      #     true_cond_lps[bi+2] = [0]
-      #   true_programs = self.iter_compose_programs(true_cond_terms, true_cond_lps)
-      #   # Compress the False conditions
-      #   false_cond_terms = programs_list.copy()
-      #   false_cond_lps = log_probs_list.copy()
-      #   false_cond_terms[bi] = ['False]']
-      #   false_cond_lps[bi] = [log(0.5)]
-      #   if len(false_cond_terms[bi+1]) > 1:
-      #     false_cond_terms[bi+1] = ['obj]']
-      #     false_cond_lps[bi+1] = [0]
-      #   false_programs = self.iter_compose_programs(false_cond_terms, false_cond_lps)
-      #   return true_programs.append(false_programs)
-      # else:
-      #   return self.iter_compose_programs(programs_list, log_probs_list)
       return self.iter_compose_programs(programs_list, log_probs_list)
 
   @staticmethod
@@ -415,8 +432,8 @@ class Program_lib(Program_lib_light):
     query_string = '&'.join([f'consistent_{i}==1' for i in range(len(data))])
     filtered = pd.DataFrame({'terms': [], 'log_prob': []})
     for i in range(len(df)):
-      # to_unfold = df.iloc[i].at['terms']
-      # print(f'Unfolding {to_unfold}')
+      to_unfold = df.iloc[i].at['terms']
+      print(f'Unfolding {to_unfold}')
       to_check = self.unfold_program(df.iloc[i].at['terms'], df.iloc[i].at['log_prob'], data)
       if len(to_check) > 0:
         for j in range(len(data)):
@@ -512,3 +529,18 @@ class Program_lib(Program_lib_light):
 # pl.generate_program(t)
 # rf = pl.bfs(t,1)
 # x = pl.filter_program(rf,data)
+
+# %%
+pm_init = pd.read_csv('data/pm_init_test.csv', index_col=0, na_filter=False)
+data = {
+  'agent': Stone(Yellow,S2,Triangle,S1), # Plain,S1
+  'recipient': Stone(Red,S1,Triangle,S1),
+  'result': Stone(Yellow,S1,Triangle,S2)
+}
+pl = Program_lib(pm_init, 0.1)
+t = [['obj', 'obj'], 'obj']
+# pl.generate_program(t)
+rf = pl.bfs(t,1)
+x = pl.filter_program(rf,data)
+
+# %%
