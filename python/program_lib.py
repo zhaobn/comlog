@@ -212,10 +212,10 @@ class Program_lib(Program_lib_light):
       }
 
   def log_dir(self, count_vec, priors = []):
-    if len(priors) == 0:
-      dir_prob = [ i+self.DIR_ALPHA-1 for i in count_vec ]
-    elif len(count_vec) == 1:
+    if len(count_vec) == 1:
       dir_prob = [1]
+    elif len(priors) == 0:
+      dir_prob = [ i+self.DIR_ALPHA-1 for i in count_vec ]
     else:
       dir_prob = [ i+j-1 for i,j in zip(count_vec, priors) ]
     return [ log(i/sum(dir_prob)) for i in dir_prob ]
