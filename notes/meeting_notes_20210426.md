@@ -28,6 +28,7 @@
 
 - Fix the top n selection bug => use sampling (among the top-ranked possibilities?)
 - Number of iterations seems to predict how tight the distribution is (can be mediated by a softmax?)
+- Plot size of intermediate filtered programs, complexity, percentage of use etc.
 - Compare generalization predictions
 - Develop pilot experiments
 
