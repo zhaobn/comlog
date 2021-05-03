@@ -29,7 +29,7 @@ Generalization data: gray agents, grayness ~ mediate white & black
 
 The normative bfs + sample method might not reproduce bootstrapping; consider local update.
 
-## Alternative ideasL
+## Alternative ideas
 
 - Context (background factor) ~ multiplicative composition
 - Curriculum design
