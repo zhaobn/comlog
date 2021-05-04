@@ -31,6 +31,19 @@ def eq_shape(arg_list):
   shp_1, shp_2 = arg_list
   return shp_1.name == shp_2.name
 
+def get_edge (obj):
+  if isinstance(obj, list): obj = obj[0]
+  return copy(obj.edge)
+
+def set_edge (arg_list):
+  obj, shp = arg_list
+  obj.edge = copy(shp)
+  return obj
+
+def eq_edge(arg_list):
+  shp_1, shp_2 = arg_list
+  return shp_1.name == shp_2.name
+
 def get_pattern (obj):
   if isinstance(obj, list): obj = obj[0]
   return copy(obj.pattern)

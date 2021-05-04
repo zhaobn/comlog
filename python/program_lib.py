@@ -448,26 +448,26 @@ class Program_lib(Program_lib_light):
     programs_df = self.bfs(type_signature, depth)
     return self.filter_program(programs_df, data)
 
-# # %%
-# def clist_to_df(clist):
-#   df = pd.DataFrame({
-#     'terms': [],
-#     'arg_types': [],
-#     'return_type': [],
-#     'type': [],
-#     'count': [],
-#   })
-#   for et in secure_list(clist):
-#     if isinstance(et, dict) == 0:
-#       et = term_to_dict(et)
-#     df = df.append(pd.DataFrame({
-#       'terms': [et['terms']],
-#       'arg_types': [et['arg_types']],
-#       'return_type': [et['return_type']],
-#       'type': [et['type']],
-#       'count': [0]
-#     }), ignore_index=True)
-#   return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
+# %%
+def clist_to_df(clist):
+  df = pd.DataFrame({
+    'terms': [],
+    'arg_types': [],
+    'return_type': [],
+    'type': [],
+    'count': [],
+  })
+  for et in secure_list(clist):
+    if isinstance(et, dict) == 0:
+      et = term_to_dict(et)
+    df = df.append(pd.DataFrame({
+      'terms': [et['terms']],
+      'arg_types': [et['arg_types']],
+      'return_type': [et['return_type']],
+      'type': [et['type']],
+      'count': [0]
+    }), ignore_index=True)
+  return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
 
 # pm_init = clist_to_df([
 #   isRed, isBlue, isYellow,
