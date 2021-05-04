@@ -11,14 +11,15 @@
 
 Example learning data
 
-| trial | agent                       | recipient                 | result                    |
-|-------|-----------------------------|---------------------------|---------------------------|
-| 1     | Stone(white,S1,triangle,S3) | Stone(black,S1,square,S3) | Stone(black,S1,square,S4) |
-| 2     | Stone(white,S1,square,S3)   | Stone(white,S1,square,S3) | Stone(white,S1,square,S5) |
-| 3     | Stone(white,S1,pentagon,S3) | Stone(black,S1,square,S3) | Stone(black,S1,square,S6) |
-| 4     | Stone(white,S1,triangle,S3) | Stone(white,S1,square,S3) | Stone(white,S1,square,S4) |
-| 5     | Stone(white,S1,square,S3)   | Stone(black,S1,square,S3) | Stone(black,S1,square,S5) |
-| 6     | Stone(black,S1,triangle,S3) | Stone(white,S1,square,S3) | Stone(white,S1,square,S2) |
+| trial | agent                    | recipient              | result                 |
+|-------|--------------------------|------------------------|------------------------|
+| 1     | Stone(white,triangle,S3) | Stone(white,square,S3) | Stone(white,square,S4) |
+| 2     | Stone(white,square,S3)   | Stone(white,square,S3) | Stone(white,square,S5) |
+| 3     | Stone(white,pentagon,S3) | Stone(white,square,S3) | Stone(white,square,S6) |
+| 4     | Stone(white,triangle,S3) | Stone(black,square,S3) | Stone(black,square,S4) |
+| 5     | Stone(white,square,S3)   | Stone(black,square,S3) | Stone(black,square,S5) |
+| 6     | Stone(white,pentagon,S3) | Stone(black,square,S3) | Stone(black,square,S6) |
+| 7     | Stone(black,triangle,S3) | Stone(white,square,S3) | Stone(white,square,S2) |
 
 ### Procedure
 
