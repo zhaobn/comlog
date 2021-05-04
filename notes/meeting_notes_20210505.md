@@ -4,8 +4,8 @@
 
 ### Stimuli
 
-5 white agents: enlarge the recipient, and A's edges ~ how much larger R gets
-1 black agent: shrink the recipient
+- 5 white agents: enlarge the recipient, and A's edges ~ how much larger R gets
+- 1 black agent: shrink the recipient
 
 (Counterbalance agent feature values between participants)
 
@@ -34,7 +34,7 @@ Consider using sliders to adjust size in the generalization task phase.
 
 The normative bfs + sample method might not reproduce bootstrapping; consider local update.
 
-## Alternative ideas
+## Other ideas
 
 - Context (background factor) ~ multiplicative composition
 - Curriculum design
