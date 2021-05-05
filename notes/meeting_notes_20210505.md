@@ -33,7 +33,8 @@ Consider using sliders to adjust size in the generalization task phase.
 
 ## Model
 
-The normative bfs + sample method might not reproduce bootstrapping; consider local update.
+I coded up a quick demo with the extended primitives (add, mul) and it seems that the step 1 search + loop method is likely to produce if-else chains. 
+We might consider setting up the primitives carefully to encode the desired effect, or compare the step 1 search method vs a purely sampling-based method?
 
 ## Other ideas
 
