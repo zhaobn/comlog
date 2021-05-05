@@ -23,7 +23,7 @@ Example learning data
 
 ### Procedure
 
-We could test several kinds of generalization scenarios, each as a separate experiment:
+We could test several kinds of generalization scenarios (each as a separate experiment, or factors in a mixed design?)
 
 - **Bootstrapping**: test generalization on black agents, and see if participants are biased towards "A's edges ~ how much shrinkage R undergoes"
 - **Extrapolation**: test on red agents, and see if participants get more creative on the prediction or still incline to the "A's edges ~ how much larger R gets" influence (model prediction)
