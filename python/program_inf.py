@@ -4,8 +4,7 @@ import math
 import random
 import pandas as pd
 pd.set_option('mode.chained_assignment', None)
-
-from base_terms import *
+from task_configs import *
 from helpers import secure_list, names_to_string, print_name, normalize, softmax
 from program_lib import Program_lib_light, Program_lib
 
@@ -40,7 +39,9 @@ class Gibbs_sampler:
       terms = eval(terms)
     tm_list = list(pd.core.common.flatten(terms))
     for t in tm_list:
-      if isinstance(t, bool) == 0 and t.ctype in (list(bases) + ['primitive']):
+      if isinstance(t, int):
+        df.add(t)
+      elif isinstance(t, bool) == 0 and t.ctype in (list(bases) + ['primitive']):
         df.add(t)
     return df.content
 

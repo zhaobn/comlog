@@ -7,7 +7,7 @@ from numpy import random as np_random
 from math import log
 from itertools import product as itertools_product
 
-from base_terms import *
+from task_configs import *
 from helpers import args_to_string, names_to_string, term_to_dict, secure_list
 
 # %%
@@ -324,6 +324,10 @@ class Program_lib(Program_lib_light):
     return df.query(f'terms=="{obj}"').log_prob.values[0]
 
   def get_term_prior(self, term):
+    if isinstance(term, int):
+      prims = self.content.query(f'type=="base_term"&return_type=="num"')
+      prims['log_prob'] = self.log_dir(prims['count'])
+      return prims[prims['terms']==str(term)].log_prob.values[0]
     if term.ctype == 'router':
       return log(1/(4**len(term.name)))
     elif term.ctype == 'obj':
@@ -354,7 +358,9 @@ class Program_lib(Program_lib_light):
       terms_lp = [first_lp]
       for ti in list(range(len(term_list))[1:]):
         # Filter out redundent all-B routers infront of a primitive
-        if term_list[ti].ctype == 'primitive' and term_list[ti-1].name.count('K') == len(term_list[ti-1].name):
+        if isinstance(term_list[ti], int):
+          terms_lp.append(self.get_term_prior(term_list[ti]))
+        elif term_list[ti].ctype == 'primitive' and term_list[ti-1].name.count('K') == len(term_list[ti-1].name):
           terms_lp.append(0)
         else:
           terms_lp.append(self.get_term_prior(term_list[ti]))

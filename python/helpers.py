@@ -2,6 +2,9 @@
 ####################### General imports ###############################
 from copy import copy
 from math import exp
+from pandas.core.algorithms import isin
+
+from pandas.core.dtypes.missing import isneginf_scalar
 
 
 # Get human-readable translation of a list of objects
@@ -12,8 +15,10 @@ def print_name(mylist):
     if isinstance(x, list):
       named_list = print_name(x)
       retlist.append(named_list)
+    elif isinstance(x, bool) or isinstance(x, int):
+      retlist.append(str(x))
     else:
-      retlist.append(str(x) if isinstance(x, bool) else x.name)
+      retlist.append(x.name)
   return retlist
 
 # Return a list
@@ -52,6 +57,11 @@ def term_to_dict(term):
     terms = 'True' if term == True else 'False'
     arg_types = ''
     return_type = 'bool'
+    type = 'base_term'
+  elif isinstance(term, int):
+    terms = str(term)
+    arg_types = ''
+    return_type = 'num'
     type = 'base_term'
   elif term.ctype == 'primitive':
     terms = term.name

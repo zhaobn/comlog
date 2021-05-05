@@ -109,6 +109,8 @@ class Program:
       left_ret = Program(secure_list(left_terms)).run()
       right_ret = Program(secure_list(right_terms)).run()
       return Program(secure_list(left_ret) + secure_list(right_ret)).run()
+    elif isinstance(self.terms[0], int):
+      return self.terms
     elif self.terms[0].ctype == 'router':
       if len(self.terms) == 1: # Should be router I
         return self.terms[0].run(arg_list)
@@ -135,3 +137,5 @@ class Program:
         return [ func_term ] + args_term
     else:
       return self.terms # Base types
+
+# %%
