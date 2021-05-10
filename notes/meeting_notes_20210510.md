@@ -10,6 +10,8 @@ Learning phase 3: White Agents make Recipients larger & Agent's number of edges 
 
 Learning phase 4: Black Agents shrink the Recipients
 
+See updated version: https://docs.google.com/presentation/d/1uTY-Tnpu7i1vSZGUGWzDuUZ6rHr-V6f_25ykbu_uYyY/edit?usp=sharing
+
 ## Modeling results
 
 Add one base primitive: `changeSize [obj -> num -> obj]`
