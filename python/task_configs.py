@@ -74,13 +74,13 @@ num = Placeholder('num')
 obj = Placeholder('obj')
 
 # Functional
-isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
-isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
-isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
+# isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
+# isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
+# isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
 
-isL1 = Primitive('isL1', ['obj'], 'bool', lambda x: x[0].length.name=='L1')
-isL2 = Primitive('isL2', ['obj'], 'bool', lambda x: x[0].length.name=='L2')
-isL3 = Primitive('isL3', ['obj'], 'bool', lambda x: x[0].length.name=='L3')
+# isL1 = Primitive('isL1', ['obj'], 'bool', lambda x: x[0].length.name=='L1')
+# isL2 = Primitive('isL2', ['obj'], 'bool', lambda x: x[0].length.name=='L2')
+# isL3 = Primitive('isL3', ['obj'], 'bool', lambda x: x[0].length.name=='L3')
 
 def set_shape (arg_list):
   obj, val = arg_list
@@ -102,12 +102,14 @@ def set_edge (arg_list):
 
 getShape = Primitive('getShape', ['obj'], 'shape', lambda x: copy(x[0].shape.name))
 setShape = Primitive('setShape', ['obj', 'shape'], 'obj', set_shape)
+isShape = Primitive('isShape', ['obj', 'shape'], 'bool', lambda x: x[0].shape.name==x[1].name)
 
 getEdge = Primitive('getEdge', ['obj'], 'num', lambda x: copy(x[0].shape.value))
 setEdge = Primitive('setEdge', ['obj', 'num'], 'obj', set_edge)
 
 getLength = Primitive('getLength', ['obj'], 'num', lambda x: copy(x[0].length.value))
 setLength = Primitive('setLength', ['obj', 'num'], 'obj', set_length)
+isLength = Primitive('isLength', ['obj', 'num'], 'bool', lambda x: x[0].length.value==x[1])
 
 addnn = Primitive('addnn', ['num', 'num'], 'num', lambda x: sum(x))
 mulnn = Primitive('mulnn', ['num', 'num'], 'num', lambda x: math.prod(x))
@@ -124,9 +126,9 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 # # %% Task set up
 # pm_setup = []
 # pm_terms = [
-#   Tria, Rect, Pent, Hexa, isTria, isRect, isPent,
-#   L1, L2, L3, L4, L5, L6, isL1, isL2, isL3,
-#   getShape, setShape, getEdge, setEdge, getLength, setLength,
+#   Tria, Rect, Pent, Hexa, #isTria, isRect, isPent,
+#   L1, L2, L3, L4, L5, L6, #isL1, isL2, isL3,
+#   getShape, setShape, getEdge, setEdge, getLength, setLength, isShape, isLength,
 #   addnn, mulnn, ifElse, I,
 #   -2, -1, 0, 1, 2, True, False,
 # ]
