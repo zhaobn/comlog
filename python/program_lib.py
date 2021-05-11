@@ -226,7 +226,7 @@ class Program_lib(Program_lib_light):
     arg_types, ret_type = type_signature
     # when no arg is provided, return all the base terms
     if len(arg_types) < 1:
-      programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'log_prob': [1]}), ignore_index=True)
+      programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'log_prob': [0]}), ignore_index=True)
       return programs_df
     else:
       # find direct matches
@@ -278,6 +278,60 @@ class Program_lib(Program_lib_light):
           left = self.expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
           # depth = depth if (left_term == 'ifElse' and free_index == 0) else depth-1
           right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
+          if len(left) > 0 and len(right) > 0:
+            terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
+      return terms_df
+
+  def typed_enum(self, type_signature, depth = 1):
+    programs_df = pd.DataFrame({'terms': [], 'log_prob': []})
+    arg_types, ret_type = type_signature
+    if len(arg_types) < 1:
+      programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'log_prob': [0]}), ignore_index=True)
+      return programs_df
+    else:
+      # Compress direct matches
+      if self.get_cached_program(type_signature) is not None:
+        programs_df = programs_df.append(pd.DataFrame({'terms': [f'PM("{args_to_string(arg_types)}_{ret_type}")'], 'log_prob': [0]}), ignore_index=True)
+      # return direct matches
+      if depth < 1:
+        return programs_df
+      # enumerate recursively
+      else:
+        left_trees = self.get_matched_program(ret_type, True)
+        for i in left_trees.index:
+          left_terms = left_trees.at[i, 'terms']
+          left_arg_types = left_trees.at[i, 'arg_types'].split('_')
+          free_index = len(left_arg_types)-1
+          # get routers
+          routers = self.get_all_routers(arg_types, left_arg_types, free_index)
+          for rt in routers:
+            routed_args = eval(rt).run({'left': [], 'right': []}, arg_types)
+            left = self.typed_expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
+            if len(routed_args['right']) > 0:
+              right_type = args_to_string(routed_args['right']) + '_' + left_arg_types[free_index]
+              right = pd.DataFrame({'terms': [f'PM("{right_type}")'], 'log_prob': [0]})
+            else:
+              # Return base term placeholder
+              right = pd.DataFrame({'terms': [left_arg_types[free_index]], 'log_prob': [0]})
+            if len(left) > 0 and len(right) > 0:
+              programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))), ignore_index=True)
+        return programs_df
+
+  def typed_expand(self, left_term, left_arg_types, free_index, args, depth):
+    if free_index < 0:
+      return pd.DataFrame({'terms': [ left_term ], 'log_prob': [0]})
+    else:
+      if len(args) < 1:
+        left = self.typed_expand(left_term, left_arg_types, free_index-1, [], depth)
+        right = self.typed_enum([[],left_arg_types[free_index]], depth-1)
+        return self.combine_terms(left, right)
+      else:
+        routers = self.get_all_routers(args, left_arg_types, free_index-1)
+        terms_df = pd.DataFrame({'terms': [], 'log_prob': []})
+        for rt in routers:
+          routed_args = eval(rt).run({'left': [], 'right': []}, args)
+          left = self.typed_expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
+          right = self.typed_enum([routed_args['right'], left_arg_types[free_index]], depth-1)
           if len(left) > 0 and len(right) > 0:
             terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
       return terms_df
@@ -449,31 +503,26 @@ class Program_lib(Program_lib_light):
         filtered = filtered.append(passed_pm[['terms', 'log_prob']], ignore_index=True)
     return filtered
 
-  # Combined function
-  def bfs_filter(self, type_signature, depth, data):
-    programs_df = self.bfs(type_signature, depth)
-    return self.filter_program(programs_df, data)
-
-# %%
-def clist_to_df(clist):
-  df = pd.DataFrame({
-    'terms': [],
-    'arg_types': [],
-    'return_type': [],
-    'type': [],
-    'count': [],
-  })
-  for et in secure_list(clist):
-    if isinstance(et, dict) == 0:
-      et = term_to_dict(et)
-    df = df.append(pd.DataFrame({
-      'terms': [et['terms']],
-      'arg_types': [et['arg_types']],
-      'return_type': [et['return_type']],
-      'type': [et['type']],
-      'count': [0]
-    }), ignore_index=True)
-  return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
+# # %%
+# def clist_to_df(clist):
+#   df = pd.DataFrame({
+#     'terms': [],
+#     'arg_types': [],
+#     'return_type': [],
+#     'type': [],
+#     'count': [],
+#   })
+#   for et in secure_list(clist):
+#     if isinstance(et, dict) == 0:
+#       et = term_to_dict(et)
+#     df = df.append(pd.DataFrame({
+#       'terms': [et['terms']],
+#       'arg_types': [et['arg_types']],
+#       'return_type': [et['return_type']],
+#       'type': [et['type']],
+#       'count': [0]
+#     }), ignore_index=True)
+#   return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
 
 # pm_init = clist_to_df([
 #   isRed, isBlue, isYellow,
@@ -516,13 +565,16 @@ def clist_to_df(clist):
 # ])
 # pm_init_test.to_csv('data/pm_init_test.csv')
 
-# # %%
-# pm_init = pd.read_csv('data/pm_init.csv', index_col=0, na_filter=False)
-# pl = Program_lib(pm_init, 0.1)
-# t = [['obj', 'obj'], 'obj']
-# # pl.generate_program(t)
-# rf = pl.bfs(t,1)
-# # rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
+# %%
+pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
+t = [['obj', 'obj'], 'obj']
+# pl.generate_program(t)
+
+pl = Program_lib(pm_init, 0.1)
+rf = pl.typed_enum(t,1)
+rf2 = pl.typed_enum(t,2)
+
+# rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
 
 # # %%
 # data = {
@@ -548,3 +600,5 @@ def clist_to_df(clist):
 # # pl.generate_program(t)
 # rf = pl.bfs(t,1)
 # x = pl.filter_program(rf,data)
+
+# %%
