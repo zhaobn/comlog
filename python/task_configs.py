@@ -9,48 +9,37 @@ from base_methods import if_else, send_right, send_left, send_both, constant, re
 from base_terms import B,C,S,K,BB,BC,BS,BK,CB,CC,CS,CK,SB,SC,SS,SK,KB,KC,KS,KK
 
 # %% Define class
-class Base:
-  def __init__(self, ctype, name, ref):
-    self.ctype = ctype
+SHAPE_REF = {
+  'Tria': 3,
+  'Rect': 4,
+  'Pent': 5,
+  'Hexa': 6,
+  'Hept': 7,
+}
+class Shape:
+  def __init__(self, name):
+    self.ctype = 'shape'
     self.name = name
-    self.ref = ref
-  @property
-  def value(self):
-    return self.ref[self.name]
+    self.value = SHAPE_REF[name]
   def __str__(self):
     return self.name
 
-class Color(Base):
+class Length:
   def __init__(self, name):
-    Base.__init__(self, 'color', name, {
-      'White': 0,
-      'Black': 1,
-    })
-class Shape(Base):
-  def __init__(self, name):
-    Base.__init__(self, 'shape', name, {
-      'Triangle': 1,
-      'Square': 2,
-      'Pentagon': 3,
-      'Hexagon': 4,
-    })
-
-class Size(Base):
-  size_ref = {}
-  for i in range(1,7):
-    size_ref[f'S{str(i)}'] = i
-  def __init__(self, name):
-    Base.__init__(self, 'size', name, self.size_ref)
+    self.ctype = 'length'
+    self.name = name
+    self.value = int(name[1:])
+  def __str__(self):
+    return self.name
 
 class Stone:
-  def __init__(self, color, shape, size):
+  def __init__(self, shape, length):
     self.ctype = 'obj'
-    self.color = color
     self.shape = shape
-    self.size = size
+    self.length = length
   @property
   def name(self):
-    return f'Stone({self.color.name},{self.shape.name},{self.size.name})'
+    return f'Stone({self.shape.name},{self.length.name})'
   def __str__(self):
     return self.name
 
@@ -64,109 +53,87 @@ class PM(Placeholder): # Programholder
     return f'{self.name} {self.arg_types} -> {self.return_type}'
 
 # %% Base terms
-Black = Color('Black')
-White = Color('White')
+Tria = Shape('Tria')
+Rect = Shape('Rect')
+Pent = Shape('Pent')
+Hexa = Shape('Hexa')
 
-Triangle = Shape('Triangle')
-Square = Shape('Square')
-Pentagon = Shape('Pentagon')
-Hexagon = Shape('Hexagon')
+L1 = Length('L1')
+L2 = Length('L2')
+L3 = Length('L3')
+L4 = Length('L4')
+L5 = Length('L5')
+L6 = Length('L6')
 
-S1 = Size('S1')
-S2 = Size('S2')
-S3 = Size('S3')
-S4 = Size('S4')
-S5 = Size('S5')
-S6 = Size('S6')
 
-isBlack = Primitive('isBlack',['obj'],'bool',lambda x: x[0].color.name=='Black')
-isWhite = Primitive('isWhite',['obj'],'bool',lambda x: x[0].color.name=='White')
+isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
+isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
+isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
+isHexa = Primitive('isHexa', ['obj'], 'bool', lambda x: x[0].shape.name=='Hexa')
 
-isTriangle = Primitive('isTriangle', ['obj'], 'bool', lambda x: x[0].shape.name=='Triangle')
-isSquare = Primitive('isSquare', ['obj'], 'bool', lambda x: x[0].shape.name=='Square')
-isPentagon = Primitive('isPentagon', ['obj'], 'bool', lambda x: x[0].shape.name=='Pentagon')
-isHexagon = Primitive('isHexagon', ['obj'], 'bool', lambda x: x[0].shape.name=='Hexagon')
-
-isS1 = Primitive('isS1', ['obj'], 'bool', lambda x: x[0].size.name=='S1')
-isS2 = Primitive('isS2', ['obj'], 'bool', lambda x: x[0].size.name=='S2')
-isS3 = Primitive('isS3', ['obj'], 'bool', lambda x: x[0].size.name=='S3')
-isS4 = Primitive('isS4', ['obj'], 'bool', lambda x: x[0].size.name=='S4')
-isS5 = Primitive('isS5', ['obj'], 'bool', lambda x: x[0].size.name=='S5')
-isS6 = Primitive('isS6', ['obj'], 'bool', lambda x: x[0].size.name=='S6')
+isL1 = Primitive('isL1', ['obj'], 'bool', lambda x: x[0].length.name=='L1')
+isL2 = Primitive('isL2', ['obj'], 'bool', lambda x: x[0].length.name=='L2')
+isL3 = Primitive('isL3', ['obj'], 'bool', lambda x: x[0].length.name=='L3')
+isL4 = Primitive('isL4', ['obj'], 'bool', lambda x: x[0].length.name=='L4')
+isL5 = Primitive('isL5', ['obj'], 'bool', lambda x: x[0].length.name=='L5')
+isL6 = Primitive('isL6', ['obj'], 'bool', lambda x: x[0].length.name=='L6')
 
 # Placeholders for typed program enumeration
-color = Placeholder('color')
 shape = Placeholder('shape')
+length = Placeholder('length')
 num = Placeholder('num')
 obj = Placeholder('obj')
 
 # Functional
-def set_color (arg_list):
-  obj, val = arg_list
-  obj.color = eval(str(copy(val)))
-  return obj
-
 def set_shape (arg_list):
   obj, val = arg_list
   obj.shape = eval(str(copy(val)))
   return obj
 
-def set_size (arg_list):
+def set_length (arg_list):
   obj, val = arg_list
-  ref = Size('S1').ref
-  upper_bound = max(list(ref.values()))
-  lower_bound= min(list(ref.values()))
-  if val > upper_bound:
-    val = copy(upper_bound)
-  elif val < lower_bound:
-    val = copy(lower_bound)
-  else:
-    val = copy(val)
-  size_name = list(ref.keys())[list(ref.values()).index(val)]
-  obj.size = eval(size_name)
+  obj.length = Length(f'L{val}')
   return obj
 
 def set_edge (arg_list):
   obj, val = arg_list
-  ref = Shape('Square').ref
-  upper_bound = max(list(ref.values()))
-  lower_bound= min(list(ref.values()))
-  if val > upper_bound:
-    val = copy(upper_bound)
-  elif val < lower_bound:
-    val = copy(lower_bound)
-  else:
-    val = copy(val)
-  shape_name = list(ref.keys())[list(ref.values()).index(val)]
-  obj.shape = eval(shape_name)
+  v_index = list(SHAPE_REF.values()).index(val)
+  if v_index > -1:
+    obj.shape = eval(list(SHAPE_REF.keys())[v_index])
   return obj
-
-getColor = Primitive('getColor', ['obj'], 'color', lambda x: copy(x[0].color.name))
-setColor = Primitive('setColor', ['obj', 'color'], 'obj', set_color)
-eqColor = Primitive('eqColor', ['color', 'color'], 'bool', lambda x: x[0].color.name==x[1].color.name)
 
 getShape = Primitive('getShape', ['obj'], 'shape', lambda x: copy(x[0].shape.name))
 setShape = Primitive('setShape', ['obj', 'shape'], 'obj', set_shape)
-eqShape = Primitive('eqShape', ['shape', 'shape'], 'bool', lambda x: x[0].shape.name==x[1].shape.name)
 
 getEdge = Primitive('getEdge', ['obj'], 'num', lambda x: copy(x[0].shape.value))
 setEdge = Primitive('setEdge', ['obj', 'num'], 'obj', set_edge)
-eqEdge = Primitive('eqEdge', ['num', 'num'], 'bool', lambda x: x[0].shape.value==x[1].shape.value)
 
-getSize = Primitive('getSize', ['obj'], 'num', lambda x: copy(x[0].size.value))
-setSize = Primitive('setSize', ['obj', 'num'], 'obj', set_size)
-eqSize = Primitive('eqSize', ['size', 'num'], 'bool', lambda x: x[0].size.value==x[1].size.value)
+getLength = Primitive('getLength', ['obj'], 'num', lambda x: copy(x[0].length.value))
+setLength = Primitive('setLength', ['obj', 'num'], 'obj', set_length)
 
-addVal = Primitive('addVal', ['num', 'num'], 'num', lambda x: sum(x))
-mulVal = Primitive('mulVal', ['num', 'num'], 'num', lambda x: math.prod(x))
+addnn = Primitive('addnn', ['num', 'num'], 'num', lambda x: sum(x))
+mulnn = Primitive('mulnn', ['num', 'num'], 'num', lambda x: math.prod(x))
 
-qObject = Primitive('eqObject', ['obj', 'obj'], 'bool', lambda x: x[0].name==x[1].name)
 ifElse = Primitive('ifElse', ['bool', 'obj', 'obj'], 'obj', if_else)
-
 I = Primitive('I', 'obj', 'obj', return_myself)
 
-# # %%
-# x = Stone(White,Square,S4)
-# y = Stone(Black,Square,S3)
-# z = Program([BS,[B,setSize,I],[BC,[B,addVal,[B,getSize,I]],[B,getEdge,I]]]).run([x,y])
-# z.name
+# %%
+x = Stone(Tria,L1)
+y = Stone(Rect,L1)
+z = Program([BC,[B,setLength,I],[C,[B,addnn,[B,getEdge,I]],-1]]).run([x,y])
+z.name
+
+# %% Set up
+# pm_task = clist_to_df([
+#   White,Black,isWhite,isBlack,
+#   Triangle,Square,Pentagon,Hexagon,isTriangle,isSquare,isPentagon,isHexagon,
+#   S1,S2,S3,S4,S5,S6,S6,isS1,isS2,isS3,isS4,isS5,isS6,
+#   getColor, setColor, eqColor,
+#   getShape, setShape, eqShape,
+#   getSize, setSize, eqSize,
+#   getEdge,setEdge,eqEdge,
+#   addVal,mulVal,ifElse,
+#   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
+#   True, False, 1,2,3,4,5,6
+# ])
+# pm_task.to_csv('data/pm_task.csv')

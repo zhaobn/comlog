@@ -182,18 +182,3 @@ g.run(save_prefix='task_test/', sample=True, top_n=1)
 # y = Stone(Black,Square,S3)
 # z = Program([KK,[setColor,Stone(Black,Square,S3)],Black]).run([x,y])
 # z.name
-
-# %% Set up
-# pm_task = clist_to_df([
-#   White,Black,isWhite,isBlack,
-#   Triangle,Square,Pentagon,Hexagon,isTriangle,isSquare,isPentagon,isHexagon,
-#   S1,S2,S3,S4,S5,S6,S6,isS1,isS2,isS3,isS4,isS5,isS6,
-#   getColor, setColor, eqColor,
-#   getShape, setShape, eqShape,
-#   getSize, setSize, eqSize,
-#   getEdge,setEdge,eqEdge,
-#   addVal,mulVal,ifElse,
-#   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
-#   True, False, 1,2,3,4,5,6
-# ])
-# pm_task.to_csv('data/pm_task.csv')
