@@ -52,8 +52,8 @@ class Task_lib(Program_lib):
 pm_init = pd.read_csv('data/pm_task.csv',index_col=0,na_filter=False)
 pl = Task_lib(pm_init)
 t = [['obj', 'obj'], 'obj']
-rf = pl.bfs(t,1)
-rf2 = pl.bfs(t,2)
+# rf = pl.bfs(t,1)
+rf2 = pl.typed_enum(t,2)
 
 # %%
 class Task_gibbs(Gibbs_sampler):

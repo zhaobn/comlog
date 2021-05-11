@@ -307,12 +307,7 @@ class Program_lib(Program_lib_light):
           for rt in routers:
             routed_args = eval(rt).run({'left': [], 'right': []}, arg_types)
             left = self.typed_expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
-            if len(routed_args['right']) > 0:
-              right_type = args_to_string(routed_args['right']) + '_' + left_arg_types[free_index]
-              right = pd.DataFrame({'terms': [f'PM("{right_type}")'], 'log_prob': [0]})
-            else:
-              # Return base term placeholder
-              right = pd.DataFrame({'terms': [left_arg_types[free_index]], 'log_prob': [0]})
+            right = self.typed_enum([routed_args['right'],left_arg_types[free_index]], depth-1)
             if len(left) > 0 and len(right) > 0:
               programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))), ignore_index=True)
         return programs_df
@@ -565,14 +560,14 @@ class Program_lib(Program_lib_light):
 # ])
 # pm_init_test.to_csv('data/pm_init_test.csv')
 
-# %%
-pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
-t = [['obj', 'obj'], 'obj']
-# pl.generate_program(t)
+# # %%
+# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
+# t = [['obj', 'obj'], 'obj']
+# # pl.generate_program(t)
 
-pl = Program_lib(pm_init, 0.1)
-rf = pl.typed_enum(t,1)
-rf2 = pl.typed_enum(t,2)
+# pl = Program_lib(pm_init, 0.1)
+# rf = pl.typed_enum(t,1)
+# rf2 = pl.typed_enum(t,2)
 
 # rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
 
