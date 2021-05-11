@@ -1,7 +1,0 @@
-trial,agent,recipient,result
-1,"Stone(White,Triangle,S3)","Stone(Black,Square,S3)","Stone(Black,Square,S4)"
-2,"Stone(White,Square,S3)","Stone(White,Square,S3)","Stone(White,Square,S5)"
-3,"Stone(White,Pentagon,S3)","Stone(Black,Square,S3)","Stone(Black,Square,S6)"
-4,"Stone(White,Triangle,S3)","Stone(White,Square,S3)","Stone(White,Square,S4)"
-5,"Stone(White,Square,S3)","Stone(Black,Square,S3)","Stone(Black,Square,S5)"
-6,"Stone(Black,Triangle,S3)","Stone(White,Square,S3)","Stone(White,Square,S2)"
