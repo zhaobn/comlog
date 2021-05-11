@@ -6,18 +6,18 @@ import pandas as pd
 from task_configs import *
 from base_classes import Program
 from base_terms import B,C,S,K,BB,BC,BS,BK,CB,CC,CS,CK,SB,SC,SS,SK,KB,KC,KS,KK
-from program_lib import Program_lib #,clist_to_df
+from program_lib import Program_lib
 from program_inf import Gibbs_sampler
 
+# %%
 class Task_lib(Program_lib):
   def __init__(self, df, dir_alpha=0.1):
     Program_lib.__init__(self, df, dir_alpha)
   def sample_base(self, type, add):
     if type == 'obj':
-      color = self.sample_base('color', add)
       shape = self.sample_base('shape', add)
-      size = self.sample_base('size', add)
-      sampled_props = [color, shape, size]
+      length = self.sample_base('length', add)
+      sampled_props = [shape, length]
       stone = 'Stone(' + ','.join([p['terms'] for p in sampled_props]) + ')'
       return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'type': 'base_term'}
     else:
@@ -32,26 +32,30 @@ class Task_lib(Program_lib):
         return sampled
   def get_all_objs(self):
     stones_df = pd.DataFrame({'terms': []})
-    color_df = self.content.query('return_type=="color"&type=="base_term"')
     shape_df = self.content.query('return_type=="shape"&type=="base_term"')
-    size_df = self.content.query('return_type=="size"&type=="base_term"')
-    for c in range(len(color_df)):
-      for s in range(len(shape_df)):
-        for z in range(len(size_df)):
-          stone_feats = [
-            color_df.iloc[c].at['terms'],
-            shape_df.iloc[s].at['terms'],
-            size_df.iloc[z].at['terms'],
-          ]
-          counts = [
-            color_df.iloc[c].at['count'],
-            shape_df.iloc[s].at['count'],
-            size_df.iloc[z].at['count'],
-          ]
-          stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
+    length_df = self.content.query('return_type=="length"&type=="base_term"')
+    for s in range(len(shape_df)):
+      for l in range(len(length_df)):
+        stone_feats = [
+          shape_df.iloc[s].at['terms'],
+          length_df.iloc[l].at['terms'],
+        ]
+        counts = [
+          shape_df.iloc[s].at['count'],
+          length_df.iloc[l].at['count'],
+        ]
+        stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
     stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
     return stones_df[['terms', 'log_prob']]
 
+# %%
+pm_init = pd.read_csv('data/pm_task.csv',index_col=0,na_filter=False)
+pl = Task_lib(pm_init)
+t = [['obj', 'obj'], 'obj']
+rf = pl.bfs(t,1)
+rf2 = pl.bfs(t,2)
+
+# %%
 class Task_gibbs(Gibbs_sampler):
   def __init__(self, program_lib, data_list, iteration, inc=True, burnin=0, down_weight=1, iter_start=0, data_start=0):
     Gibbs_sampler.__init__(self, program_lib, data_list, iteration, inc, burnin, down_weight, iter_start, data_start)
@@ -120,21 +124,21 @@ class Task_gibbs(Gibbs_sampler):
           filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}.csv')
           pd.DataFrame.from_records(self.filtering_history).to_csv(f'{save_prefix}filter_hist.csv')
           self.cur_programs.to_csv(f'{save_prefix}_{str(i+1).zfill(padding)}.csv')
-# %%
-task_data_df = pd.read_csv('task_data.csv',index_col=0)
-task_data = []
-for i in range(len(task_data_df)):
-  tdata = task_data_df.iloc[i].to_dict()
-  task = {
-    'agent': eval(tdata['agent']),
-    'recipient': eval(tdata['recipient']),
-    'result': eval(tdata['result'])
-  }
-  task_data.append(task)
+# # %%
+# task_data_df = pd.read_csv('task_data.csv',index_col=0)
+# task_data = []
+# for i in range(len(task_data_df)):
+#   tdata = task_data_df.iloc[i].to_dict()
+#   task = {
+#     'agent': eval(tdata['agent']),
+#     'recipient': eval(tdata['recipient']),
+#     'result': eval(tdata['result'])
+#   }
+#   task_data.append(task)
 
-pm_init = pd.read_csv('data/pm_task.csv',index_col=0,na_filter=False)
-g = Task_gibbs(Task_lib(pm_init), task_data, iteration=1000, burnin=0, inc=1)
-g.run(save_prefix='task_test/', sample=True, top_n=1)
+# pm_init = pd.read_csv('data/pm_task.csv',index_col=0,na_filter=False)
+# g = Task_gibbs(Task_lib(pm_init), task_data, iteration=1000, burnin=0, inc=1)
+# g.run(save_prefix='task_test/', sample=True, top_n=1)
 
 # # %%
 # pm_init = pd.read_csv('data/pm_task.csv',index_col=0,na_filter=False)

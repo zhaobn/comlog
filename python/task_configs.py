@@ -1,6 +1,8 @@
 # %%
 import math
 from copy import copy
+from numpy import int32
+import pandas as pd
 from pandas.core.common import flatten
 
 from helpers import secure_list, copy_list
@@ -43,7 +45,7 @@ class Stone:
   def __str__(self):
     return self.name
 
-class PM(Placeholder): # Programholder
+class PM(Placeholder): # Programholder for typed enumeration
   def __init__(self, type_sig, name='pgm'):
     Placeholder.__init__(self, name)
     types = type_sig.split('_')
@@ -65,19 +67,6 @@ L4 = Length('L4')
 L5 = Length('L5')
 L6 = Length('L6')
 
-
-isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
-isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
-isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
-isHexa = Primitive('isHexa', ['obj'], 'bool', lambda x: x[0].shape.name=='Hexa')
-
-isL1 = Primitive('isL1', ['obj'], 'bool', lambda x: x[0].length.name=='L1')
-isL2 = Primitive('isL2', ['obj'], 'bool', lambda x: x[0].length.name=='L2')
-isL3 = Primitive('isL3', ['obj'], 'bool', lambda x: x[0].length.name=='L3')
-isL4 = Primitive('isL4', ['obj'], 'bool', lambda x: x[0].length.name=='L4')
-isL5 = Primitive('isL5', ['obj'], 'bool', lambda x: x[0].length.name=='L5')
-isL6 = Primitive('isL6', ['obj'], 'bool', lambda x: x[0].length.name=='L6')
-
 # Placeholders for typed program enumeration
 shape = Placeholder('shape')
 length = Placeholder('length')
@@ -85,6 +74,14 @@ num = Placeholder('num')
 obj = Placeholder('obj')
 
 # Functional
+isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
+isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
+isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
+
+isL1 = Primitive('isL1', ['obj'], 'bool', lambda x: x[0].length.name=='L1')
+isL2 = Primitive('isL2', ['obj'], 'bool', lambda x: x[0].length.name=='L2')
+isL3 = Primitive('isL3', ['obj'], 'bool', lambda x: x[0].length.name=='L3')
+
 def set_shape (arg_list):
   obj, val = arg_list
   obj.shape = eval(str(copy(val)))
@@ -92,7 +89,8 @@ def set_shape (arg_list):
 
 def set_length (arg_list):
   obj, val = arg_list
-  obj.length = Length(f'L{val}')
+  len_val = 1 if val < 1 else val
+  obj.length = Length(f'L{len_val}')
   return obj
 
 def set_edge (arg_list):
@@ -117,23 +115,38 @@ mulnn = Primitive('mulnn', ['num', 'num'], 'num', lambda x: math.prod(x))
 ifElse = Primitive('ifElse', ['bool', 'obj', 'obj'], 'obj', if_else)
 I = Primitive('I', 'obj', 'obj', return_myself)
 
-# %%
-x = Stone(Tria,L1)
-y = Stone(Rect,L1)
-z = Program([BC,[B,setLength,I],[C,[B,addnn,[B,getEdge,I]],-1]]).run([x,y])
-z.name
+# # %%
+# x = Stone(Pent,L1)
+# y = Stone(Rect,L1)
+# z = Program([BC,[B,setLength,I],[C,[B,mulnn,[B,getEdge,I]],2]]).run([x,y])
+# z.name
 
-# %% Set up
-# pm_task = clist_to_df([
-#   White,Black,isWhite,isBlack,
-#   Triangle,Square,Pentagon,Hexagon,isTriangle,isSquare,isPentagon,isHexagon,
-#   S1,S2,S3,S4,S5,S6,S6,isS1,isS2,isS3,isS4,isS5,isS6,
-#   getColor, setColor, eqColor,
-#   getShape, setShape, eqShape,
-#   getSize, setSize, eqSize,
-#   getEdge,setEdge,eqEdge,
-#   addVal,mulVal,ifElse,
-#   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
-#   True, False, 1,2,3,4,5,6
-# ])
+# # %% Task set up
+# pm_setup = []
+# pm_terms = [
+#   Tria, Rect, Pent, Hexa, isTria, isRect, isPent,
+#   L1, L2, L3, L4, L5, L6, isL1, isL2, isL3,
+#   getShape, setShape, getEdge, setEdge, getLength, setLength,
+#   addnn, mulnn, ifElse, I,
+#   -2, -1, 0, 1, 2, True, False,
+# ]
+# for pt in pm_terms:
+#   if isinstance(pt, bool) or isinstance(pt, int):
+#     terms = str(pt)
+#     arg_types = ''
+#     return_type = 'bool' if isinstance(pt, bool) else 'num'
+#     type = 'base_term'
+#   elif pt.ctype == 'shape' or pt.ctype == 'length':
+#     terms = pt.name
+#     arg_types = ''
+#     return_type = pt.ctype
+#     type = 'base_term'
+#   else:
+#     terms = pt.name
+#     arg_types = '_'.join(secure_list(pt.arg_type))
+#     return_type = pt.return_type
+#     type = 'primitive'
+#   pm_setup.append({'terms':terms,'arg_types':arg_types,'return_type':return_type,'type':type,'count':1})
+
+# pm_task = pd.DataFrame.from_records(pm_setup).groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
 # pm_task.to_csv('data/pm_task.csv')
