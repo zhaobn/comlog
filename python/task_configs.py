@@ -193,7 +193,12 @@ class Task_lib(Program_lib):
     stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
     return stones_df[['terms', 'log_prob']]
 
-# # %%
+# %%
+# pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
+# pl = Task_lib(pm_task)
+# pl.get_init_prior()
+# pl.content.reset_index().to_csv('data/task_pm.csv') # Add priors for programs manually
+
 # pm_init = pd.read_csv('data/pm_task.csv',index_col=0,na_filter=False)
 # pl = Task_lib(pm_init)
 # t = [['obj', 'obj'], 'obj']
@@ -203,3 +208,5 @@ class Task_lib(Program_lib):
 # frames = rf2[rf2["terms"].str.contains("ifElse,bool")==False]
 # frames = frames.reset_index()[['terms', 'log_prob']]
 # frames.to_csv('data/frames.csv')
+
+# %%

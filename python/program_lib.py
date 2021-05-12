@@ -2,13 +2,12 @@
 # %%
 import pandas as pd
 pd.set_option('mode.chained_assignment', None)
-
 from numpy import random as np_random
-from math import log
+from math import log, exp
 from itertools import product as itertools_product
 
-from task_configs import *
-from helpers import args_to_string, names_to_string, term_to_dict, secure_list
+from base_terms import *
+from helpers import args_to_string, names_to_string, term_to_dict, secure_list, print_name
 
 # %%
 class Program_lib_light:
@@ -39,6 +38,16 @@ class Program_lib(Program_lib_light):
     Program_lib_light.__init__(self, df, dir_alpha)
     self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'type': 'ERROR'}
     self.SET_MARKERS = set(list(self.content[self.content['type']=='base_term'].return_type))
+
+  def get_init_prior(self): # NB: no programs
+    df = self.content.query(f'type=="primitive"')
+    df['log_prior'] = self.log_dir(df['count'])
+    for t in self.SET_MARKERS:
+      sub_df = self.content.query(f'type=="base_term"&return_type=="{t}"')
+      sub_df['log_prior'] = self.log_dir(sub_df['count'])
+      df = df.append(sub_df)
+    programs = self.content.query(f'type=="program"')
+    self.content = df.append(programs).fillna(0)
 
   # List all the possile stones (w flat prior)
   def get_all_objs(self):
@@ -368,52 +377,52 @@ class Program_lib(Program_lib_light):
       routers.append(''.join(r))
     return routers
 
-  @staticmethod
-  def query_log_prob(obj, df):
-    return df.query(f'terms=="{obj}"').log_prob.values[0]
+  # @staticmethod
+  # def query_log_prob(obj, df):
+  #   return df.query(f'terms=="{obj}"').log_prob.values[0]
 
-  def get_term_prior(self, term):
-    if isinstance(term, int):
-      prims = self.content.query(f'type=="base_term"&return_type=="num"')
-      prims['log_prob'] = self.log_dir(prims['count'])
-      return prims[prims['terms']==str(term)].log_prob.values[0]
-    if term.ctype == 'router':
-      return log(1/(4**len(term.name)))
-    elif term.ctype == 'obj':
-      return self.get_all_objs().query(f'terms=="{term.name}"').log_prob.values[0]
-    elif term.ctype in self.SET_MARKERS:
-      prims = self.content.query(f'type=="base_term"&return_type=="{term.ctype}"')
-      prims['log_prob'] = self.log_dir(prims['count'])
-      return prims[prims['terms']==term.name].log_prob.values[0]
-    elif term.ctype == 'primitive' and len(term.name) > 1:
-      prims = self.content.query(f'type=="primitive"&return_type=="{term.return_type}"')
-      prims['log_prob'] = self.log_dir(prims['count'])
-      return prims[prims['terms']==term.name].log_prob.values[0]
-    elif term.name == 'I':
-      prims = self.content.query(f'type=="program"&arg_types=="obj"&return_type=="obj"')
-      prims['log_prob'] = self.log_dir(prims['count'])
-      return prims[prims['terms']=='I'].log_prob.values[0]
-    else:
-      print(f'get_term_prior() receives unclear ctype of {term.name}')
+  # def get_term_prior(self, term):
+  #   if isinstance(term, int):
+  #     prims = self.content.query(f'type=="base_term"&return_type=="num"')
+  #     prims['log_prob'] = self.log_dir(prims['count'])
+  #     return prims[prims['terms']==str(term)].log_prob.values[0]
+  #   if term.ctype == 'router':
+  #     return log(1/(4**len(term.name)))
+  #   elif term.ctype == 'obj':
+  #     return self.get_all_objs().query(f'terms=="{term.name}"').log_prob.values[0]
+  #   elif term.ctype in self.SET_MARKERS:
+  #     prims = self.content.query(f'type=="base_term"&return_type=="{term.ctype}"')
+  #     prims['log_prob'] = self.log_dir(prims['count'])
+  #     return prims[prims['terms']==term.name].log_prob.values[0]
+  #   elif term.ctype == 'primitive' and len(term.name) > 1:
+  #     prims = self.content.query(f'type=="primitive"&return_type=="{term.return_type}"')
+  #     prims['log_prob'] = self.log_dir(prims['count'])
+  #     return prims[prims['terms']==term.name].log_prob.values[0]
+  #   elif term.name == 'I':
+  #     prims = self.content.query(f'type=="program"&arg_types=="obj"&return_type=="obj"')
+  #     prims['log_prob'] = self.log_dir(prims['count'])
+  #     return prims[prims['terms']=='I'].log_prob.values[0]
+  #   else:
+  #     print(f'get_term_prior() receives unclear ctype of {term.name}')
 
-  def get_pm_prior(self, terms):
-    if isinstance(terms, str):
-      terms = eval(terms)
-    term_list = list(pd.core.common.flatten(secure_list(terms)))
-    first_lp = self.get_term_prior(term_list[0])
-    if len(term_list) == 1:
-      return first_lp
-    else:
-      terms_lp = [first_lp]
-      for ti in list(range(len(term_list))[1:]):
-        # Filter out redundent all-B routers infront of a primitive
-        if isinstance(term_list[ti], int):
-          terms_lp.append(self.get_term_prior(term_list[ti]))
-        elif term_list[ti].ctype == 'primitive' and term_list[ti-1].name.count('K') == len(term_list[ti-1].name):
-          terms_lp.append(0)
-        else:
-          terms_lp.append(self.get_term_prior(term_list[ti]))
-      return sum(terms_lp)
+  # def get_pm_prior(self, terms):
+  #   if isinstance(terms, str):
+  #     terms = eval(terms)
+  #   term_list = list(pd.core.common.flatten(secure_list(terms)))
+  #   first_lp = self.get_term_prior(term_list[0])
+  #   if len(term_list) == 1:
+  #     return first_lp
+  #   else:
+  #     terms_lp = [first_lp]
+  #     for ti in list(range(len(term_list))[1:]):
+  #       # Filter out redundent all-B routers infront of a primitive
+  #       if isinstance(term_list[ti], int):
+  #         terms_lp.append(self.get_term_prior(term_list[ti]))
+  #       elif term_list[ti].ctype == 'primitive' and term_list[ti-1].name.count('K') == len(term_list[ti-1].name):
+  #         terms_lp.append(0)
+  #       else:
+  #         terms_lp.append(self.get_term_prior(term_list[ti]))
+  #     return sum(terms_lp)
 
   def unfold_program(self, terms, log_prob, data):
     # Preps
@@ -434,8 +443,8 @@ class Program_lib(Program_lib_light):
       pm = eval(terms)
       unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"&type=="program"')
       if len(unfolded) > 0:
-        unfolded['log_prior'] = unfolded.apply(lambda row: self.get_pm_prior(row['terms']), axis=1)
-        unfolded['log_prob'] = self.log_dir(list(unfolded['count']), list(unfolded['log_prior']))
+        unfolded['prior'] = unfolded.apply(lambda row: exp(row['log_prior']), axis=1)
+        unfolded['log_prob'] = self.log_dir(list(unfolded['count']), list(unfolded['prior']))
         return unfolded[['terms', 'log_prob']]
       else:
         return pd.DataFrame({'terms': [], 'log_prob': []})
@@ -450,8 +459,9 @@ class Program_lib(Program_lib_light):
         tm = t.strip('[]')
         if tm in list(self.SET_MARKERS):
           unfolded = self.content.query(f'return_type=="{tm}"&type=="base_term"')
+          unfolded['prior'] = unfolded.apply(lambda row: exp(row['log_prior']), axis=1)
           unfolded_terms = list(unfolded['terms'])
-          unfolded_lps = self.log_dir(list(unfolded['count']))
+          unfolded_lps = self.log_dir(list(unfolded['count']), list(unfolded['prior']))
         elif tm == 'obj':
           cur_data = data[-1]
           unfolded_terms = [str(cur_data['recipient']), str(cur_data['result'])]
@@ -459,10 +469,20 @@ class Program_lib(Program_lib_light):
         elif 'PM' in tm:
           pm = eval(tm)
           unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"&type=="program"')
+          unfolded['prior'] = unfolded.apply(lambda row: exp(row['log_prior']), axis=1)
           unfolded_terms = list(unfolded['terms'])
-          unfolded['log_prior'] = unfolded.apply(lambda row: self.get_pm_prior(row['terms']), axis=1)
-          unfolded_lps = self.log_dir(list(unfolded['count']), list(unfolded['log_prior']))
-        else:
+          unfolded_lps = self.log_dir(list(unfolded['count']), list(unfolded['prior']))
+        elif eval(tm).ctype == 'router':
+          unfolded_terms = [tm]
+          unfolded_lps = [log(1/(4**len(tm)))]
+        elif eval(tm).ctype == 'primitive':
+          unfolded = self.content.query(f'terms=="{tm}"&type=="primitive"')
+          unfolded['prior'] = unfolded.apply(lambda row: exp(row['log_prior']), axis=1)
+          unfolded_terms = list(unfolded['terms'])
+          unfolded_lps = self.log_dir(list(unfolded['count']), list(unfolded['prior']))
+          unfolded_terms = [tm]
+          unfolded_lps = [log_prob]
+        else: # a primitive
           unfolded_terms = [tm]
           unfolded_lps = [log_prob]
         programs_list.append([t.replace(tm, u) for u in unfolded_terms])
@@ -562,13 +582,16 @@ class Program_lib(Program_lib_light):
 
 # # %%
 # pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
-# t = [['obj', 'obj'], 'obj']
-# # pl.generate_program(t)
-
 # pl = Program_lib(pm_init, 0.1)
+# # pl.get_init_prior()
+# # pl.content.to_csv('data/pm_init_cut.csv')
+
+# t = [['obj', 'obj'], 'obj']
+# pl.generate_program(t)
 # rf = pl.typed_enum(t,1)
 # rf2 = pl.typed_enum(t,2)
 
+# rf.to_csv('data/pm_frames.csv')
 # rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
 
 # # %%
