@@ -28,3 +28,5 @@
 26,setEdge,obj_num,obj,primitive,1
 27,setLength,obj_num,obj,primitive,1
 28,setShape,obj_shape,obj,primitive,1
+29,"I",obj,obj,program,1
+30,"[KB,I,I]",obj_obj,obj,program,1

@@ -52,7 +52,9 @@ class Task_lib(Program_lib):
 pm_init = pd.read_csv('data/pm_task.csv',index_col=0,na_filter=False)
 pl = Task_lib(pm_init)
 t = [['obj', 'obj'], 'obj']
-#rf = pl.bfs(t,1)
+rf = pl.typed_enum(t,1)
+
+#%%
 rf2 = pl.typed_enum(t,2)
 frames = rf2[rf2["terms"].str.contains("ifElse,bool")==False]
 frames = frames.reset_index()[['terms', 'log_prob']]
