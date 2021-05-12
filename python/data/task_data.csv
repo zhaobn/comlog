@@ -1,0 +1,13 @@
+phase,trial,agent,recipient,result
+tab,1,"Stone(Tria,L1)","Stone(Rect,L1)","Stone(Rect,L2)"
+tab,2,"Stone(Tria,L1)","Stone(Rect,L2)","Stone(Rect,L3)"
+tab,3,"Stone(Tria,L1)","Stone(Rect,L3)","Stone(Rect,L4)"
+tab,4,"Stone(Rect,L1)","Stone(Rect,L1)","Stone(Rect,L3)"
+tab,5,"Stone(Rect,L1)","Stone(Rect,L2)","Stone(Rect,L4)"
+tab,6,"Stone(Rect,L1)","Stone(Rect,L3)","Stone(Rect,L5)"
+tab,7,"Stone(Pent,L1)","Stone(Rect,L1)","Stone(Rect,L4)"
+tab,8,"Stone(Pent,L1)","Stone(Rect,L2)","Stone(Rect,L5)"
+tab,9,"Stone(Pent,L1)","Stone(Rect,L3)","Stone(Rect,L6)"
+novel,1,"Stone(Hexa,L1)","Stone(Rect,L1)",
+novel,2,"Stone(Hexa,L1)","Stone(Rect,L2)",
+novel,3,"Stone(Hexa,L1)","Stone(Rect,L3)",
