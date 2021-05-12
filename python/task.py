@@ -10,57 +10,6 @@ from program_lib import Program_lib
 from program_inf import Gibbs_sampler
 
 # %%
-class Task_lib(Program_lib):
-  def __init__(self, df, dir_alpha=0.1):
-    Program_lib.__init__(self, df, dir_alpha)
-  def sample_base(self, type, add):
-    if type == 'obj':
-      shape = self.sample_base('shape', add)
-      length = self.sample_base('length', add)
-      sampled_props = [shape, length]
-      stone = 'Stone(' + ','.join([p['terms'] for p in sampled_props]) + ')'
-      return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'type': 'base_term'}
-    else:
-      bases = self.content.query(f'return_type=="{type}"&type=="base_term"')
-      if bases is None or bases.empty:
-        print('No base terms found!')
-        return self.ERROR_TERM
-      else:
-        sampled = bases.sample(n=1, weights='count').iloc[0].to_dict()
-        if add:
-          self.add(sampled)
-        return sampled
-  def get_all_objs(self):
-    stones_df = pd.DataFrame({'terms': []})
-    shape_df = self.content.query('return_type=="shape"&type=="base_term"')
-    length_df = self.content.query('return_type=="length"&type=="base_term"')
-    for s in range(len(shape_df)):
-      for l in range(len(length_df)):
-        stone_feats = [
-          shape_df.iloc[s].at['terms'],
-          length_df.iloc[l].at['terms'],
-        ]
-        counts = [
-          shape_df.iloc[s].at['count'],
-          length_df.iloc[l].at['count'],
-        ]
-        stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
-    stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
-    return stones_df[['terms', 'log_prob']]
-
-# %%
-pm_init = pd.read_csv('data/pm_task.csv',index_col=0,na_filter=False)
-pl = Task_lib(pm_init)
-t = [['obj', 'obj'], 'obj']
-rf = pl.typed_enum(t,1)
-
-#%%
-rf2 = pl.typed_enum(t,2)
-frames = rf2[rf2["terms"].str.contains("ifElse,bool")==False]
-frames = frames.reset_index()[['terms', 'log_prob']]
-frames.to_csv('data/frames.csv')
-
-# %%
 class Task_gibbs(Gibbs_sampler):
   def __init__(self, program_lib, data_list, iteration, inc=True, burnin=0, down_weight=1, iter_start=0, data_start=0):
     Gibbs_sampler.__init__(self, program_lib, data_list, iteration, inc, burnin, down_weight, iter_start, data_start)

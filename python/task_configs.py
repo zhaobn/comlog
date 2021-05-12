@@ -1,7 +1,6 @@
 # %%
 import math
 from copy import copy
-from numpy import int32
 import pandas as pd
 from pandas.core.common import flatten
 
@@ -9,6 +8,7 @@ from helpers import secure_list, copy_list
 from base_classes import Placeholder, Primitive, Program
 from base_methods import if_else, send_right, send_left, send_both, constant, return_myself
 from base_terms import B,C,S,K,BB,BC,BS,BK,CB,CC,CS,CK,SB,SC,SS,SK,KB,KC,KS,KK
+from program_lib import Program_lib
 
 # %% Define class
 SHAPE_REF = {
@@ -54,7 +54,7 @@ class PM(Placeholder): # Programholder for typed enumeration
   def __str__(self):
     return f'{self.name} {self.arg_types} -> {self.return_type}'
 
-# %% Base terms
+# Base terms
 Tria = Shape('Tria')
 Rect = Shape('Rect')
 Pent = Shape('Pent')
@@ -74,14 +74,6 @@ num = Placeholder('num')
 obj = Placeholder('obj')
 
 # Functional
-# isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
-# isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
-# isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
-
-# isL1 = Primitive('isL1', ['obj'], 'bool', lambda x: x[0].length.name=='L1')
-# isL2 = Primitive('isL2', ['obj'], 'bool', lambda x: x[0].length.name=='L2')
-# isL3 = Primitive('isL3', ['obj'], 'bool', lambda x: x[0].length.name=='L3')
-
 def set_shape (arg_list):
   obj, val = arg_list
   obj.shape = eval(str(copy(val)))
@@ -117,6 +109,15 @@ mulnn = Primitive('mulnn', ['num', 'num'], 'num', lambda x: math.prod(x))
 ifElse = Primitive('ifElse', ['bool', 'obj', 'obj'], 'obj', if_else)
 I = Primitive('I', 'obj', 'obj', return_myself)
 
+# isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
+# isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
+# isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
+
+# isL1 = Primitive('isL1', ['obj'], 'bool', lambda x: x[0].length.name=='L1')
+# isL2 = Primitive('isL2', ['obj'], 'bool', lambda x: x[0].length.name=='L2')
+# isL3 = Primitive('isL3', ['obj'], 'bool', lambda x: x[0].length.name=='L3')
+
+
 # # %%
 # x = Stone(Pent,L1)
 # y = Stone(Rect,L1)
@@ -151,4 +152,54 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 #   pm_setup.append({'terms':terms,'arg_types':arg_types,'return_type':return_type,'type':type,'count':1})
 
 # pm_task = pd.DataFrame.from_records(pm_setup).groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
-# pm_task.to_csv('data/pm_task.csv')
+# pm_task.to_csv('data/pm_task.csv') # Later manually add [KB,I,I] & [B,I,I]
+
+# %%
+class Task_lib(Program_lib):
+  def __init__(self, df, dir_alpha=0.1):
+    Program_lib.__init__(self, df, dir_alpha)
+  def sample_base(self, type, add):
+    if type == 'obj':
+      shape = self.sample_base('shape', add)
+      length = self.sample_base('length', add)
+      sampled_props = [shape, length]
+      stone = 'Stone(' + ','.join([p['terms'] for p in sampled_props]) + ')'
+      return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'type': 'base_term'}
+    else:
+      bases = self.content.query(f'return_type=="{type}"&type=="base_term"')
+      if bases is None or bases.empty:
+        print('No base terms found!')
+        return self.ERROR_TERM
+      else:
+        sampled = bases.sample(n=1, weights='count').iloc[0].to_dict()
+        if add:
+          self.add(sampled)
+        return sampled
+  def get_all_objs(self):
+    stones_df = pd.DataFrame({'terms': []})
+    shape_df = self.content.query('return_type=="shape"&type=="base_term"')
+    length_df = self.content.query('return_type=="length"&type=="base_term"')
+    for s in range(len(shape_df)):
+      for l in range(len(length_df)):
+        stone_feats = [
+          shape_df.iloc[s].at['terms'],
+          length_df.iloc[l].at['terms'],
+        ]
+        counts = [
+          shape_df.iloc[s].at['count'],
+          length_df.iloc[l].at['count'],
+        ]
+        stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
+    stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
+    return stones_df[['terms', 'log_prob']]
+
+# # %%
+# pm_init = pd.read_csv('data/pm_task.csv',index_col=0,na_filter=False)
+# pl = Task_lib(pm_init)
+# t = [['obj', 'obj'], 'obj']
+
+# # rf = pl.typed_enum(t,1)
+# rf2 = pl.typed_enum(t,2)
+# frames = rf2[rf2["terms"].str.contains("ifElse,bool")==False]
+# frames = frames.reset_index()[['terms', 'log_prob']]
+# frames.to_csv('data/frames.csv')
