@@ -39,15 +39,20 @@ class Program_lib(Program_lib_light):
     self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'type': 'ERROR'}
     self.SET_MARKERS = set(list(self.content[self.content['type']=='base_term'].return_type))
 
-  def get_init_prior(self): # NB: no programs
+  def update_log_prob(self, init=False):
     df = self.content.query(f'type=="primitive"')
-    df['log_prior'] = self.log_dir(df['count'])
+    df['log_prob'] = self.log_dir(df['count'])
     for t in self.SET_MARKERS:
       sub_df = self.content.query(f'type=="base_term"&return_type=="{t}"')
-      sub_df['log_prior'] = self.log_dir(sub_df['count'])
+      sub_df['log_prob'] = self.log_dir(sub_df['count'])
       df = df.append(sub_df)
     programs = self.content.query(f'type=="program"')
-    self.content = df.append(programs).fillna(0)
+    if init==1:
+      self.content = df.append(programs).fillna(0)
+    else:
+      programs['prior'] = programs.apply(lambda row: exp(row['log_prob']), axis=1)
+      programs['log_prob'] = self.log_dir(programs['count'], programs['prior'])
+      self.content = df.append(programs[['terms','arg_types','return_type','type','count','log_prob']])
 
   # List all the possile stones (w flat prior)
   def get_all_objs(self):
@@ -377,55 +382,12 @@ class Program_lib(Program_lib_light):
       routers.append(''.join(r))
     return routers
 
-  # @staticmethod
-  # def query_log_prob(obj, df):
-  #   return df.query(f'terms=="{obj}"').log_prob.values[0]
+  @staticmethod
+  def query_obj_lp(obj, df):
+    return df.query(f'terms=="{obj}"').log_prob.values[0]
 
-  # def get_term_prior(self, term):
-  #   if isinstance(term, int):
-  #     prims = self.content.query(f'type=="base_term"&return_type=="num"')
-  #     prims['log_prob'] = self.log_dir(prims['count'])
-  #     return prims[prims['terms']==str(term)].log_prob.values[0]
-  #   if term.ctype == 'router':
-  #     return log(1/(4**len(term.name)))
-  #   elif term.ctype == 'obj':
-  #     return self.get_all_objs().query(f'terms=="{term.name}"').log_prob.values[0]
-  #   elif term.ctype in self.SET_MARKERS:
-  #     prims = self.content.query(f'type=="base_term"&return_type=="{term.ctype}"')
-  #     prims['log_prob'] = self.log_dir(prims['count'])
-  #     return prims[prims['terms']==term.name].log_prob.values[0]
-  #   elif term.ctype == 'primitive' and len(term.name) > 1:
-  #     prims = self.content.query(f'type=="primitive"&return_type=="{term.return_type}"')
-  #     prims['log_prob'] = self.log_dir(prims['count'])
-  #     return prims[prims['terms']==term.name].log_prob.values[0]
-  #   elif term.name == 'I':
-  #     prims = self.content.query(f'type=="program"&arg_types=="obj"&return_type=="obj"')
-  #     prims['log_prob'] = self.log_dir(prims['count'])
-  #     return prims[prims['terms']=='I'].log_prob.values[0]
-  #   else:
-  #     print(f'get_term_prior() receives unclear ctype of {term.name}')
-
-  # def get_pm_prior(self, terms):
-  #   if isinstance(terms, str):
-  #     terms = eval(terms)
-  #   term_list = list(pd.core.common.flatten(secure_list(terms)))
-  #   first_lp = self.get_term_prior(term_list[0])
-  #   if len(term_list) == 1:
-  #     return first_lp
-  #   else:
-  #     terms_lp = [first_lp]
-  #     for ti in list(range(len(term_list))[1:]):
-  #       # Filter out redundent all-B routers infront of a primitive
-  #       if isinstance(term_list[ti], int):
-  #         terms_lp.append(self.get_term_prior(term_list[ti]))
-  #       elif term_list[ti].ctype == 'primitive' and term_list[ti-1].name.count('K') == len(term_list[ti-1].name):
-  #         terms_lp.append(0)
-  #       else:
-  #         terms_lp.append(self.get_term_prior(term_list[ti]))
-  #     return sum(terms_lp)
-
-  def unfold_program(self, terms, log_prob, data):
-    # Preps
+  @staticmethod
+  def trim_frames(frames):
     to_ignore = [
       'eqObject],obj],obj]',
       'eqColor,col],col]',
@@ -436,15 +398,14 @@ class Program_lib(Program_lib_light):
       'eqDensity,int],int]',
       'ifElse,bool',
     ]
-    # Filter out plain boolean distribution
-    if any(x in terms for x in to_ignore):
-      return pd.DataFrame({'terms': [], 'log_prob': []})
-    elif terms[:2]=='PM':
+    trimed = frames[~frames.terms.isin(to_ignore)]
+    return trimed
+
+  def unfold_program(self, terms, data):
+    if terms[:2]=='PM':
       pm = eval(terms)
       unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"&type=="program"')
       if len(unfolded) > 0:
-        unfolded['prior'] = unfolded.apply(lambda row: exp(row['log_prior']), axis=1)
-        unfolded['log_prob'] = self.log_dir(list(unfolded['count']), list(unfolded['prior']))
         return unfolded[['terms', 'log_prob']]
       else:
         return pd.DataFrame({'terms': [], 'log_prob': []})
@@ -452,39 +413,36 @@ class Program_lib(Program_lib_light):
       programs_list = []
       log_probs_list = []
       term_list = terms.split(',')
-      if 'obj' in terms:
-        all_obs = self.get_all_objs()
+      all_obs = self.get_all_objs()
       for i in range(len(term_list)):
         t = term_list[i]
         tm = t.strip('[]')
         if tm in list(self.SET_MARKERS):
           unfolded = self.content.query(f'return_type=="{tm}"&type=="base_term"')
-          unfolded['prior'] = unfolded.apply(lambda row: exp(row['log_prior']), axis=1)
           unfolded_terms = list(unfolded['terms'])
-          unfolded_lps = self.log_dir(list(unfolded['count']), list(unfolded['prior']))
+          unfolded_lps = list(unfolded['log_prob'])
         elif tm == 'obj':
           cur_data = data[-1]
           unfolded_terms = [str(cur_data['recipient']), str(cur_data['result'])]
-          unfolded_lps = [self.query_log_prob(x, all_obs) for x in unfolded_terms]
+          unfolded_lps = [self.query_obj_lp(x, all_obs) for x in unfolded_terms]
         elif 'PM' in tm:
           pm = eval(tm)
-          unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"&type=="program"')
-          unfolded['prior'] = unfolded.apply(lambda row: exp(row['log_prior']), axis=1)
+          qs = '&type=="program"' if (pm.arg_types == ['obj'] and pm.return_type == 'obj') else ''
+          unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"{qs}')
           unfolded_terms = list(unfolded['terms'])
-          unfolded_lps = self.log_dir(list(unfolded['count']), list(unfolded['prior']))
+          unfolded_lps = list(unfolded['log_prob'])
         elif eval(tm).ctype == 'router':
           unfolded_terms = [tm]
           unfolded_lps = [log(1/(4**len(tm)))]
+          next_tm = term_list[i+1].strip('[]')
+          if next_tm not in list(self.SET_MARKERS):
+            if eval(next_tm).ctype == 'primitive':
+              unfolded_lps = [0]
         elif eval(tm).ctype == 'primitive':
-          unfolded = self.content.query(f'terms=="{tm}"&type=="primitive"')
-          unfolded['prior'] = unfolded.apply(lambda row: exp(row['log_prior']), axis=1)
-          unfolded_terms = list(unfolded['terms'])
-          unfolded_lps = self.log_dir(list(unfolded['count']), list(unfolded['prior']))
           unfolded_terms = [tm]
-          unfolded_lps = [log_prob]
-        else: # a primitive
-          unfolded_terms = [tm]
-          unfolded_lps = [log_prob]
+          unfolded_lps = list(self.content.query(f'terms=="{tm}"&type=="primitive"').log_prob)
+        else:
+          print('Unknow term!')
         programs_list.append([t.replace(tm, u) for u in unfolded_terms])
         log_probs_list.append(unfolded_lps)
       return self.iter_compose_programs(programs_list, log_probs_list)
@@ -492,10 +450,10 @@ class Program_lib(Program_lib_light):
   @staticmethod
   def iter_compose_programs(terms_list, lp_list):
     programs_list = list(itertools_product(*terms_list))
-    programs_list = [','.join(p) for p in programs_list]
+    programs_list_agg = [','.join(p) for p in programs_list]
     log_probs_list = list(itertools_product(*lp_list))
-    log_probs_list = [sum(x) for x in log_probs_list]
-    return pd.DataFrame({'terms': programs_list, 'log_prob': log_probs_list})
+    log_probs_list_agg = [sum(x) for x in log_probs_list]
+    return pd.DataFrame({'terms': programs_list_agg, 'log_prob': log_probs_list_agg})
 
   @staticmethod
   def check_program(terms, data):
@@ -517,6 +475,20 @@ class Program_lib(Program_lib_light):
         print(f"{i+1}/{len(df)} | Unfolding {df.iloc[i].at['terms']} - {len(passed_pm)} passed")
         filtered = filtered.append(passed_pm[['terms', 'log_prob']], ignore_index=True)
     return filtered
+
+# %%
+# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
+# pl = Program_lib(pm_init, 0.1)
+# pl.update_log_prob(init=True)
+# pl.update_log_prob(init=False)
+
+# frames = pd.read_csv('data/pm_frames.csv',index_col=0)
+# data = [{
+#   'agent': Stone(Yellow,S2,Triangle,S1), # Plain,S1
+#   'recipient': Stone(Red,S1,Triangle,S1),
+#   'result': Stone(Yellow,S1,Triangle,S2)
+# }]
+# pl.unfold_program(frames.at[73,'terms'], data)
 
 # # %%
 # def clist_to_df(clist):
@@ -580,11 +552,11 @@ class Program_lib(Program_lib_light):
 # ])
 # pm_init_test.to_csv('data/pm_init_test.csv')
 
-# # %%
+# %%
 # pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
 # pl = Program_lib(pm_init, 0.1)
-# # pl.get_init_prior()
-# # pl.content.to_csv('data/pm_init_cut.csv')
+# pl.get_init_prior()
+# pl.content.to_csv('data/pm_init_cut.csv')
 
 # t = [['obj', 'obj'], 'obj']
 # pl.generate_program(t)
@@ -593,6 +565,9 @@ class Program_lib(Program_lib_light):
 
 # rf.to_csv('data/pm_frames.csv')
 # rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
+
+# rf = pd.read_csv('data/pm_frames.csv', index_col=0, na_filter=False)
+# terms = rf.at[118,'terms']
 
 # # %%
 # data = {
@@ -606,17 +581,5 @@ class Program_lib(Program_lib_light):
 # rf = pl.bfs(t,1)
 # x = pl.filter_program(rf,data)
 
-# # %%
-# pm_init = pd.read_csv('data/pm_init_test.csv', index_col=0, na_filter=False)
-# data = {
-#   'agent': Stone(Yellow,S2,Triangle,S1), # Plain,S1
-#   'recipient': Stone(Red,S1,Triangle,S1),
-#   'result': Stone(Yellow,S1,Triangle,S2)
-# }
-# pl = Program_lib(pm_init, 0.1)
-# t = [['obj', 'obj'], 'obj']
-# # pl.generate_program(t)
-# rf = pl.bfs(t,1)
-# x = pl.filter_program(rf,data)
 
 # %%
