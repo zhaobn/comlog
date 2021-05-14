@@ -1,4 +1,4 @@
-,index,terms,arg_types,return_type,type,count,log_prior
+,index,terms,arg_types,return_type,type,count,log_prob
 0,7,I,obj,obj,primitive,1,-2.4849066497880004
 1,18,addnn,num_num,num,primitive,1,-2.4849066497880004
 2,19,getEdge,obj,num,primitive,1,-2.4849066497880004
@@ -28,5 +28,5 @@
 26,14,Pent,,shape,base_term,1,-1.3862943611198906
 27,15,Rect,,shape,base_term,1,-1.3862943611198906
 28,16,Tria,,shape,base_term,1,-1.3862943611198906
-29,29,I,obj,obj,program,1,-2.4849066497880004
-30,30,"[KB,I,I]",obj_obj,obj,program,1,-7.742402021815781
+29,29,"[B,I,I]",obj,obj,program,1,-2.4849066497880004
+30,30,"[KB,I,I]",obj_obj,obj,program,1,-2.4849066497880004

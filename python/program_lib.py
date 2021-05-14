@@ -6,7 +6,8 @@ from numpy import random as np_random
 from math import log, exp
 from itertools import product as itertools_product
 
-from base_terms import *
+from task_configs import *
+from base_terms import Program
 from helpers import args_to_string, names_to_string, term_to_dict, secure_list, print_name
 
 # %%
@@ -14,7 +15,6 @@ class Program_lib_light:
   def __init__(self, df, dir_alpha=0.1):
     self.content = df
     self.DIR_ALPHA = dir_alpha
-
   def add(self, entry_list):
     entry_list = secure_list(entry_list)
     for et in entry_list:
@@ -30,7 +30,7 @@ class Program_lib_light:
           'arg_types': [et['arg_types']],
           'return_type': [et['return_type']],
           'type': [et['type']],
-          'count': [1]
+          'count': [1],
         }), ignore_index=True)
 
 class Program_lib(Program_lib_light):
@@ -373,10 +373,9 @@ class Program_lib(Program_lib_light):
     candidates = ['B']
     if free_index >= 0:
       candidates.append('K')
-    if free_index >= 0 and len(arg_list) <= len(left_arg_list):
+    if free_index > 0: #and len(arg_list) <= len(left_arg_list):
       candidates.append('C')
       candidates.append('S')
-
     routers = []
     for r in list(itertools_product(candidates, repeat=len(arg_list))):
       routers.append(''.join(r))
