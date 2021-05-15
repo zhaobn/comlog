@@ -92,6 +92,8 @@ class Task_gibbs(Gibbs_sampler):
           if not isinstance(next_tm,bool) or not isinstance(next_tm,int):
             if next_tm.ctype=='primitive':
               log_prob += 0
+            elif tm == 'I':
+              log_prob += math.log(1/(2**len(tm)))
             else:
               log_prob += math.log(1/(4**len(tm)))
           else:
@@ -120,6 +122,7 @@ class Task_gibbs(Gibbs_sampler):
         # Unfold frames and filter with data
         filtered = pd.DataFrame({'terms': [], 'log_prob': []})
         pl = Task_lib(pms, self.dir_alpha)
+        pl.update_log_prob() if not (i==0&j==0) else None
         query_string = '&'.join([f'consistent_{i}==1' for i in range(len(data))])
         for k in range(len(frames)):
           all_programs = pl.unfold_program(frames.iloc[k].at['terms'], data)
@@ -161,10 +164,12 @@ class Task_gibbs(Gibbs_sampler):
 # pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 # all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
 # frames = all_frames.sample(n=20)
-# g = Task_gibbs(Task_lib(pm_init), task_data, iteration=1)
+# g = Task_gibbs(Task_lib(pm_init), task_data, iteration=2)
 
-# pl = Task_lib(pm_init)
-# all_programs = pl.unfold_program(all_frames.iloc[4545]['terms'],task_data)
-# pl.check_program(all_programs.at[0,'terms'], task_data[0])
+# # pl = Task_lib(pm_init)
+# # all_programs = pl.unfold_program(all_frames.iloc[4545]['terms'],task_data)
+# # pl.check_program(all_programs.at[0,'terms'], task_data[0])
 
 # g.run(frames, save_prefix='task_test/tt', sample=True, top_n=1)
+
+# %%

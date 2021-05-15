@@ -182,7 +182,7 @@ class Gibbs_sampler:
       else: # use full batch
         pms = self.cur_programs
         data = self.data
-        pl = Task_lib(pms, self.dir_alpha)
+        pl = Program_lib(pms, self.dir_alpha)
         enumed = pl.bfs(type_sig, 1)
         filtered = pl.filter_program(enumed, data)
         if len(filtered) < 1:

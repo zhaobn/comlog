@@ -50,6 +50,7 @@ class Program_lib(Program_lib_light):
     if init==1:
       self.content = df.append(programs).fillna(0)
     else:
+      # complexity penalty, adjustable
       programs['prior'] = programs.apply(lambda row: exp(row['log_prob']), axis=1)
       programs['log_prob'] = self.log_dir(programs['count'], programs['prior'])
       self.content = df.append(programs[['terms','arg_types','return_type','type','count','log_prob']])
