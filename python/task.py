@@ -101,6 +101,64 @@ class Task_gibbs(Gibbs_sampler):
       to_set_df.at[i,'log_prob']=log_prob
     return pd.concat([set_df, to_set_df],ignore_index=True)
 
+  def fast_run(self, frames, top_n=1, sample=True, frame_sample=20, base=0, logging=True, save_prefix=''):
+    frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
+    for i in range(self.iter_start, self.iter):
+      iter_log = f'Iter {i+1}/{self.iter}'
+      data_start = 0 if i > self.iter_start else self.data_start
+      for j in range(data_start, len(self.data)):
+        data_log = f'Data {j+1}/{len(self.data)}'
+        data = self.data[:(j+1)] if i < 1 else self.data
+        # Remove previously-extracted counts
+        pms = self.cur_programs
+        if i > 0:
+          previous = self.extraction_history[i-1][j]
+          if previous is not None:
+            lhs = self.cur_programs
+            rhs = previous[['terms', 'arg_types', 'return_type', 'type', 'count']]
+            pms = pd.merge(lhs, rhs, on=['terms', 'arg_types', 'return_type', 'type'], how='outer')
+            pms = pms.fillna(0)
+            pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw by default is 1
+            pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count', 'log_prob']]
+
+        # Unfold frames and filter with data
+        pl = Task_lib(pms, self.dir_alpha)
+        pl.update_log_prob() if not (i==0&j==0) else None
+        query_string = '&'.join([f'consistent_{i}==1' for i in range(len(data))])
+        # Use sampled frames
+        ns = 0
+        filtered = pd.DataFrame({'terms': [], 'log_prob': []})
+        while (len(filtered)) < 1 or ns > 100:
+          ns += 1
+          sampled_frames = pd.concat([
+            frames[frames.index==0], # 'PM("obj_obj_obj")'
+            frames[frames.index>0].sample(n=frame_sample, weights='prob')
+          ])
+          sampled_frames = sampled_frames.reset_index(drop=True)
+          for k in range(len(sampled_frames)):
+            all_programs = pl.unfold_program(frames.iloc[k].at['terms'], data)
+            if len(all_programs) > 0:
+              for d in range(len(data)):
+                all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
+              passed_pm = all_programs.query(query_string)
+              print(f"[{iter_log}|{data_log}]Unfolding {frames.iloc[k].at['terms']}: {len(passed_pm)} passed") if logging else None
+              filtered = filtered.append(passed_pm[['terms', 'log_prob']], ignore_index=True)
+        # Extract resusable bits
+        if len(filtered) < 1:
+          self.filtering_history[i][j] = 0
+          print('Nothing consistent, skipping to next...') if logging else None
+        else:
+          self.filtering_history[i][j] = 1
+          extracted = self.extract(filtered, top_n, sample, base)
+          print(extracted) if logging else None
+          self.extraction_history[i][j] = extracted
+          self.cur_programs = self.merge_lib(extracted)
+          if len(save_prefix) > 0:
+            padding = len(str(self.iter))
+            pd.DataFrame.from_records(self.filtering_history).to_csv(f'{save_prefix}_filter_hist.csv')
+            filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+            self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+
   def run(self, frames, top_n=1, sample=True, base=0, logging=True, save_prefix=''):
     for i in range(self.iter_start, self.iter):
       iter_log = f'Iter {i+1}/{self.iter}'
@@ -170,6 +228,6 @@ class Task_gibbs(Gibbs_sampler):
 # # all_programs = pl.unfold_program(all_frames.iloc[4545]['terms'],task_data)
 # # pl.check_program(all_programs.at[0,'terms'], task_data[0])
 
-# g.run(frames, save_prefix='task_test/tt', sample=True, top_n=1)
+# g.fast_run(frames, sample=True, top_n=1)
 
 # %%

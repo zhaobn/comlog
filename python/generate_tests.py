@@ -1,10 +1,10 @@
 # %%
-iter = 100
+iter = 500
 test_configs = {
-  'tt_row': "task_data_df.at[i,'trial'] in [1,2,3]",
-  'tt_col': "task_data_df.at[i,'trial'] in [1,4,7]",
-  'tt_ldg': "task_data_df.at[i,'trial'] in [1,5,9]",
-  'tt_rdg': "task_data_df.at[i,'trial'] in [3,5,7]",
+  'ft_row': "task_data_df.at[i,'trial'] in [1,2,3]",
+  'ft_col': "task_data_df.at[i,'trial'] in [1,4,7]",
+  'ft_ldg': "task_data_df.at[i,'trial'] in [1,5,9]",
+  'ft_rdg': "task_data_df.at[i,'trial'] in [3,5,7]",
 }
 bash_scripts = ''
 
@@ -30,7 +30,7 @@ for i in range(len(task_data_df)):
 pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
 g = Task_gibbs(Task_lib(pm_init), task_data, iteration={iteration})
-g.run(all_frames, save_prefix='{test_name}/{test_name}', sample=True, top_n=1)
+g.fast_run(all_frames, save_prefix='{test_name}/{test_name}', sample=True, top_n=1)
 """
 
 def generate_cmd(test_name):
