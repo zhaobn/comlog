@@ -47,11 +47,12 @@ class Task_lib(Program_lib):
     stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
     return stones_df[['terms', 'log_prob']]
 
-# %%
+# # %%
 # pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
-# pl = Task_lib(pm_task)
-# pl.get_init_prior()
-# pl.content.reset_index().to_csv('data/task_pm.csv') # Add priors for programs manually
+# pl = Task_lib(pm_task) # Add [B,I,I], [KB,I,I] manually
+# pl.update_log_prob(init=True)
+# pl.update_log_prob(init=False)
+# pl.content.reset_index().to_csv('data/task_pm.csv')
 
 # pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 # pl = Task_lib(pm_init)
@@ -175,7 +176,7 @@ class Task_gibbs(Gibbs_sampler):
         # Use sampled frames
         ns = 0
         filtered = pd.DataFrame({'terms': [], 'log_prob': []})
-        while (len(filtered)) < 1 or ns > 100:
+        while (len(filtered)) < 1 or ns < 100:
           ns += 1
           sampled_frames = pd.concat([
             frames[frames.index==0], # 'PM("obj_obj_obj")'
@@ -274,37 +275,37 @@ class Task_gibbs(Gibbs_sampler):
           self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
 
 # %%
-task_data_df = pd.read_csv('data/task_data.csv')
+# task_data_df = pd.read_csv('data/task_data.csv')
 
-def get_task_task(tids, dsource=task_data_df):
-  task_data = []
-  for i in range(len(dsource)):
-    if dsource.at[i,'phase']=='tab' and dsource.at[i,'trial'] in tids:
-      tdata = dsource.iloc[i].to_dict()
-      task = {
-        'agent': eval(tdata['agent']),
-        'recipient': eval(tdata['recipient']),
-        'result': eval(tdata['result'])
-      }
-      task_data.append(task)
-  return task_data
+# def get_task_task(tids, dsource=task_data_df):
+#   task_data = []
+#   for i in range(len(dsource)):
+#     if dsource.at[i,'phase']=='tab' and dsource.at[i,'trial'] in tids:
+#       tdata = dsource.iloc[i].to_dict()
+#       task = {
+#         'agent': eval(tdata['agent']),
+#         'recipient': eval(tdata['recipient']),
+#         'result': eval(tdata['result'])
+#       }
+#       task_data.append(task)
+#   return task_data
 
-task_row = get_task_task([1,2,3])
-task_col = get_task_task([1,4,7])
-task_ldg = get_task_task([1,5,9])
-task_rdg = get_task_task([3,5,7])
+# task_row = get_task_task([1,2,3])
+# task_col = get_task_task([1,4,7])
+# task_ldg = get_task_task([1,5,9])
+# task_rdg = get_task_task([3,5,7])
 
-task_data = task_row + task_col
+# task_data = task_row + task_col
 
-pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
-all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-frames = all_frames.sample(n=20)
-g = Task_gibbs(Task_lib(pm_init), task_data, iteration=2)
+# pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
+# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
+# frames = all_frames.sample(n=20)
+# g = Task_gibbs(Task_lib(pm_init), task_data, iteration=2)
 
-# # pl = Task_lib(pm_init)
-# # all_programs = pl.unfold_program(all_frames.iloc[4545]['terms'],task_data)
-# # pl.check_program(all_programs.at[0,'terms'], task_data[0])
+# # # pl = Task_lib(pm_init)
+# # # all_programs = pl.unfold_program(all_frames.iloc[4545]['terms'],task_data)
+# # # pl.check_program(all_programs.at[0,'terms'], task_data[0])
 
-g.fast_run(all_frames, sample=True, top_n=1)
+# g.fast_run(all_frames, sample=True, top_n=1)
 
 # %%

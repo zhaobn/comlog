@@ -67,6 +67,8 @@ L3 = Length('L3')
 L4 = Length('L4')
 L5 = Length('L5')
 L6 = Length('L6')
+L7 = Length('L7')
+
 
 # Placeholders for typed program enumeration
 shape = Placeholder('shape')
@@ -118,7 +120,6 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 # isL2 = Primitive('isL2', ['obj'], 'bool', lambda x: x[0].length.name=='L2')
 # isL3 = Primitive('isL3', ['obj'], 'bool', lambda x: x[0].length.name=='L3')
 
-
 # # %%
 # x = Stone(Pent,L1)
 # y = Stone(Rect,L1)
@@ -129,7 +130,7 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 # pm_setup = []
 # pm_terms = [
 #   Tria, Rect, Pent, Hexa, #isTria, isRect, isPent,
-#   L1, L2, L3, L4, L5, L6, #isL1, isL2, isL3,
+#   L1, L2, L3, L4, L5, L6, L7, #isL1, isL2, isL3,
 #   getShape, setShape, getEdge, setEdge, getLength, setLength, isShape, isLength,
 #   addnn, mulnn, ifElse, I,
 #   -2, -1, 0, 1, 2, True, False,
@@ -153,4 +154,4 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 #   pm_setup.append({'terms':terms,'arg_types':arg_types,'return_type':return_type,'type':type,'count':1})
 
 # pm_task = pd.DataFrame.from_records(pm_setup).groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
-# pm_task.to_csv('data/pm_task.csv') # Later manually add [KB,I,I] & [B,I,I]
+# pm_task.to_csv('data/task_pm.csv') # Later manually add [KB,I,I] & [B,I,I]
