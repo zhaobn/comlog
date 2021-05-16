@@ -177,7 +177,7 @@ class Task_gibbs(Gibbs_sampler):
         # Use sampled frames
         ns = 0
         filtered = pd.DataFrame({'terms': [], 'log_prob': []})
-        while (len(filtered)) < 1 or ns < 100:
+        while (len(filtered)) < 1 and ns < 3:
           ns += 1
           sampled_frames = pd.concat([
             frames[frames.index==0], # 'PM("obj_obj_obj")'
@@ -298,15 +298,28 @@ class Task_gibbs(Gibbs_sampler):
 
 # task_data = task_row + task_col
 
-# pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
-# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-# frames = all_frames.sample(n=20)
-# g = Task_gibbs(Task_lib(pm_init), task_data, iteration=2)
+task_data_df = pd.read_csv('data/task_data.csv')
+task_data_df = task_data_df[task_data_df.index>8]
 
-# # # pl = Task_lib(pm_init)
-# # # all_programs = pl.unfold_program(all_frames.iloc[4545]['terms'],task_data)
-# # # pl.check_program(all_programs.at[0,'terms'], task_data[0])
+task_data = []
+for i in range(len(task_data_df)):
+  tdata = task_data_df.iloc[i].to_dict()
+  task = {
+    'agent': eval(tdata['agent']),
+    'recipient': eval(tdata['recipient']),
+    'result': eval(tdata['result'])
+  }
+  task_data.append(task)
 
-# g.fast_run(all_frames, sample=True, top_n=1)
+pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
+all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
+frames = all_frames.sample(n=20)
+g = Task_gibbs(Task_lib(pm_init), task_data, iteration=2)
+
+# # pl = Task_lib(pm_init)
+# # all_programs = pl.unfold_program(all_frames.iloc[4545]['terms'],task_data)
+# # pl.check_program(all_programs.at[0,'terms'], task_data[0])
+
+g.fast_run(all_frames, sample=True, top_n=1)
 
 # %%
