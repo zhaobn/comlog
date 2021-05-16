@@ -53,6 +53,7 @@ class Task_lib(Program_lib):
 # pl.update_log_prob(init=True)
 # pl.update_log_prob(init=False)
 # pl.content.reset_index().to_csv('data/task_pm.csv')
+# pl.content.to_csv('data/task_pm.csv')
 
 # pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 # pl = Task_lib(pm_init)
