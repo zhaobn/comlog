@@ -177,7 +177,7 @@ class Task_gibbs(Gibbs_sampler):
         # Use sampled frames
         ns = 0
         filtered = pd.DataFrame({'terms': [], 'log_prob': []})
-        while (len(filtered)) < 1 and ns < 3:
+        while (len(filtered)) < 1 and ns < 100:
           ns += 1
           sampled_frames = pd.concat([
             frames[frames.index==0], # 'PM("obj_obj_obj")'
