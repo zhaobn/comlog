@@ -92,7 +92,9 @@ for item in test_configs.items():
 
 save_file('run.sh', bash_scripts)
 
-# # %%
-# for tn in ['bc', 'bh', 'bm', 'br']:
-#   test_name = 'ts_'+tn
-#   print(f'screen -dmS {test_name} python {test_name}.py')
+# %%
+for tn in ['bc', 'bh', 'bm', 'br']:
+  test_name = 'ts_'+tn
+  print(f'screen -dmS {test_name} python {test_name}.py')
+
+# %%
