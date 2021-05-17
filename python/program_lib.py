@@ -39,6 +39,36 @@ class Program_lib(Program_lib_light):
     self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'type': 'ERROR'}
     self.SET_MARKERS = set(list(self.content[self.content['type']=='base_term'].return_type))
 
+  def calc_log_prob(self, init=False):
+    df = pd.DataFrame(columns=['terms','arg_types','return_type','type','count','log_prob'])
+    type_qs = []
+    # check for base terms
+    for s in self.SET_MARKERS:
+      type_qs.append(f'return_type=="{s}"&type=="base_term"')
+    # check for primitives
+    for r in list(self.content[self.content['type']=='primitive'].return_type.unique()):
+      type_qs.append(f'return_type=="{r}"&type=="primitive"')
+    # check for programs
+    uniq_pm_type_df = self.content[self.content['type']=='program'].groupby(['arg_types','return_type']).size().reset_index()
+    for i in uniq_pm_type_df.index:
+      type_info = uniq_pm_type_df.iloc[i].to_dict()
+      qs = 'arg_types=="'+type_info['arg_types']+'"&return_type=="'+type_info['return_type']+'"&type=="program"'
+      type_qs.append(qs)
+
+    for qs in type_qs:
+      sub_df = self.content.query(qs)
+      if sub_df.type.values[0] == 'program':
+        if init == 1:
+          sub_df['log_prob'] = 0
+        else:
+          # complexity penalty, adjustable
+          sub_df['prior'] = sub_df.apply(lambda row: exp(row['log_prob']), axis=1)
+          sub_df['log_prob'] = self.log_dir(sub_df['count'], sub_df['prior'])
+      else:
+        sub_df['log_prob'] = self.log_dir(sub_df['count'])
+      df = df.append(sub_df[['terms','arg_types','return_type','type','count','log_prob']])
+    self.content = df.copy()
+
   def update_log_prob(self, init=False):
     df = self.content.query(f'type=="primitive"')
     df['log_prob'] = self.log_dir(df['count'])
@@ -235,6 +265,20 @@ class Program_lib(Program_lib_light):
       dir_prob = [ i+j-1 for i,j in zip(count_vec, priors) ]
     return [ log(i/sum(dir_prob)) for i in dir_prob ]
 
+  @staticmethod
+  def get_all_routers(arg_list, left_arg_list, free_index):
+    assert len(arg_list) > 0, 'No arguments for router!'
+    candidates = ['B']
+    if free_index >= 0:
+      candidates.append('K')
+    if free_index > 0: #and len(arg_list) <= len(left_arg_list):
+      candidates.append('C')
+      candidates.append('S')
+    routers = []
+    for r in list(itertools_product(candidates, repeat=len(arg_list))):
+      routers.append(''.join(r))
+    return routers
+
   # enumeration
   def bfs(self, type_signature, depth = 0):
     programs_df = pd.DataFrame({'terms': [], 'log_prob': []})
@@ -336,7 +380,7 @@ class Program_lib(Program_lib_light):
         right = self.typed_enum([[],left_arg_types[free_index]], depth-1)
         return self.combine_terms(left, right)
       else:
-        routers = self.get_all_routers(args, left_arg_types, free_index-1)
+        routers = self.get_all_routers(args, left_arg_types, free_index)
         terms_df = pd.DataFrame({'terms': [], 'log_prob': []})
         for rt in routers:
           routed_args = eval(rt).run({'left': [], 'right': []}, args)
@@ -367,20 +411,6 @@ class Program_lib(Program_lib_light):
     # combined = combined.astype({'left_log_prob': 'int32', 'right_log_prob': 'int32'})
     # combined['log_prob'] = combined['left_log_prob'] | combined['right_log_prob']
     return combined[['terms', 'log_prob']]
-
-  @staticmethod
-  def get_all_routers(arg_list, left_arg_list, free_index):
-    assert len(arg_list) > 0, 'No arguments for router!'
-    candidates = ['B']
-    if free_index >= 0:
-      candidates.append('K')
-    if free_index > 0: #and len(arg_list) <= len(left_arg_list):
-      candidates.append('C')
-      candidates.append('S')
-    routers = []
-    for r in list(itertools_product(candidates, repeat=len(arg_list))):
-      routers.append(''.join(r))
-    return routers
 
   @staticmethod
   def query_obj_lp(obj, df):
@@ -476,7 +506,7 @@ class Program_lib(Program_lib_light):
         filtered = filtered.append(passed_pm[['terms', 'log_prob']], ignore_index=True)
     return filtered
 
-# %%
+# # %%
 # pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
 # pl = Program_lib(pm_init, 0.1)
 # pl.update_log_prob(init=True)

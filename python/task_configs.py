@@ -67,7 +67,7 @@ L3 = Length('L3')
 L4 = Length('L4')
 L5 = Length('L5')
 L6 = Length('L6')
-L7 = Length('L7')
+# L7 = Length('L7')
 
 
 # Placeholders for typed program enumeration
@@ -112,10 +112,9 @@ mulnn = Primitive('mulnn', ['num', 'num'], 'num', lambda x: math.prod(x))
 ifElse = Primitive('ifElse', ['bool', 'obj', 'obj'], 'obj', if_else)
 I = Primitive('I', 'obj', 'obj', return_myself)
 
-# isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
-# isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
-# isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
-
+isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
+isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
+isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
 # isL1 = Primitive('isL1', ['obj'], 'bool', lambda x: x[0].length.name=='L1')
 # isL2 = Primitive('isL2', ['obj'], 'bool', lambda x: x[0].length.name=='L2')
 # isL3 = Primitive('isL3', ['obj'], 'bool', lambda x: x[0].length.name=='L3')
@@ -129,8 +128,8 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 # # %% Task set up
 # pm_setup = []
 # pm_terms = [
-#   Tria, Rect, Pent, Hexa, #isTria, isRect, isPent,
-#   L1, L2, L3, L4, L5, L6, L7, #isL1, isL2, isL3,
+#   Tria, Rect, Pent, Hexa, isTria, isRect, isPent,
+#   L1, L2, L3, L4, L5, L6, #L7, isL1, isL2, isL3,
 #   getShape, setShape, getEdge, setEdge, getLength, setLength, isShape, isLength,
 #   addnn, mulnn, ifElse, I,
 #   -2, -1, 0, 1, 2, True, False,
@@ -155,3 +154,5 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 
 # pm_task = pd.DataFrame.from_records(pm_setup).groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
 # pm_task.to_csv('data/task_pm.csv') # Later manually add [KB,I,I] & [B,I,I]
+
+# %%
