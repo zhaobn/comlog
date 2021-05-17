@@ -47,22 +47,23 @@ class Task_lib(Program_lib):
     stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
     return stones_df[['terms', 'log_prob']]
 
-# %%
-pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
-pl = Task_lib(pm_task)
-pl.calc_log_prob(init=True)
-pl.calc_log_prob(init=False)
-pl.content.reset_index().to_csv('data/task_pm.csv')
+# # %%
+# pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
+# pl = Task_lib(pm_task)
+# pl.calc_log_prob(init=True)
+# pl.calc_log_prob(init=False)
+# pl.content.reset_index(drop=True).to_csv('data/task_pm.csv')
 
-pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
-pl = Task_lib(pm_init)
-t = [['obj', 'obj'], 'obj']
+# pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
+# pl = Task_lib(pm_init)
+# t = [['obj', 'obj'], 'obj']
 
-# rf = pl.typed_enum(t,1)
-rf2 = pl.typed_enum(t,2)
-frames = rf2[rf2["terms"].str.contains("ifElse,bool")==False]
-frames = frames.reset_index()[['terms', 'log_prob']]
-frames.to_csv('data/task_frames.csv')
+# # rf = pl.typed_enum(t,1)
+# rf2 = pl.typed_enum(t,2)
+# rf2.to_csv('data/task_frames.csv')
+# # frames = rf2[rf2["terms"].str.contains("ifElse,bool")==False]
+# # frames = rf2.reset_index(drop=True)[['terms', 'log_prob']]
+# # frames.to_csv('data/task_frames.csv') # N=6,953,362
 
 # %%
 class Task_gibbs(Gibbs_sampler):
@@ -72,8 +73,8 @@ class Task_gibbs(Gibbs_sampler):
   def merge_lib(self, extracted_df):
     merged_df = pd.merge(self.cur_programs.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
     merged_df['count'] = merged_df['count_x'] +  merged_df['count_y']
-    set_df = merged_df[merged_df['log_prob']<0][['terms','arg_types','return_type','type','count','log_prob']]
-    to_set_df = merged_df[merged_df['log_prob']>=0][['terms','arg_types','return_type','type','count','log_prob']]
+    set_df = merged_df.query('log_prob!=0|type=="primitive"')[['terms','arg_types','return_type','type','count','log_prob']]
+    to_set_df = merged_df.query('log_prob==0&type!="primitive"')[['terms','arg_types','return_type','type','count','log_prob']]
     to_set_df = to_set_df.reset_index(drop=True)
     for i in range(len(to_set_df)):
       log_prob = 0
@@ -274,7 +275,7 @@ class Task_gibbs(Gibbs_sampler):
           filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
           self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
 
-# %%
+# # %%
 # task_data_df = pd.read_csv('data/task_data.csv')
 
 # def get_task_task(tids, dsource=task_data_df):
@@ -295,24 +296,27 @@ class Task_gibbs(Gibbs_sampler):
 # task_ldg = get_task_task([1,5,9])
 # task_rdg = get_task_task([3,5,7])
 
-# task_data = task_row + task_col
+# # %%
+# task_data = task_row
 
-# task_data_df = pd.read_csv('data/task_data.csv')
-# task_data_df = task_data_df[task_data_df.index>8]
+# # task_data = task_row + task_col
 
-# task_data = []
-# for i in range(len(task_data_df)):
-#   tdata = task_data_df.iloc[i].to_dict()
-#   task = {
-#     'agent': eval(tdata['agent']),
-#     'recipient': eval(tdata['recipient']),
-#     'result': eval(tdata['result'])
-#   }
-#   task_data.append(task)
+# # task_data_df = pd.read_csv('data/task_data.csv')
+# # task_data_df = task_data_df[task_data_df.index>8]
+
+# # task_data = []
+# # for i in range(len(task_data_df)):
+# #   tdata = task_data_df.iloc[i].to_dict()
+# #   task = {
+# #     'agent': eval(tdata['agent']),
+# #     'recipient': eval(tdata['recipient']),
+# #     'result': eval(tdata['result'])
+# #   }
+# #   task_data.append(task)
 
 # pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 # all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-# frames = all_frames.sample(n=20)
+# # frames = all_frames.sample(n=20)
 # g = Task_gibbs(Task_lib(pm_init), task_data, iteration=2)
 
 # # # pl = Task_lib(pm_init)

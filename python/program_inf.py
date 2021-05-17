@@ -34,7 +34,7 @@ class Gibbs_sampler:
     return ','.join([tm.strip() for tm in terms_str.split(',')])
 
   def get_base_primitives(self, terms):
-    df = Program_lib_light(pd.DataFrame({'terms': [], 'arg_types': [], 'return_type': [], 'type': [], 'count': []}))
+    df = Program_lib_light(pd.DataFrame(columns=['terms','arg_types','return_type','type','count']))
     bases = set(list(self.cur_programs[self.cur_programs['type']=='base_term'].return_type))
     if isinstance(terms, str):
       terms = eval(terms)
@@ -77,7 +77,7 @@ class Gibbs_sampler:
       right_index = 2 if len(terms) == 3 else 1
       if len(secure_list(terms[right_index])) > 1:
         program_dict = {
-          'terms': names_to_string(print_name(terms[right_index])),
+          'terms': self.strip_terms_spaces(names_to_string(print_name(terms[right_index]))),
           'arg_types': '_'.join(['obj'] * terms[right_index][0].n_arg),
           'return_type': self.find_ret_type(terms[right_index]),
           'type': 'program',
@@ -108,7 +108,22 @@ class Gibbs_sampler:
     if self.is_all_K(terms_str):
       return df
     else:
-      df = df.append(self.get_base_primitives(terms_eval))
+      # df = df.append(self.get_base_primitives(terms_eval))
+      # Add first primitive
+      all_primitives = list(self.cur_programs[self.cur_programs['type']=='primitive'].terms)
+      striped_terms = str(terms)
+      for r in (('Stone',''), ('(',''),(')',''),('[',''),(']','')):
+        striped_terms = striped_terms.replace(*r)
+      first_primitive = next(x for x in striped_terms.split(',') if x in all_primitives)
+      fp_info = self.cur_programs.query(f'terms=="{first_primitive}"&type=="primitive"').iloc[0].to_dict()
+      df = df.append(pd.DataFrame({
+        'terms': [ first_primitive ],
+        'arg_types': [ fp_info['arg_types'] ],
+        'return_type': [ fp_info['return_type']],
+        'type': [ 'primitive' ],
+        'count': [ 1 ],
+      }))
+      # Add subtrees
       df_pm = pd.DataFrame(self.get_sub_programs(terms_eval))
       if len(df_pm) > 0:
         df_pm = df_pm.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
@@ -234,3 +249,25 @@ class Gibbs_sampler:
 # filtered = pd.read_csv('tests/composition/phase_1/pm_filtered_1_2.csv', index_col=0, na_filter=False)
 # extracted = g.extract(filtered, 6, False)
 # print(extracted)
+
+# # %%
+# filtered = pd.read_csv('sf.csv', index_col=0, na_filter=False)
+# to_add = filtered.sample(n=1, weights='prob')
+# terms = to_add.iloc[0].terms
+
+# task_data_df = pd.read_csv('data/task_data.csv')
+# task_data = []
+# for i in range(len(task_data_df)):
+#   tdata = task_data_df.iloc[i].to_dict()
+#   task = {
+#     'agent': eval(tdata['agent']),
+#     'recipient': eval(tdata['recipient']),
+#     'result': eval(tdata['result'])
+#   }
+#   task_data.append(task)
+
+# pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
+# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
+# g = Gibbs_sampler(Program_lib(pm_init), task_data, iteration=1000)
+
+# %%

@@ -97,24 +97,24 @@ def set_edge (arg_list):
 
 getShape = Primitive('getShape', ['obj'], 'shape', lambda x: copy(x[0].shape))
 setShape = Primitive('setShape', ['obj', 'shape'], 'obj', set_shape)
-isShape = Primitive('isShape', ['obj', 'shape'], 'bool', lambda x: x[0].shape.name==x[1].name)
+# isShape = Primitive('isShape', ['obj', 'shape'], 'bool', lambda x: x[0].shape.name==x[1].name)
 
 getEdge = Primitive('getEdge', ['obj'], 'num', lambda x: copy(x[0].shape.value))
 setEdge = Primitive('setEdge', ['obj', 'num'], 'obj', set_edge)
 
 getLength = Primitive('getLength', ['obj'], 'num', lambda x: copy(x[0].length.value))
 setLength = Primitive('setLength', ['obj', 'num'], 'obj', set_length)
-isLength = Primitive('isLength', ['obj', 'num'], 'bool', lambda x: x[0].length.value==x[1])
+# isLength = Primitive('isLength', ['obj', 'num'], 'bool', lambda x: x[0].length.value==x[1])
 
 addnn = Primitive('addnn', ['num', 'num'], 'num', lambda x: sum(x))
 mulnn = Primitive('mulnn', ['num', 'num'], 'num', lambda x: math.prod(x))
 
-ifElse = Primitive('ifElse', ['bool', 'obj', 'obj'], 'obj', if_else)
 I = Primitive('I', 'obj', 'obj', return_myself)
 
-isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
-isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
-isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
+# ifElse = Primitive('ifElse', ['bool', 'obj', 'obj'], 'obj', if_else)
+# isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
+# isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
+# isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
 # isL1 = Primitive('isL1', ['obj'], 'bool', lambda x: x[0].length.name=='L1')
 # isL2 = Primitive('isL2', ['obj'], 'bool', lambda x: x[0].length.name=='L2')
 # isL3 = Primitive('isL3', ['obj'], 'bool', lambda x: x[0].length.name=='L3')
@@ -128,11 +128,11 @@ isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
 # # %% Task set up
 # pm_setup = []
 # pm_terms = [
-#   Tria, Rect, Pent, Hexa, isTria, isRect, isPent,
+#   Tria, Rect, Pent, # isTria, isRect, isPent,
 #   L1, L2, L3, L4, L5, L6, #L7, isL1, isL2, isL3,
-#   getShape, setShape, getEdge, setEdge, getLength, setLength, isShape, isLength,
-#   addnn, mulnn, ifElse, I,
-#   -2, -1, 0, 1, 2, True, False,
+#   getShape, setShape, getEdge, setEdge, getLength, setLength, # isShape, isLength,
+#   addnn, mulnn, I, #ifElse
+#   -2, -1, 0, 1, 2, #True, False,
 # ]
 # for pt in pm_terms:
 #   if isinstance(pt, bool) or isinstance(pt, int):
