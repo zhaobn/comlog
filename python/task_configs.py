@@ -61,6 +61,7 @@ Rect = Shape('Rect')
 Pent = Shape('Pent')
 Hexa = Shape('Hexa')
 
+L0 = Length('L0')
 L1 = Length('L1')
 L2 = Length('L2')
 L3 = Length('L3')
@@ -129,7 +130,7 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 # pm_setup = []
 # pm_terms = [
 #   Tria, Rect, Pent, # isTria, isRect, isPent,
-#   L1, L2, L3, L4, L5, L6, #L7, isL1, isL2, isL3,
+#   L0, L1, L2, L3, L4, L5, L6, #L7, isL1, isL2, isL3,
 #   getShape, setShape, getEdge, setEdge, getLength, setLength, # isShape, isLength,
 #   addnn, mulnn, I, #ifElse
 #   -2, -1, 0, 1, 2, #True, False,

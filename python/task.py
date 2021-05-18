@@ -297,22 +297,21 @@ class Task_gibbs(Gibbs_sampler):
 # task_rdg = get_task_task([3,5,7])
 
 # # %%
-# task_data = task_row
+# task_data_df = pd.read_csv('data/task_data.csv')
+# sorted_indexes = [9,10,11]
 
-# # task_data = task_row + task_col
+# task_data_df = task_data_df[task_data_df.index.isin(sorted_indexes)].reindex(sorted_indexes)
+# task_data = []
 
-# # task_data_df = pd.read_csv('data/task_data.csv')
-# # task_data_df = task_data_df[task_data_df.index>8]
-
-# # task_data = []
-# # for i in range(len(task_data_df)):
-# #   tdata = task_data_df.iloc[i].to_dict()
-# #   task = {
-# #     'agent': eval(tdata['agent']),
-# #     'recipient': eval(tdata['recipient']),
-# #     'result': eval(tdata['result'])
-# #   }
-# #   task_data.append(task)
+# task_data = []
+# for i in range(len(task_data_df)):
+#   tdata = task_data_df.iloc[i].to_dict()
+#   task = {
+#     'agent': eval(tdata['agent']),
+#     'recipient': eval(tdata['recipient']),
+#     'result': eval(tdata['result'])
+#   }
+#   task_data.append(task)
 
 # pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 # all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
