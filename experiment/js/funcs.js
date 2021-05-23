@@ -1,5 +1,6 @@
 const defaultStone = { 'borderWidth': '8px', 'mar': 5, 'len': 60 };
 const smallStone = { 'borderWidth': '3px', 'mar': 3, 'len': 20 };
+const maxBlocks = 8
 
 function createCustomElement (type = 'div', className, id) {
   let element = (["svg", "polygon"].indexOf(type) < 0)?
@@ -51,24 +52,34 @@ function createAgentStone(id, stoneOpts) {
   return(div);
 }
 function createBlocks(id, stoneOpts=0) {
+  let isGenTask = id.substring(0,3)==='gen'
   let div = createCustomElement("div", "recipient-stone-div", `${id}-blocks-all`);
   let length = stoneOpts.recipient % 10
-  let max =  stoneOpts.result % 10
+  let max =  stoneOpts.result % 10 || maxBlocks
   for(let i = 0; i < max; i++ ) {
     let block = createCustomElement("div", "recipient-block", `${id}-block-${i}`)
-    block.style.opacity = (i < length)? 1: 0
+    block.style.opacity = (i < length)? 1: (isGenTask? 0.1: 0)
     div.append(block)
   }
   return(div);
 }
+function createGenStones(config, parentDiv) {
+  parentDiv.append(createAgentStone(`gen${config.trial}-agent`, config.agent));
+  parentDiv.append(createBlocks(`gen${config.trial}-recipient`, config));
+  return(parentDiv);
+}
 
-function createRecipientStone(id, stoneOpts) {
-  let div = document.getElementById(`${id}-blocks-all`)
-  let length = stoneOpts % 10;
-  for(let i = 0; i < length; i++ ) {
-    div.append(createCustomElement("div", "recipient-block", `${id}-block-${i+1}`))
+function genBlocksEffects(config) {
+  for(let i = 0; i < maxBlocks; i++ ) {
+    let idPrefix = `gen${config.trial}-recipient-block-`
+    document.getElementById(`${idPrefix}${i}`).onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i)
   }
-  return(div);
+}
+function highlightBlocksOnMouseOver(idPrefix, i) {
+  let yesBlocks = Array.from(Array(maxBlocks).keys()).map(m => `${idPrefix}${m}`)
+  let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
+  yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
+  noBlocks.forEach(b => document.getElementById(b).style.opacity=0.1)
 }
 
 function createPolygon(className, id, sides, scale) {

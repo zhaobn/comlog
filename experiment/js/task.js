@@ -1,5 +1,5 @@
 
-const mode = '' // '' for production, 'dev' for development, 'flask' for flask-app
+const mode = 'dev' // '' for production, 'dev' for development, 'flask' for flask-app
 
 /** Pick a condition */
 const cond = 'row'
@@ -84,12 +84,31 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
 
 }
 
-// Generate agent stone
+let genDivPrefix = 'task-gen'
+let genDiv = document.getElementById(genDivPrefix)
+let genTaskConfigs = [{'trial':1, 'agent': 61, 'recipient': 41}]
+for(let i = 0; i < genTaskConfigs.length; i++ ) {
+  let trialId = genTaskConfigs[i].trial
+  let box = createCustomElement("div", "box", `${genDivPrefix}-box-${trialId}`);
 
-// Generate recipient stone
+  let taskBox = createCustomElement("div", "task-box", `${genDivPrefix}-taskbox-${trialId}`);
+  let taskNum = createText('h2', `${trialId}/${genTaskConfigs.length}`);
+  taskBox.append(taskNum);
 
-// Generate result stone
+  let displayBox = createCustomElement("div", "display-box", `${genDivPrefix}-displaybox-${trialId}`);
+  let displayMain = createCustomElement("div", "display-main", `${genDivPrefix}-displaymain-${trialId}`);
+  displayMain = createGenStones(genTaskConfigs[i], displayMain);
+  displayBox.append(displayMain)
 
-// Add animation
+  const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
+  buttonGroup.append(createBtn(`${genDivPrefix}-test-btn-${trialId}`, "Confirm", true));
 
-// Try gen task selection
+  taskBox.append(displayBox);
+  taskBox.append(buttonGroup);
+  box.append(taskBox);
+  genDiv.append(box);
+
+  /** Effects and button functionalities */
+  genBlocksEffects(genTaskConfigs[i])
+
+}
