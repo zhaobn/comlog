@@ -33,7 +33,14 @@ function createBtn (btnId, text = "Button", on = true, className = "task-button"
 }
 function createInitStones(config, parentDiv) {
   parentDiv.append(createAgentStone(`learn${config.trial}-agent`, config.agent));
-  parentDiv.append(createRecipientStone(`learn${config.trial}-recipient`, config.recipient));
+  parentDiv.append(createBlocks(`learn${config.trial}-recipient`, config));
+  return(parentDiv);
+}
+function createInitHistory(config, parentDiv) {
+  let textDiv = createCustomElement('div', 'hist-text', id=`learn${config.trial}-hist-text`)
+  textDiv.append(createText('h2', 'Before'))
+  parentDiv.append(textDiv);
+  parentDiv.append(createBlocks(`learn${config.trial}-recipient`, config));
   return(parentDiv);
 }
 function createAgentStone(id, stoneOpts) {
@@ -43,8 +50,20 @@ function createAgentStone(id, stoneOpts) {
   div.append(svg)
   return(div);
 }
+function createBlocks(id, stoneOpts=0) {
+  let div = createCustomElement("div", "recipient-stone-div", `${id}-blocks-all`);
+  let length = stoneOpts.recipient % 10
+  let max =  stoneOpts.result % 10
+  for(let i = 0; i < max; i++ ) {
+    let block = createCustomElement("div", "recipient-block", `${id}-block-${i}`)
+    block.style.opacity = (i < length)? 1: 0
+    div.append(block)
+  }
+  return(div);
+}
+
 function createRecipientStone(id, stoneOpts) {
-  let div = createCustomElement("div", "recipient-stone-div", `${id}-div`);
+  let div = document.getElementById(`${id}-blocks-all`)
   let length = stoneOpts % 10;
   for(let i = 0; i < length; i++ ) {
     div.append(createCustomElement("div", "recipient-block", `${id}-block-${i+1}`))
@@ -83,10 +102,6 @@ function createPolygon(className, id, sides, scale) {
   setAttributes(polygon, { "points": output.join(" ") });
   return(polygon);
 }
-function clearStones (config) {
-  let els = [ "agent", "recipient" ].map(s => `learn${config.trial}-${s}-div`);
-  els.forEach (el => clearElement(el));
-}
 function clearElement (id) {
   let clear = document.getElementById(id);
   clear.remove();
@@ -105,7 +120,7 @@ function playEffects (config) {
     createStones(config)
   }
   const agent = `learn${config.trial}-agent-div`;
-  const recipient = `learn${config.trial}-recipient-div`;
+  const recipient = `learn${config.trial}-recipient-blocks-all`;
 
   const agentStone = document.getElementById(agent);
   const startPos = getCurrentLocation(agent).right;
@@ -115,29 +130,15 @@ function playEffects (config) {
   (delta > 0) && (agentStone.style.left = `${delta}px`);
 
   setTimeout(() => {
-    let div = document.getElementById(`learn${config.trial}-recipient-div`);
-    Array.from(Array(config.recipient % 10).keys()).map(i => clearElement(`learn${config.trial}-recipient-block-${i+1}`));
-    let length = config.result % 10
-    for (let i = 0; i < length; i++ ) {
-      createResultBlock(div, `learn${config.trial}-result-block-${i+1}`)
-      // let block = createCustomElement("div", "recipient-block", `learn${config.trial}-result-block-${i+1}`)
-      // block.style.opacity = 0
-      // div.append(block)
-      // fadeIn(block)
+    let initLen = config.recipient % 10
+    let targetLen = config.result % 10
+    let hist = document.getElementById(`task-obs-training-displayhist-${config.trial}`)
+    for (let i = initLen; i < targetLen; i++ ) {
+      fadeIn(document.getElementById(`learn${config.trial}-recipient-block-${i}`))
+      setTimeout(()=> hist.style.opacity = 1, 1000)
     }
   }, 1500);
 }
-
-function createResultBlock(parentDiv,id) {
-  setTimeout(()=> {
-    let block = createCustomElement("div", "recipient-block", id)
-    block.style.opacity = 0
-    parentDiv.append(block)
-    fadeIn(block)
-    createResultBlock()
-  }, 100)
-}
-
 function fadeIn(element) {
   let op = 0.1;
   let timer = setInterval(() => {
@@ -148,4 +149,13 @@ function fadeIn(element) {
     element.style.filter = 'alpha(opacity=' + op * 100 + ")";
     op += op * 0.1;
   }, 20);
+}
+function showNext(id, display = "flex") {
+  let div = document.getElementById(id);
+  div.style.display = display;
+  div.scrollIntoView(true);
+}
+function hide(id) {
+  let div = document.getElementById(id);
+  div.style.display = "none";
 }

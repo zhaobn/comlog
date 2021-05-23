@@ -28,11 +28,26 @@ body {
   height: 90%;
   margin: 10px;
   display: flex;
+  background-color: white;
 }
 
 .display-box {
   width: 100%;
   border: #bbbbbb solid 2px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.display-main {
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.display-hist {
+  width: 100%;
+  display: flex;
   justify-content: space-evenly;
   align-items: center;
 }
@@ -97,4 +112,8 @@ body {
   width: 40px;
   margin: 0;
   padding: 0;
+}
+.hist-text h2 {
+  font-size: 25px;
+  color: #bbbbbb;
 }

@@ -1,8 +1,8 @@
 
-const mode = 'dev' // '' for production, 'dev' for development, 'flask' for flask-app
+const mode = '' // '' for production, 'dev' for development, 'flask' for flask-app
 
 /** Pick a condition */
-const cond = 'col'
+const cond = 'row'
 const cond_dict = {
   'row': [1,2,3],
   'col': [1,4,7],
@@ -30,11 +30,20 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
   taskBox.append(taskNum);
 
   let displayBox = createCustomElement("div", "display-box", `${learnDivPrefix}-displaybox-${trialId}`);
-  displayBox = createInitStones(config, displayBox);
 
-  const buttonGroup = createCustomElement("div", "button-group-vc", `${display}-btns-${trialId}`);
-  buttonGroup.append(createBtn(`${display}-btns-${trialId}-test`, "Test", true));
-  buttonGroup.append(createBtn(`${display}-btns-${trialId}-next`, "Next", false));
+  let displayMain = createCustomElement("div", "display-main", `${learnDivPrefix}-displaymain-${trialId}`);
+  displayMain = createInitStones(config, displayMain);
+
+  let displayHist = createCustomElement("div", "display-hist", `${learnDivPrefix}-displayhist-${trialId}`);
+  displayHist = createInitHistory(config, displayHist)
+  displayHist.style.opacity = 0
+
+  displayBox.append(displayMain)
+  displayBox.append(displayHist)
+
+  const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
+  buttonGroup.append(createBtn(`${learnDivPrefix}-test-btn-${trialId}`, "Test", true));
+  buttonGroup.append(createBtn(`${learnDivPrefix}-next-btn-${trialId}`, "Next", false));
 
   taskBox.append(displayBox);
   taskBox.append(buttonGroup);
@@ -43,14 +52,16 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
   coreLearnDiv.append(box);
 
   /** Button functionalities */
-  const playBtn = document.getElementById(`flex-btns-${trialId}-test`);
-  const nextBtn = document.getElementById(`flex-btns-${trialId}-next`);
+  const playBtn = document.getElementById(`${learnDivPrefix}-test-btn-${trialId}`);
+  const nextBtn = document.getElementById(`${learnDivPrefix}-next-btn-${trialId}`);
 
   playBtn.onclick = () => {
     playBtn.disabled = true;
     if (learnClicked[i] > 0) {
-      clearStones(config);
-      createInitStones(config, displayBox)
+      clearElement(`learn${config.trial}-agent-div`)
+      clearElement(`learn${config.trial}-recipient-blocks-all`)
+      createInitStones(config, displayMain)
+      displayHist.style.opacity = 0
     }
     playEffects(config);
     setTimeout(() => {
@@ -61,12 +72,15 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
     }, 2000);
     learnClicked[i] += 1;
   }
-  // nextBtn.onclick = () => {
-  //   nextBtn.disabled = true;
-  //   const nextDiv = (i === learnConfigs.length-1)? "core-learn-form-div": `box-learn-${padNum(i+2)}`;
-  //   (mode !== 'dev')? hide(`box-${trialId}`): null;
-  //   showNext(nextDiv, 'flex');
-  // }
+  nextBtn.onclick = () => {
+    nextBtn.disabled = true;
+    if (i <= taskConfigs.length-1) {
+      showNext(`task-obs-training-box-${trialId+1}`, 'flex')
+    }
+    // const nextDiv = (i === taskConfigs.length-1)? '': `task-obs-training-box-${i+2}`;
+    // (mode !== 'dev')? hide(`box-${trialId}`): null;
+    // showNext(nextDiv, 'flex');
+  }
 
 }
 
