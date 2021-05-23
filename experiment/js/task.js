@@ -13,8 +13,28 @@ taskConfigs = config.filter(c => c.phase === 'tab' & cond_dict[cond].indexOf(c.t
 let learnClicked = Array(taskConfigs.length).fill(0);
 console.log(cond)
 
+// Demo pre-train materials
+let ptDivPrefix = 'task-pretrain'
+let box = createCustomElement("div", "box", `${ptDivPrefix}-box`);
+let taskBox = createCustomElement("div", "task-box", `${ptDivPrefix}-taskbox`);
+
+let taskNum = createText('h2', `Power detection results`);
+taskBox.append(taskNum);
+
+let displayBox = createCustomElement("div", "pt-display-box", `${ptDivPrefix}-displaybox`);
+displayBox = createPretrainings(displayBox)
+
+const buttonGroup = createCustomElement("div", "button-group-vc", `p`);
+buttonGroup.append(createBtn(`${ptDivPrefix}-next-btn`, "Next", false));
+
+taskBox.append(displayBox);
+taskBox.append(buttonGroup);
+box.append(taskBox);
+document.getElementById(ptDivPrefix).append(box);
+
+
 // Generate learning frame
-learnDivPrefix = 'task-obs-training'
+learnDivPrefix = 'task-training'
 coreLearnDiv = document.getElementById(learnDivPrefix)
 for(let i = 0; i < taskConfigs.length; i++ ) {
   let { _, trial, agent, recipient, result } = taskConfigs[i];
@@ -75,15 +95,16 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
   nextBtn.onclick = () => {
     nextBtn.disabled = true;
     if (i <= taskConfigs.length-1) {
-      showNext(`task-obs-training-box-${trialId+1}`, 'flex')
+      showNext(`task-training-box-${trialId+1}`, 'flex')
     }
-    // const nextDiv = (i === taskConfigs.length-1)? '': `task-obs-training-box-${i+2}`;
+    // const nextDiv = (i === taskConfigs.length-1)? '': `task-training-box-${i+2}`;
     // (mode !== 'dev')? hide(`box-${trialId}`): null;
     // showNext(nextDiv, 'flex');
   }
 
 }
 
+// Generate gen tasks
 let genDivPrefix = 'task-gen'
 let genDiv = document.getElementById(genDivPrefix)
 let genTaskConfigs = [{'trial':1, 'agent': 61, 'recipient': 41}]

@@ -154,7 +154,7 @@ function playEffects (config) {
   setTimeout(() => {
     let initLen = config.recipient % 10
     let targetLen = config.result % 10
-    let hist = document.getElementById(`task-obs-training-displayhist-${config.trial}`)
+    let hist = document.getElementById(`task-training-displayhist-${config.trial}`)
     for (let i = initLen; i < targetLen; i++ ) {
       fadeIn(document.getElementById(`learn${config.trial}-recipient-block-${i}`))
       setTimeout(()=> hist.style.opacity = 1, 1000)
@@ -180,4 +180,18 @@ function showNext(id, display = "flex") {
 function hide(id) {
   let div = document.getElementById(id);
   div.style.display = "none";
+}
+function createPretrainings(parentDiv) {
+  for(let i = 0; i < 3; i++ ) {
+    let obsId = i + 1
+    let div = createCustomElement('div', 'detect-div', `pretrain-detect-div-${obsId}`)
+    let agent = createCustomElement('div', 'detect-div-agent', `pretrain-detect-div-agent-${obsId}`)
+    agent.append(createAgentStone(`pretrain-detect-agent-${obsId}`, (i+3)*10+1))
+    let power = createCustomElement('div', 'detect-div-power', `pretrain-detect-div-power-${obsId}`)
+    power.innerHTML = `<p>${'&#9733;'.repeat(i+1)}</p>`
+    div.append(agent)
+    div.append(power)
+    parentDiv.append(div)
+  }
+  return parentDiv
 }
