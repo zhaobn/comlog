@@ -22,10 +22,4 @@
 
 However we can "pre-train" the model to learn the `addnn(getEdge(A),-2)` sub-program. In this way, our model can learn the ground-truth rule (`setLength(R, addnn(getLength(R), addnn(getEdge(A),-2))`) successfully.
 
-- Pre-train setup: triangle ~ 1, rectangle ~ 2, pentagon ~ 3
-
-## Plan
-
-- Experiment: explicit pre-train V.S. forced discovery
-  - Pre-train: show shapes and a corresponding number
-  - Force-discovery: learn row 1 (all triangle agents, expected sub-program: `addnn(getLength(R),+1)`), row 2, (`addnn(getLength(R),+2)`) and row 3 (`addnn(getLength(R),+3)`), and then consolidate to learn the expected sub-program `getRank := addnn(getEdge(A),-2)`
+- Pre-train setup: triangle ~ 1, rectangle ~ 2, pentagon ~ 3 (See demo experiment)
