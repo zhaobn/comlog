@@ -72,10 +72,21 @@ function createGenStones(config, parentDiv) {
 function genBlocksEffects(config) {
   for(let i = 0; i < maxBlocks; i++ ) {
     let idPrefix = `gen${config.trial}-recipient-block-`
-    document.getElementById(`${idPrefix}${i}`).onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i)
+    let base = config.recipient % 10
+    document.getElementById(`${idPrefix}${i}`).onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i, base)
+    document.getElementById(`${idPrefix}${i}`).onmouseout = () => highlightBlocksOnClick(idPrefix, i)
+    document.getElementById(`${idPrefix}${i}`).onclick = () => highlightBlocksOnClick(idPrefix, i)
   }
 }
-function highlightBlocksOnMouseOver(idPrefix, i) {
+function highlightBlocksOnMouseOver(idPrefix, i, base) {
+  let baseBlocks = Array.from(Array(base).keys()).map(m => `${idPrefix}${m}`)
+  let yesBlocks = Array.from(Array(maxBlocks).keys()).filter(b => (b>=base && b <= i)).map(m => `${idPrefix}${m}`)
+  let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
+  baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
+  yesBlocks.forEach(b => document.getElementById(b).style.opacity=0.5)
+  noBlocks.forEach(b => document.getElementById(b).style.opacity=0.1)
+}
+function highlightBlocksOnClick(idPrefix, i) {
   let yesBlocks = Array.from(Array(maxBlocks).keys()).map(m => `${idPrefix}${m}`)
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
