@@ -18,11 +18,10 @@ Task-specifically, I'm making these changes:
 
 - Data: the 3 * 3 design, observing data per (1) row, (2) column, (3) right-diagonal, (4) left-diagonal, (5) combined
 - Method: `fast_run`, iteration = 500, for each loop sample 1 consistent program; ran a comprehensive run for the combined data setup for comparison
-  - (1)-(4) is learning the expected sub-programs
-    - Per row: `[C,[B,addnn,getLength],1]`
-    - Per column: `[B,[addnn,-1],getEdge]`
-    - Left diagonal: `[C,[B,mulnn,getLength],2]`
-    - Right diagonal: `[B,[setLength,Stone(Rect,L3)],[K,getEdge,Stone(Rect,L4)]]` (subprogram `[K,getEdge,Stone(Rect,L4)]]` is an approximation for number 4)
+  - Per row: `[C,[B,addnn,getLength],1]`
+  - Per column: `[B,[addnn,-1],getEdge]`
+  - Left diagonal: `[C,[B,mulnn,getLength],2]`
+  - Right diagonal: `[B,[setLength,Stone(Rect,L3)],[K,getEdge,Stone(Rect,L4)]]` (subprogram `[K,getEdge,Stone(Rect,L4)]]` is a representation for number 4)
   - Combined data failed to learn a consistent program, even for the comprehensive run (because of depth=2 typed enumeration & no `ifElse` primitive & no fallback)
 
 However we can "pre-train" the model to learn the `addnn(getEdge(A),-2)` sub-program. In this way, our model can learn the ground-truth rule (`setLength(R, addnn(getLength(R), addnn(getEdge(A),-2))`) successfully.
