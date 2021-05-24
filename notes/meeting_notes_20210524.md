@@ -11,7 +11,7 @@ Previous experiment stimuli draft: https://docs.google.com/presentation/d/1uTY-T
 Task-specifically, I'm making these changes:
 
 - Fix (typed frames) enumeration depth = 2, in order to include `addnn <num -> num -> num>`, `mulnn <num -> num -> num>`.
-- Not consider `ifElse` for now (otherwise typed frames N = 7 million). Hence not having `isShape`, `eqShape` sorts of primitives, really focus on the universal arithmetric relationships that we are testing.
+- Not consider `ifElse` for now (otherwise typed frames N = 7 million). Hence not having `isShape`, `eqShape` sorts of primitives, instead let the model really focus on the universal arithmetric relationships that we are testing.
 
 
 ## Model results
