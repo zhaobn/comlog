@@ -16,8 +16,9 @@ Task-specifically, I'm making these changes:
 
 ## Model results
 
-- Data: the 3 * 3 design, observing data per (1) row, (2) column, (3) right-diagonal, (4) left-diagonal, (5) combined
-- Method: `fast_run`, iteration = 500, for each loop sample 1 consistent program; ran a comprehensive run for the combined data setup for comparison
+- **Data**: the 3 * 3 design, observing data per (1) row, (2) column, (3) right-diagonal, (4) left-diagonal, (5) combined
+- **Method**: `fast_run`, iteration = 500, for each loop sample 1 consistent program; ran a comprehensive run for the combined data setup for comparison
+- **Results**
   - Per row: `[C,[B,addnn,getLength],1]`
   - Per column: `[B,[addnn,-1],getEdge]`
   - Left diagonal: `[C,[B,mulnn,getLength],2]`
