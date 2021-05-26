@@ -80,17 +80,16 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
   playBtn.onclick = () => {
     playBtn.disabled = true;
     if (learnClicked[i] > 0) {
-      clearElement(`learn${config.trial}-agent-div`)
-      clearElement(`learn${config.trial}-recipient-blocks-all`)
+      clearElement(`${learnDivPrefix}-displaymainspace-${config.trial}`)
+      clearElement(`${learnDivPrefix}-displaymainagent-${config.trial}`)
+      clearElement(`${learnDivPrefix}-displaymainrecipient-${config.trial}`)
       createInitStones(config, displayMain)
-      displayHist.style.opacity = 0
     }
-    playEffects(config);
+    playEffects(config, learnClicked[i]);
     setTimeout(() => {
       nextBtn.disabled = false;
       playBtn.disabled = false;
       playBtn.innerText = 'Test again'
-      // boxWrapper.style.display = 'flex';
     }, 2000);
     learnClicked[i] += 1;
   }

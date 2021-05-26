@@ -143,7 +143,7 @@ function clearElement (id) {
   let clear = document.getElementById(id);
   clear.remove();
 }
-function playEffects (config) {
+function playEffects (config, clicked=0) {
   const getCurrentLocation = (id) => {
     let rect = {top: 0, bottom: 0, left: 0, right: 0};
     const pos = document.getElementById(id).getBoundingClientRect();
@@ -171,11 +171,13 @@ function playEffects (config) {
     let hist = document.getElementById(`task-training-displayhist-${config.trial}`)
     for (let i = initLen; i < targetLen; i++ ) {
       fadeIn(document.getElementById(`learn${config.trial}-recipient-block-${i}`))
-      setTimeout(()=> {
-        hist.style.opacity = 0
-        hist.style.display = 'flex'
-        fadeIn(hist)
-      }, 1000)
+      if (clicked == 0) {
+        setTimeout(()=> {
+          hist.style.opacity = 0
+          hist.style.display = 'flex'
+          fadeIn(hist)
+        }, 1000)
+      }
     }
   }, 1500);
 }
