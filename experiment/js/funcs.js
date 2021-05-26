@@ -92,7 +92,7 @@ function createGenStones(config, parentDiv) {
   return(parentDiv);
 }
 function blockOpDecay(index, base) {
-  return 0.1 - 0.01*(index - base)
+  return (index > base + 1)? 0: 0.1 - 0.001*(index - base)
 }
 
 function genBlocksEffects(config) {
@@ -120,13 +120,13 @@ function highlightBlocksOnMouseOver(idPrefix, i, base) {
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
   baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=0.5)
-  noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), base))
+  noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), i))
 }
 function highlightBlocksOnClick(idPrefix, i, base) {
   let yesBlocks = Array.from(Array(maxBlocks).keys()).map(m => `${idPrefix}${m}`)
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
-  noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), base))
+  noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), i))
 }
 function resetGenBlock(config) {
   let length = config.recipient % 10
