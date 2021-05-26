@@ -1,13 +1,13 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
-  /* background-color: #e0e0e0; */
+  background-color: #e0e0e0;
 }
 
 button {
   font-size: 18px;
   width: 120px;
- }
+}
 
 .base {
   width:800px;
@@ -167,4 +167,30 @@ button {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
+}
+.task-button, .big-button {
+  border: #e0e0e0 1px solid;
+  text-align: center;
+  border-radius: 10%;
+  margin: 2px;
+  padding: 5px 10px;
+}
+
+.task-button:hover:enabled,
+.big-button:hover:enabled {
+  background-color: #116466;
+  color: #e0e0e0;
+}
+
+.task-button:disabled,
+.big-button:disabled,
+.task-button:disabled:hover,
+.big-button:disabled:hover {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.big-button {
+  font-size: 15px;
+  padding: 10px 30px;
 }

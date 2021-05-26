@@ -73,15 +73,26 @@ function createBlocks(id, stoneOpts=0) {
   let max =  stoneOpts.result % 10 || maxBlocks
   for(let i = 0; i < max; i++ ) {
     let block = createCustomElement("div", "recipient-block", `${id}-block-${i}`)
-    block.style.opacity = (i < length)? 1: (isGenTask? 0.1: 0)
+    block.style.opacity = (i < length)? 1 : (isGenTask==0)? 0 : blockOpDecay(i, length)
     div.append(block)
   }
   return(div);
 }
 function createGenStones(config, parentDiv) {
-  parentDiv.append(createAgentStone(`gen${config.trial}-agent`, config.agent));
-  parentDiv.append(createBlocks(`gen${config.trial}-recipient`, config));
+  let spaceDiv = createCustomElement("div", "display-main-space", `gen${config.trial}-display-space-div`)
+  let agentDiv = createCustomElement("div", "display-main-agent", `gen${config.trial}-display-agent-div`)
+  let recipientDiv = createCustomElement("div", "display-main-recipient", `${learnDivPrefix}-display-recipient-div`)
+
+  agentDiv.append(createAgentStone(`gen${config.trial}-agent`, config.agent));
+  recipientDiv.append(createBlocks(`gen${config.trial}-recipient`, config));
+
+  parentDiv.append(spaceDiv)
+  parentDiv.append(agentDiv)
+  parentDiv.append(recipientDiv)
   return(parentDiv);
+}
+function blockOpDecay(index, base) {
+  return 0.1 - 0.01*(index - base)
 }
 
 function genBlocksEffects(config) {
@@ -89,8 +100,8 @@ function genBlocksEffects(config) {
     let idPrefix = `gen${config.trial}-recipient-block-`
     let base = config.recipient % 10
     document.getElementById(`${idPrefix}${i}`).onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i, base)
-    document.getElementById(`${idPrefix}${i}`).onmouseout = () => highlightBlocksOnClick(idPrefix, i)
-    document.getElementById(`${idPrefix}${i}`).onclick = () => highlightBlocksOnClick(idPrefix, i)
+    document.getElementById(`${idPrefix}${i}`).onmouseout = () => highlightBlocksOnClick(idPrefix, i, base)
+    document.getElementById(`${idPrefix}${i}`).onclick = () => highlightBlocksOnClick(idPrefix, i, base)
   }
 }
 function highlightBlocksOnMouseOver(idPrefix, i, base) {
@@ -99,13 +110,13 @@ function highlightBlocksOnMouseOver(idPrefix, i, base) {
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
   baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=0.5)
-  noBlocks.forEach(b => document.getElementById(b).style.opacity=0.1)
+  noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), base))
 }
-function highlightBlocksOnClick(idPrefix, i) {
+function highlightBlocksOnClick(idPrefix, i, base) {
   let yesBlocks = Array.from(Array(maxBlocks).keys()).map(m => `${idPrefix}${m}`)
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
-  noBlocks.forEach(b => document.getElementById(b).style.opacity=0.1)
+  noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), base))
 }
 
 function createPolygon(className, id, sides, scale) {

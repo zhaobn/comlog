@@ -126,8 +126,9 @@ for(let i = 0; i < genTaskConfigs.length; i++ ) {
   buttonGroup.append(createBtn(`${genDivPrefix}-test-btn-${trialId}`, "Confirm", true));
 
   taskBox.append(displayBox);
-  taskBox.append(buttonGroup);
+  // taskBox.append(buttonGroup);
   box.append(taskBox);
+  box.append(buttonGroup);
   genDiv.append(box);
 
   /** Effects and button functionalities */
