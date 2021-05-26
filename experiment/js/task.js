@@ -56,10 +56,10 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
 
   let displayHist = createCustomElement("div", "display-hist", `${learnDivPrefix}-displayhist-${trialId}`);
   displayHist = createInitHistory(config, displayHist)
-  displayHist.style.opacity = 0
 
-  displayBox.append(displayMain)
   displayBox.append(displayHist)
+  displayBox.append(displayMain)
+  displayHist.style.display = "None"
 
   const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
   buttonGroup.append(createBtn(`${learnDivPrefix}-test-btn-${trialId}`, "Test", true));

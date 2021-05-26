@@ -33,15 +33,30 @@ function createBtn (btnId, text = "Button", on = true, className = "task-button"
   return(btn)
 }
 function createInitStones(config, parentDiv) {
-  parentDiv.append(createAgentStone(`learn${config.trial}-agent`, config.agent));
-  parentDiv.append(createBlocks(`learn${config.trial}-recipient`, config));
+  let spaceDiv = createCustomElement("div", "display-main-space", `${learnDivPrefix}-displaymainspace-${config.trial}`)
+  let agentDiv = createCustomElement("div", "display-main-agent", `${learnDivPrefix}-displaymainagent-${config.trial}`)
+  let recipientDiv = createCustomElement("div", "display-main-recipient", `${learnDivPrefix}-displaymainrecipient-${config.trial}`)
+  agentDiv.append(createAgentStone(`learn${config.trial}-agent`, config.agent))
+  recipientDiv.append(createBlocks(`learn${config.trial}-recipient`, config))
+  parentDiv.append(spaceDiv)
+  parentDiv.append(agentDiv)
+  parentDiv.append(recipientDiv)
   return(parentDiv);
 }
 function createInitHistory(config, parentDiv) {
+  let spaceDiv = createCustomElement("div", "display-main-space", `${learnDivPrefix}-displaymainspace-hist-${config.trial}`)
+  let agentDiv = createCustomElement("div", "display-main-agent", `${learnDivPrefix}-displaymainagent-hist-${config.trial}`)
+  let recipientDiv = createCustomElement("div", "display-main-recipient", `${learnDivPrefix}-displaymainrecipient-hist-${config.trial}`)
+
   let textDiv = createCustomElement('div', 'hist-text', id=`learn${config.trial}-hist-text`)
   textDiv.append(createText('h2', 'Before'))
-  parentDiv.append(textDiv);
-  parentDiv.append(createBlocks(`learn${config.trial}-recipient`, config));
+  spaceDiv.append(textDiv);
+  agentDiv.append(createAgentStone(`learn${config.trial}-hist-agent`, config.agent))
+  recipientDiv.append(createBlocks(`learn${config.trial}-hist-recipient`, config))
+
+  parentDiv.append(spaceDiv)
+  parentDiv.append(agentDiv)
+  parentDiv.append(recipientDiv)
   return(parentDiv);
 }
 function createAgentStone(id, stoneOpts) {
@@ -138,17 +153,16 @@ function playEffects (config) {
     rect.right = pos.right;
     return rect;
   }
+
   if (!(document.body.contains(document.getElementById(`learn${config.trial}-agent-div`)))) {
     createStones(config)
   }
-  const agent = `learn${config.trial}-agent-div`;
-  const recipient = `learn${config.trial}-recipient-blocks-all`;
 
-  const agentStone = document.getElementById(agent);
-  const startPos = getCurrentLocation(agent).right;
-  const endPos = getCurrentLocation(recipient).left;
+  const agentStone = document.getElementById(`learn${config.trial}-agent-div`);
+  const startPos = getCurrentLocation(`learn${config.trial}-agent`).right;
+  const endPos = getCurrentLocation(`learn${config.trial}-recipient-blocks-all`).left;
 
-  const delta = Math.round(endPos - startPos) + 15;
+  const delta = Math.round(endPos - startPos);
   (delta > 0) && (agentStone.style.left = `${delta}px`);
 
   setTimeout(() => {
@@ -157,10 +171,16 @@ function playEffects (config) {
     let hist = document.getElementById(`task-training-displayhist-${config.trial}`)
     for (let i = initLen; i < targetLen; i++ ) {
       fadeIn(document.getElementById(`learn${config.trial}-recipient-block-${i}`))
-      setTimeout(()=> hist.style.opacity = 1, 1000)
+      setTimeout(()=> {
+        hist.style.opacity = 0
+        hist.style.display = 'flex'
+        fadeIn(hist)
+      }, 1000)
     }
   }, 1500);
 }
+
+
 function fadeIn(element) {
   let op = 0.1;
   let timer = setInterval(() => {
