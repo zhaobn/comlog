@@ -9,9 +9,14 @@ const cond_dict = {
   'ldg': [1,5,9],
   'rdg': [3,5,7],
 }
-taskConfigs = config.filter(c => c.phase === 'tab' & cond_dict[cond].indexOf(c.trial) > -1 );
-let learnClicked = Array(taskConfigs.length).fill(0);
 console.log(cond)
+
+let learnConfigs = config.filter(c => c.phase === 'tab' & cond_dict[cond].indexOf(c.trial) > -1)
+let learnClicked = Array(learnConfigs.length).fill(0);
+
+let genConfigs = config.filter(c => c.phase === 'tab' & cond_dict[cond].indexOf(c.trial) < 0).concat(config.filter(c => c.phase === 'gen'))
+genConfigs.map()
+console.log(genConfigs)
 
 // // Demo pre-train materials
 // let ptDivPrefix = 'task-pretrain'
@@ -36,8 +41,8 @@ console.log(cond)
 // Generate learning frame
 learnDivPrefix = 'task-training'
 coreLearnDiv = document.getElementById(learnDivPrefix)
-for(let i = 0; i < taskConfigs.length; i++ ) {
-  let { _, trial, agent, recipient, result } = taskConfigs[i];
+for(let i = 0; i < learnConfigs.length; i++ ) {
+  let { _, trial, agent, recipient, result } = learnConfigs[i];
   let config = { trial: i+1, taskId: trial, agent, recipient, result }
 
   let trialId = config.trial;
@@ -47,7 +52,7 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
   let taskBox = createCustomElement("div", "task-box", `${learnDivPrefix}-taskbox-${trialId}`);
 
 
-  let taskNum = createText('h2', `${trialId}/${taskConfigs.length}`);
+  let taskNum = createText('h2', `${trialId}/${learnConfigs.length}`);
   taskBox.append(taskNum);
 
   let displayBox = createCustomElement("div", "display-box", `${learnDivPrefix}-displaybox-${trialId}`);
@@ -95,7 +100,7 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
   }
   nextBtn.onclick = () => {
     nextBtn.disabled = true;
-    if (i <= taskConfigs.length-1) {
+    if (i <= learnConfigs.length-1) {
       showNext(`task-training-box-${trialId+1}`, 'flex')
     }
     // const nextDiv = (i === taskConfigs.length-1)? '': `task-training-box-${i+2}`;
@@ -108,18 +113,18 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
 // Generate gen tasks
 let genDivPrefix = 'task-gen'
 let genDiv = document.getElementById(genDivPrefix)
-let genTaskConfigs = [{'trial':1, 'agent': 61, 'recipient': 41}]
-for(let i = 0; i < genTaskConfigs.length; i++ ) {
-  let trialId = genTaskConfigs[i].trial
+for(let i = 0; i < genConfigs.length; i++ ) {
+  console.log(genConfigs[i])
+  let trialId = genConfigs[i].trial
   let box = createCustomElement("div", "box", `${genDivPrefix}-box-${trialId}`);
 
   let taskBox = createCustomElement("div", "task-box", `${genDivPrefix}-taskbox-${trialId}`);
-  let taskNum = createText('h2', `${trialId}/${genTaskConfigs.length}`);
+  let taskNum = createText('h2', `${trialId}/${genConfigs.length}`);
   taskBox.append(taskNum);
 
   let displayBox = createCustomElement("div", "display-box", `${genDivPrefix}-displaybox-${trialId}`);
   let displayMain = createCustomElement("div", "display-main", `${genDivPrefix}-displaymain-${trialId}`);
-  displayMain = createGenStones(genTaskConfigs[i], displayMain);
+  displayMain = createGenStones(genConfigs[i], displayMain);
   displayBox.append(displayMain)
 
   const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
@@ -133,9 +138,9 @@ for(let i = 0; i < genTaskConfigs.length; i++ ) {
   genDiv.append(box);
 
   /** Effects and button functionalities */
-  genBlocksEffects(genTaskConfigs[i])
-  handleGenSelection(genTaskConfigs[i])
+  genBlocksEffects(genConfigs[i])
+  handleGenSelection(genConfigs[i])
   let resetBtn = document.getElementById(`${genDivPrefix}-reset-btn-${trialId}`)
   let confirmBtn = document.getElementById(`${genDivPrefix}-confirm-btn-${trialId}`)
-  resetBtn.onclick = () => resetGenBlock(genTaskConfigs[i])
+  resetBtn.onclick = () => resetGenBlock(genConfigs[i])
 }
