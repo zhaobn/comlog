@@ -15,7 +15,11 @@ let learnConfigs = config.filter(c => c.phase === 'tab' & cond_dict[cond].indexO
 let learnClicked = Array(learnConfigs.length).fill(0);
 
 let genConfigs = config.filter(c => c.phase === 'tab' & cond_dict[cond].indexOf(c.trial) < 0).concat(config.filter(c => c.phase === 'gen'))
-genConfigs.map()
+genConfigs = shuffleArray(genConfigs)
+genConfigs.map((gc, idx) => {
+  gc['ptrial'] = gc['trial']
+  gc['trial'] = idx+1
+})
 console.log(genConfigs)
 
 // // Demo pre-train materials
