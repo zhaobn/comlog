@@ -46,6 +46,7 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
   let box = createCustomElement("div", "box", `${learnDivPrefix}-box-${trialId}`);
   let taskBox = createCustomElement("div", "task-box", `${learnDivPrefix}-taskbox-${trialId}`);
 
+
   let taskNum = createText('h2', `${trialId}/${taskConfigs.length}`);
   taskBox.append(taskNum);
 
@@ -56,18 +57,19 @@ for(let i = 0; i < taskConfigs.length; i++ ) {
 
   let displayHist = createCustomElement("div", "display-hist", `${learnDivPrefix}-displayhist-${trialId}`);
   displayHist = createInitHistory(config, displayHist)
+  displayHist.style.opacity = 0
 
   displayBox.append(displayHist)
   displayBox.append(displayMain)
-  displayHist.style.display = "None"
 
   const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
   buttonGroup.append(createBtn(`${learnDivPrefix}-test-btn-${trialId}`, "Test", true));
   buttonGroup.append(createBtn(`${learnDivPrefix}-next-btn-${trialId}`, "Next", false));
 
   taskBox.append(displayBox);
-  taskBox.append(buttonGroup);
+  // taskBox.append(buttonGroup);
   box.append(taskBox);
+  box.append(buttonGroup)
   box.style.display = display;
   coreLearnDiv.append(box);
 
