@@ -81,7 +81,7 @@ function createBlocks(id, stoneOpts=0) {
 function createGenStones(config, parentDiv) {
   let spaceDiv = createCustomElement("div", "display-main-space", `gen${config.trial}-display-space-div`)
   let agentDiv = createCustomElement("div", "display-main-agent", `gen${config.trial}-display-agent-div`)
-  let recipientDiv = createCustomElement("div", "display-main-recipient", `${learnDivPrefix}-display-recipient-div`)
+  let recipientDiv = createCustomElement("div", "display-main-recipient", `gen${config.trial}-display-recipient-div`)
 
   agentDiv.append(createAgentStone(`gen${config.trial}-agent`, config.agent));
   recipientDiv.append(createBlocks(`gen${config.trial}-recipient`, config));
@@ -104,6 +104,16 @@ function genBlocksEffects(config) {
     document.getElementById(`${idPrefix}${i}`).onclick = () => highlightBlocksOnClick(idPrefix, i, base)
   }
 }
+function handleGenSelection(config) {
+  let blocksDiv = document.getElementById(`gen${config.trial}-recipient-blocks-all`)
+  let resetBtn = document.getElementById(`task-gen-reset-btn-${config.trial}`)
+  let confirmBtn = document.getElementById(`task-gen-confirm-btn-${config.trial}`)
+  blocksDiv.onclick = () => {
+    resetBtn.disabled = false
+    confirmBtn.disabled = false
+  }
+}
+
 function highlightBlocksOnMouseOver(idPrefix, i, base) {
   let baseBlocks = Array.from(Array(base).keys()).map(m => `${idPrefix}${m}`)
   let yesBlocks = Array.from(Array(maxBlocks).keys()).filter(b => (b>=base && b <= i)).map(m => `${idPrefix}${m}`)
@@ -117,6 +127,13 @@ function highlightBlocksOnClick(idPrefix, i, base) {
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
   noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), base))
+}
+function resetGenBlock(config) {
+  let length = config.recipient % 10
+  for(let i = 0; i < maxBlocks; i++ ) {
+    let block = document.getElementById(`gen${config.trial}-recipient-block-${i}`)
+    block.style.opacity = (i < length)? 1 : blockOpDecay(i, length)
+  }
 }
 
 function createPolygon(className, id, sides, scale) {

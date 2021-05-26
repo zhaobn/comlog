@@ -123,7 +123,8 @@ for(let i = 0; i < genTaskConfigs.length; i++ ) {
   displayBox.append(displayMain)
 
   const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
-  buttonGroup.append(createBtn(`${genDivPrefix}-test-btn-${trialId}`, "Confirm", true));
+  buttonGroup.append(createBtn(`${genDivPrefix}-reset-btn-${trialId}`, "Reset", false));
+  buttonGroup.append(createBtn(`${genDivPrefix}-confirm-btn-${trialId}`, "Confirm", false));
 
   taskBox.append(displayBox);
   // taskBox.append(buttonGroup);
@@ -133,5 +134,8 @@ for(let i = 0; i < genTaskConfigs.length; i++ ) {
 
   /** Effects and button functionalities */
   genBlocksEffects(genTaskConfigs[i])
-
+  handleGenSelection(genTaskConfigs[i])
+  let resetBtn = document.getElementById(`${genDivPrefix}-reset-btn-${trialId}`)
+  let confirmBtn = document.getElementById(`${genDivPrefix}-confirm-btn-${trialId}`)
+  resetBtn.onclick = () => resetGenBlock(genTaskConfigs[i])
 }
