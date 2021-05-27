@@ -12,15 +12,21 @@ const cond_dict = {
 console.log(cond)
 
 let learnConfigs = config.filter(c => c.phase === 'tab' & cond_dict[cond].indexOf(c.trial) > -1)
+learnConfigs.map((lc, idx) => {
+  lc['ptrial'] = `${lc['phase']}-${lc['trial']}`
+  lc['trial'] = idx+1
+  lc['task_phase'] = 'learn'
+})
 let learnClicked = Array(learnConfigs.length).fill(0);
 
 let genConfigs = config.filter(c => c.phase === 'tab' & cond_dict[cond].indexOf(c.trial) < 0).concat(config.filter(c => c.phase === 'gen'))
 genConfigs = shuffleArray(genConfigs)
 genConfigs.map((gc, idx) => {
-  gc['ptrial'] = gc['trial']
+  gc['ptrial'] = `${gc['phase']}-${gc['trial']}`
   gc['trial'] = idx+1
+  gc['task_phase'] = 'gen'
 })
-console.log(genConfigs)
+let genClicked = Array(genConfigs.length).fill(0);
 
 // // Demo pre-train materials
 // let ptDivPrefix = 'task-pretrain'
@@ -118,7 +124,6 @@ for(let i = 0; i < learnConfigs.length; i++ ) {
 let genDivPrefix = 'task-gen'
 let genDiv = document.getElementById(genDivPrefix)
 for(let i = 0; i < genConfigs.length; i++ ) {
-  console.log(genConfigs[i])
   let trialId = genConfigs[i].trial
   let box = createCustomElement("div", "box", `${genDivPrefix}-box-${trialId}`);
 
@@ -142,9 +147,12 @@ for(let i = 0; i < genConfigs.length; i++ ) {
   genDiv.append(box);
 
   /** Effects and button functionalities */
-  genBlocksEffects(genConfigs[i])
-  handleGenSelection(genConfigs[i])
+  genBlocksEffects(genConfigs[i], genClicked)
+  handleGenSelection(genConfigs[i], genClicked)
   let resetBtn = document.getElementById(`${genDivPrefix}-reset-btn-${trialId}`)
   let confirmBtn = document.getElementById(`${genDivPrefix}-confirm-btn-${trialId}`)
-  resetBtn.onclick = () => resetGenBlock(genConfigs[i])
+  resetBtn.onclick = () => {
+    genClicked[i] = 0
+    resetGenBlock(genConfigs[i], genClicked)
+  }
 }

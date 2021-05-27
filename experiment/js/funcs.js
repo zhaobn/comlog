@@ -66,14 +66,13 @@ function createAgentStone(id, stoneOpts) {
   div.append(svg)
   return(div);
 }
-function createBlocks(id, stoneOpts=0) {
-  let isGenTask = id.substring(0,3)==='gen'
+function createBlocks(id, stoneOpts) {
   let div = createCustomElement("div", "recipient-stone-div", `${id}-blocks-all`);
   let length = stoneOpts.recipient % 10
-  let max =  stoneOpts.result % 10 || maxBlocks
+  let max =  (stoneOpts.task_phase=='gen')? maxBlocks: stoneOpts.result % 10
   for(let i = 0; i < max; i++ ) {
     let block = createCustomElement("div", "recipient-block", `${id}-block-${i}`)
-    block.style.opacity = (i < length)? 1 : (isGenTask==0)? 0 : blockOpDecay(i, length)
+    block.style.opacity = (i < length)? 1 : (stoneOpts.task_phase=='gen')? blockOpDecay(i, length) : 0
     div.append(block)
   }
   return(div);
@@ -95,16 +94,33 @@ function blockOpDecay(index, base) {
   return (index > base + 1)? 0: 0.1 - 0.001*(index - base)
 }
 
-function genBlocksEffects(config) {
+function genBlocksEffects(config, genClicked) {
   for(let i = 0; i < maxBlocks; i++ ) {
     let idPrefix = `gen${config.trial}-recipient-block-`
     let base = config.recipient % 10
-    document.getElementById(`${idPrefix}${i}`).onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i, base)
-    document.getElementById(`${idPrefix}${i}`).onmouseout = () => highlightBlocksOnClick(idPrefix, i, base)
-    document.getElementById(`${idPrefix}${i}`).onclick = () => highlightBlocksOnClick(idPrefix, i, base)
+    let blockDiv = document.getElementById(`${idPrefix}${i}`)
+    blockDiv.onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i, base)
+    blockDiv.onmouseout = () => highlightBlocks(idPrefix, i, base)
+    blockDiv.onclick = () => {
+      highlightBlocks(idPrefix, i, base)
+      if (genClicked[config.trial-1] % 2 == 1) {
+        for(let i = 0; i < maxBlocks; i++ ) {
+          let blockDiv = document.getElementById(`${idPrefix}${i}`)
+          blockDiv.onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i, base)
+          blockDiv.onmouseout = () => highlightBlocks(idPrefix, i, base)
+        }
+      } else {
+        for(let i = 0; i < maxBlocks; i++ ) {
+          let blockDiv = document.getElementById(`${idPrefix}${i}`)
+          blockDiv.onmousemove = () => null
+          blockDiv.onmouseout = () => null
+        }
+      }
+      genClicked[config.trial-1] += 1
+    }
   }
 }
-function handleGenSelection(config) {
+function handleGenSelection(config, genClicked) {
   let blocksDiv = document.getElementById(`gen${config.trial}-recipient-blocks-all`)
   let resetBtn = document.getElementById(`task-gen-reset-btn-${config.trial}`)
   let confirmBtn = document.getElementById(`task-gen-confirm-btn-${config.trial}`)
@@ -122,18 +138,19 @@ function highlightBlocksOnMouseOver(idPrefix, i, base) {
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=0.5)
   noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), i))
 }
-function highlightBlocksOnClick(idPrefix, i, base) {
+function highlightBlocks(idPrefix, i, base) {
   let yesBlocks = Array.from(Array(maxBlocks).keys()).map(m => `${idPrefix}${m}`)
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
   noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), i))
 }
-function resetGenBlock(config) {
+function resetGenBlock(config, genClicked) {
   let length = config.recipient % 10
   for(let i = 0; i < maxBlocks; i++ ) {
     let block = document.getElementById(`gen${config.trial}-recipient-block-${i}`)
     block.style.opacity = (i < length)? 1 : blockOpDecay(i, length)
   }
+  genBlocksEffects(config, genClicked)
 }
 
 function createPolygon(className, id, sides, scale) {
