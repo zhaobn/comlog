@@ -12,7 +12,42 @@
     <div id="task" class="base">
       <!-- <div id="task-pretrain"></div> -->
       <div id="task-training"></div>
-      <div id="task-guess"></div>
+      <div id="task-guess" style="display:none;">
+        <div class="box" id="task-guess-box">
+          <div class="display-box" id="task-guess-display-box">
+            <form class="input-form" id="task-guess-input-form">
+              <p>
+                <b>What is your best guess about how these mysterious stones work?</b>
+                (Please refer to stones as <i>active</i> and <i>inactive</i>,
+                and be specific about <i>what properties you think matter or do not matter for the effects,
+                and how they do so</i>.)
+                <br />
+              </p>
+              <textarea name="task_guess_input" id="task_guess-input" placeholder="Type here"></textarea>
+              <p class="incentive">Remember there is a $0.50 bonus if you guess correctly, and nonsense answers will result in a zero bonus or hit rejection.</p>
+              <p>How certain are you?
+                <select name="task_guess_certainty" id="task_guess-certainty" class="input-rule">
+                  <option value="--" SELECTED>
+                    <option value="10">10 - Very certain</option>
+                    <option value="9">9</option>
+                    <option value="8">8</option>
+                    <option value="7">7</option>
+                    <option value="6">6</option>
+                    <option value="5">5 - Moderately</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                    <option value="0">0 - Not sure at all</option>
+                </select>
+              </p>
+            </form>
+          </div>
+          <div class="button-group-vc" id="task-guess-button-group-vc">
+            <button id="task-guess-input-submit-btn" disabled=true>OK</button>
+          </div>
+        </div>
+      </div>
       <div id="task-gen"></div>
     </div>
     <div id="debrief" class="base" style="display:none;"></div>

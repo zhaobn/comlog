@@ -120,7 +120,7 @@ function genBlocksEffects(config, genClicked) {
     }
   }
 }
-function handleGenSelection(config, genClicked) {
+function handleGenSelection(config) {
   let blocksDiv = document.getElementById(`gen${config.trial}-recipient-blocks-all`)
   let resetBtn = document.getElementById(`task-gen-reset-btn-${config.trial}`)
   let confirmBtn = document.getElementById(`task-gen-confirm-btn-${config.trial}`)
@@ -129,7 +129,23 @@ function handleGenSelection(config, genClicked) {
     confirmBtn.disabled = false
   }
 }
-
+function getCurrentSelection(config) {
+  let blocksDiv = document.getElementById(`gen${config.trial}-recipient-blocks-all`)
+  let blockOps = []
+  for(let i = 0; i < maxBlocks; i++ ) {
+    blockOps.push(document.getElementById(`gen${config.trial}-recipient-block-${i}`).style.opacity)
+  }
+  return(findAllIndex('1',blockOps).length)
+}
+function disableBlocks(config) {
+  document.getElementById(`gen${config.trial}-recipient-blocks-all`).onclick = null
+  for(let i = 0; i < maxBlocks; i++ ) {
+    let blockDiv = document.getElementById(`gen${config.trial}-recipient-block-${i}`)
+    blockDiv.onmousemove = () => null
+    blockDiv.onmouseout = () => null
+    blockDiv.onclick = () => null
+  }
+}
 function highlightBlocksOnMouseOver(idPrefix, i, base) {
   let baseBlocks = Array.from(Array(base).keys()).map(m => `${idPrefix}${m}`)
   let yesBlocks = Array.from(Array(maxBlocks).keys()).filter(b => (b>=base && b <= i)).map(m => `${idPrefix}${m}`)
@@ -268,4 +284,32 @@ function shuffleArray(array) {
     [array[i], array[j]] = [array[j], array[i]];
   }
   return array
+}
+
+function disableFormInputs (formId) {
+  const form = document.getElementById(formId);
+  const inputs = form.elements;
+  (Object.keys(inputs)).forEach((input) => inputs[input].disabled = true);
+}
+function isFilled (formID) {
+  let notFilled = false;
+  const nulls = [ '', '--', '', '--', '', '--' ];
+  const form = document.getElementById(formID);
+  const inputs = form.elements;
+  (Object.keys(inputs)).forEach((input, idx) => {
+    let field = inputs[input];
+    notFilled = (notFilled || (field.value === nulls[idx]));
+  });
+  return (!notFilled)
+}
+
+
+function findAllIndex(element, array) {
+  let indices = [];
+  let idx = array.indexOf(element);
+  while (idx != -1) {
+    indices.push(idx);
+    idx = array.indexOf(element, idx + 1);
+  }
+  return(indices);
 }

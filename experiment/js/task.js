@@ -11,6 +11,7 @@ const cond_dict = {
 }
 console.log(cond)
 
+/** Prep task data for experiment */
 let learnConfigs = config.filter(c => c.phase === 'tab' & cond_dict[cond].indexOf(c.trial) > -1)
 learnConfigs.map((lc, idx) => {
   lc['ptrial'] = `${lc['phase']}-${lc['trial']}`
@@ -27,6 +28,34 @@ genConfigs.map((gc, idx) => {
   gc['task_phase'] = 'gen'
 })
 let genClicked = Array(genConfigs.length).fill(0);
+
+/** Prep task data for save */
+let subjectData = {};
+
+let trialData = {
+  "phase": [],
+  "tid": [],
+  "sid": [],
+  "agent": [],
+  "recipient": [],
+  "result": [],
+};
+learnConfigs.forEach(c => {
+  trialData['phase'].push('learn');
+  trialData['tid'].push(c.trial);
+  trialData['sid'].push(c.ptrial);
+  trialData['agent'].push(c.agent);
+  trialData['recipient'].push(c.recipient);
+  trialData['result'].push(c.result);
+})
+genConfigs.forEach(c => {
+  trialData['phase'].push('gen');
+  trialData['tid'].push(c.trial);
+  trialData['sid'].push(c.ptrial);
+  trialData['agent'].push(c.agent);
+  trialData['recipient'].push(c.recipient);
+  trialData['result'].push('0');
+})
 
 // // Demo pre-train materials
 // let ptDivPrefix = 'task-pretrain'
@@ -110,21 +139,40 @@ for(let i = 0; i < learnConfigs.length; i++ ) {
   }
   nextBtn.onclick = () => {
     nextBtn.disabled = true;
-    if (i <= learnConfigs.length-1) {
-      showNext(`task-training-box-${trialId+1}`, 'flex')
-    }
-    // const nextDiv = (i === taskConfigs.length-1)? '': `task-training-box-${i+2}`;
+    const nextDiv = (i === learnConfigs.length-1)? 'task-guess': `task-training-box-${i+2}`;
     // (mode !== 'dev')? hide(`box-${trialId}`): null;
-    // showNext(nextDiv, 'flex');
+    showNext(nextDiv);
   }
 
 }
+
+// Free response
+(mode === 'dev')? document.getElementById('task-guess').style.display = 'flex': null;
+let inputForm = document.getElementById('task-guess-input-form')
+let okBtn = document.getElementById('task-guess-input-submit-btn')
+
+inputForm.onchange = () => isFilled('task-guess-input-form')? okBtn.disabled = false: null;
+okBtn.onclick = () => {
+  let inputs = inputForm.elements;
+  Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
+  okBtn.disabled = true;
+  disableFormInputs('task-guess-input-form');
+  console.log(subjectData)
+  if (mode !== 'dev') {
+    // hide("core-learn-form-div");
+    showNext("task-gen-box-1")
+  }
+}
+
 
 // Generate gen tasks
 let genDivPrefix = 'task-gen'
 let genDiv = document.getElementById(genDivPrefix)
 for(let i = 0; i < genConfigs.length; i++ ) {
+
   let trialId = genConfigs[i].trial
+  let display = (mode==='dev')? 'flex': 'none';
+
   let box = createCustomElement("div", "box", `${genDivPrefix}-box-${trialId}`);
 
   let taskBox = createCustomElement("div", "task-box", `${genDivPrefix}-taskbox-${trialId}`);
@@ -145,14 +193,24 @@ for(let i = 0; i < genConfigs.length; i++ ) {
   box.append(taskBox);
   box.append(buttonGroup);
   genDiv.append(box);
+  box.style.display = display
 
   /** Effects and button functionalities */
   genBlocksEffects(genConfigs[i], genClicked)
-  handleGenSelection(genConfigs[i], genClicked)
+  handleGenSelection(genConfigs[i])
   let resetBtn = document.getElementById(`${genDivPrefix}-reset-btn-${trialId}`)
   let confirmBtn = document.getElementById(`${genDivPrefix}-confirm-btn-${trialId}`)
   resetBtn.onclick = () => {
     genClicked[i] = 0
+    confirmBtn.disabled = true;
     resetGenBlock(genConfigs[i], genClicked)
+  }
+  confirmBtn.onclick = () => {
+    disableBlocks(genConfigs[i])
+    resetBtn.disabled = true
+    confirmBtn.disabled = true;
+    trialData.result[learnConfigs.length+i] = '4'+getCurrentSelection(genConfigs[i])
+    // const nextDiv = (i === genConfigs.length-1)? '': `task-gen-box-${i+2}`;
+    // showNext(nextDiv);
   }
 }

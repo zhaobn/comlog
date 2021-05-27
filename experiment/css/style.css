@@ -194,3 +194,14 @@ button {
   font-size: 15px;
   padding: 10px 30px;
 }
+
+.input-form textarea {
+  height: 120px;
+  width: 98%;
+  border: #bbbbbb solid 0.5px;
+  font-size: 20px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.input-form p, select {
+  font-size: 20px;
+}
