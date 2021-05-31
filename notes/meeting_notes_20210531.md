@@ -5,7 +5,7 @@ Stimuli summary: https://docs.google.com/presentation/d/1uTY-Tnpu7i1vSZGUGWzDuUZ
 
 ## Model updates
 
-Ground truth: `[BC,[B,addnn,getLength],[B,[addnn,-2],getEdge]]`
+Ground truth: `[BS,[B,setLength,I],[BC,[B,addnn,getLength],[B,[addnn,-2],getEdge]]]`
 
 - Under current setup, ground truth can't really be learned from information presentation, because there is no partial information combo that gives rise to the subparts directly
 - Modelwise, we could force learning the ground truth by perhaps:
