@@ -12,7 +12,7 @@ Ground truth: `[BC,[B,addnn,getLength],[B,[addnn,-2],getEdge]]`
   1. Enlarge depth = 3 (so that we included groud truth in the set). Or
   2. Use type signature `obj->obj->num` (include ground truth with depth = 2)
 - One observation: condition `col` learned the critical part of the ground truth `[B,[addnn,-2],getEdge]` by accident
-- For human, maybe we can present three rows (or columns) as three indpendent sets, and then encourage people to generalize over the three sets
+- For people, maybe we can present three rows (or columns) as three indpendent sets, and then encourage people to generalize over the three sets
 
 ## Experiment interface
 
