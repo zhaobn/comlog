@@ -1,5 +1,5 @@
 
-const mode = 'dev' // '' for production, 'dev' for development, 'flask' for flask-app
+const mode = '' // '' for production, 'dev' for development, 'flask' for flask-app
 
 /** Pick a condition */
 const cond = 'row'
@@ -210,7 +210,9 @@ for(let i = 0; i < genConfigs.length; i++ ) {
     resetBtn.disabled = true
     confirmBtn.disabled = true;
     trialData.result[learnConfigs.length+i] = '4'+getCurrentSelection(genConfigs[i])
-    // const nextDiv = (i === genConfigs.length-1)? '': `task-gen-box-${i+2}`;
-    // showNext(nextDiv);
+    if (mode!=='dev') {
+      const nextDiv = (i === genConfigs.length-1)? '': `task-gen-box-${i+2}`;
+      showNext(nextDiv);
+    }
   }
 }
