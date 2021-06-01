@@ -10,19 +10,11 @@ from base_methods import if_else, send_right, send_left, send_both, constant, re
 from base_terms import B,C,S,K,BB,BC,BS,BK,CB,CC,CS,CK,SB,SC,SS,SK,KB,KC,KS,KK
 
 # %% Define class
-SHAPE_REF = {
-  'Snil': 0,
-  'Tria': 3,
-  'Rect': 4,
-  'Pent': 5,
-  'Hexa': 6,
-  'Hept': 7,
-}
 class Shape:
   def __init__(self, name):
     self.ctype = 'shape'
     self.name = name
-    self.value = SHAPE_REF[name]
+    self.value = name
   def __str__(self):
     return self.name
 
@@ -34,14 +26,23 @@ class Length:
   def __str__(self):
     return self.name
 
+class Stripe:
+  def __init__(self, name):
+    self.ctype = 'stripe'
+    self.name = name
+    self.value = int(name[1:])
+  def __str__(self):
+    return self.name
+
 class Stone:
-  def __init__(self, shape, length):
+  def __init__(self, shape, stripe, length):
     self.ctype = 'obj'
     self.shape = shape
+    self.stripe = stripe
     self.length = length
   @property
   def name(self):
-    return f'Stone({self.shape.name},{self.length.name})'
+    return f'Stone({self.shape.name},{self.stripe.name},{self.length.name})'
   def __str__(self):
     return self.name
 
@@ -55,32 +56,33 @@ class PM(Placeholder): # Programholder for typed enumeration
     return f'{self.name} {self.arg_types} -> {self.return_type}'
 
 # Base terms
-Snil = Shape('Snil')
-Tria = Shape('Tria')
+Circ = Shape('Circ')
 Rect = Shape('Rect')
-Pent = Shape('Pent')
-Hexa = Shape('Hexa')
 
-L0 = Length('L0')
-L1 = Length('L1')
-L2 = Length('L2')
-L3 = Length('L3')
-L4 = Length('L4')
-L5 = Length('L5')
-L6 = Length('L6')
-# L7 = Length('L7')
+for i in range(1,9+1):
+  exec(f"L{i} = Length('L{i}')")
 
+for i in range(5+1):
+  exec(f"S{i} = Stripe('S{i}')")
 
 # Placeholders for typed program enumeration
 shape = Placeholder('shape')
+stripe = Placeholder('stripe')
 length = Placeholder('length')
 num = Placeholder('num')
 obj = Placeholder('obj')
 
+# %%
 # Functional
 def set_shape (arg_list):
   obj, val = arg_list
   obj.shape = eval(str(copy(val)))
+  return obj
+
+def set_stripe (arg_list):
+  obj, val = arg_list
+  stripe_val = 0 if val < 0 else val
+  obj.stripe = Stripe(f'S{stripe_val}')
   return obj
 
 def set_length (arg_list):
@@ -89,71 +91,59 @@ def set_length (arg_list):
   obj.length = Length(f'L{len_val}')
   return obj
 
-def set_edge (arg_list):
-  obj, val = arg_list
-  edge_val = 0 if val < 3 or val > 5 else val
-  v_index = list(SHAPE_REF.values()).index(edge_val)
-  obj.shape = eval(list(SHAPE_REF.keys())[v_index])
-  return obj
-
 getShape = Primitive('getShape', ['obj'], 'shape', lambda x: copy(x[0].shape))
 setShape = Primitive('setShape', ['obj', 'shape'], 'obj', set_shape)
-# isShape = Primitive('isShape', ['obj', 'shape'], 'bool', lambda x: x[0].shape.name==x[1].name)
 
-getEdge = Primitive('getEdge', ['obj'], 'num', lambda x: copy(x[0].shape.value))
-setEdge = Primitive('setEdge', ['obj', 'num'], 'obj', set_edge)
+getStripe = Primitive('getStripe', ['obj'], 'num', lambda x: copy(x[0].stripe.value))
+setStripe = Primitive('setStripe', ['obj', 'num'], 'obj', set_stripe)
 
 getLength = Primitive('getLength', ['obj'], 'num', lambda x: copy(x[0].length.value))
 setLength = Primitive('setLength', ['obj', 'num'], 'obj', set_length)
-# isLength = Primitive('isLength', ['obj', 'num'], 'bool', lambda x: x[0].length.value==x[1])
 
 addnn = Primitive('addnn', ['num', 'num'], 'num', lambda x: sum(x))
 mulnn = Primitive('mulnn', ['num', 'num'], 'num', lambda x: math.prod(x))
 
 I = Primitive('I', 'obj', 'obj', return_myself)
 
-# ifElse = Primitive('ifElse', ['bool', 'obj', 'obj'], 'obj', if_else)
-# isTria = Primitive('isTria', ['obj'], 'bool', lambda x: x[0].shape.name=='Tria')
-# isRect = Primitive('isRect', ['obj'], 'bool', lambda x: x[0].shape.name=='Rect')
-# isPent = Primitive('isPent', ['obj'], 'bool', lambda x: x[0].shape.name=='Pent')
-# isL1 = Primitive('isL1', ['obj'], 'bool', lambda x: x[0].length.name=='L1')
-# isL2 = Primitive('isL2', ['obj'], 'bool', lambda x: x[0].length.name=='L2')
-# isL3 = Primitive('isL3', ['obj'], 'bool', lambda x: x[0].length.name=='L3')
-
 # # %%
-# x = Stone(Pent,L1)
-# y = Stone(Rect,L1)
-# z = Program([BC,[B,setLength,I],[C,[B,mulnn,[B,getEdge,I]],2]]).run([x,y])
+# x = Stone(Circ,S1,L1)
+# y = Stone(Rect,S0,L2)
+# z = Program([BC,[B,setLength,I],[C,[B,mulnn,[B,getStripe,I]],3]]).run([x,y])
 # z.name
 
-# # %% Task set up
-# pm_setup = []
-# pm_terms = [
-#   Tria, Rect, Pent, # isTria, isRect, isPent,
-#   L0, L1, L2, L3, L4, L5, L6, #L7, isL1, isL2, isL3,
-#   getShape, setShape, getEdge, setEdge, getLength, setLength, # isShape, isLength,
-#   addnn, mulnn, I, #ifElse
-#   -2, -1, 0, 1, 2, #True, False,
-# ]
-# for pt in pm_terms:
-#   if isinstance(pt, bool) or isinstance(pt, int):
-#     terms = str(pt)
-#     arg_types = ''
-#     return_type = 'bool' if isinstance(pt, bool) else 'num'
-#     type = 'base_term'
-#   elif pt.ctype == 'shape' or pt.ctype == 'length':
-#     terms = pt.name
-#     arg_types = ''
-#     return_type = pt.ctype
-#     type = 'base_term'
-#   else:
-#     terms = pt.name
-#     arg_types = '_'.join(secure_list(pt.arg_type))
-#     return_type = pt.return_type
-#     type = 'primitive'
-#   pm_setup.append({'terms':terms,'arg_types':arg_types,'return_type':return_type,'type':type,'count':1})
+# %% Task set up
+pm_setup = []
+pm_terms = [
+  Circ, Rect,
+  S0, S1, S2, S3, S4, S5,
+  L1, L2, L3, L4, L5, L6, L7, L8, L9,
+  getShape, setShape, getStripe, setStripe, getLength, setLength,
+  addnn, mulnn, I,
+]
 
-# pm_task = pd.DataFrame.from_records(pm_setup).groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
-# pm_task.to_csv('data/task_pm.csv') # Later manually add [KB,I,I] & [B,I,I]
+for pt in pm_terms:
+  if isinstance(pt, bool) or isinstance(pt, int):
+    terms = str(pt)
+    arg_types = ''
+    return_type = 'bool' if isinstance(pt, bool) else 'num'
+    type = 'base_term'
+  elif pt.ctype == 'shape' or pt.ctype == 'length' or pt.ctype == 'stripe':
+    terms = pt.name
+    arg_types = ''
+    return_type = pt.ctype
+    type = 'base_term'
+  else:
+    terms = pt.name
+    arg_types = '_'.join(secure_list(pt.arg_type))
+    return_type = pt.return_type
+    type = 'primitive'
+  pm_setup.append({'terms':terms,'arg_types':arg_types,'return_type':return_type,'type':type,'count':1})
+
+pm_task = (pd.DataFrame.from_records(pm_setup)
+  .groupby(by=['terms','arg_types','return_type','type'], as_index=False)
+  .agg({'count': pd.Series.count})
+  .sort_values(by=['type','return_type','arg_types','terms'])
+  .reset_index(drop=1))
+pm_task.to_csv('data/task_pm.csv') # Later manually add [KB,I,I] & [B,I,I]
 
 # %%
