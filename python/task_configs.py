@@ -111,39 +111,46 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 # z = Program([BC,[B,setLength,I],[C,[B,mulnn,[B,getStripe,I]],3]]).run([x,y])
 # z.name
 
-# %% Task set up
-pm_setup = []
-pm_terms = [
-  Circ, Rect,
-  S0, S1, S2, S3, S4, S5,
-  L1, L2, L3, L4, L5, L6, L7, L8, L9,
-  getShape, setShape, getStripe, setStripe, getLength, setLength,
-  addnn, mulnn, I,
-]
+# # %% Task set up
+# pm_setup = []
+# pm_terms = [
+#   Circ, Rect,
+#   S0, S1, S2, S3, S4, S5,
+#   L1, L2, L3, L4, L5, L6, L7, L8, L9,
+#   {'terms': '[B,I,I]', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
+#   {'terms': '[KB,I,I]', 'arg_types': 'obj_obj', 'return_type': 'obj', 'type': 'program'},
+#   getShape, setShape, getStripe, setStripe, getLength, setLength,
+#   addnn, mulnn, I,
+# ]
 
-for pt in pm_terms:
-  if isinstance(pt, bool) or isinstance(pt, int):
-    terms = str(pt)
-    arg_types = ''
-    return_type = 'bool' if isinstance(pt, bool) else 'num'
-    type = 'base_term'
-  elif pt.ctype == 'shape' or pt.ctype == 'length' or pt.ctype == 'stripe':
-    terms = pt.name
-    arg_types = ''
-    return_type = pt.ctype
-    type = 'base_term'
-  else:
-    terms = pt.name
-    arg_types = '_'.join(secure_list(pt.arg_type))
-    return_type = pt.return_type
-    type = 'primitive'
-  pm_setup.append({'terms':terms,'arg_types':arg_types,'return_type':return_type,'type':type,'count':1})
+# for pt in pm_terms:
+#   if isinstance(pt, dict):
+#     terms = pt['terms']
+#     arg_types = pt['arg_types']
+#     return_type = pt['return_type']
+#     type = pt['type']
+#   elif isinstance(pt, bool) or isinstance(pt, int):
+#     terms = str(pt)
+#     arg_types = ''
+#     return_type = 'bool' if isinstance(pt, bool) else 'num'
+#     type = 'base_term'
+#   elif pt.ctype == 'shape' or pt.ctype == 'length' or pt.ctype == 'stripe':
+#     terms = pt.name
+#     arg_types = ''
+#     return_type = pt.ctype
+#     type = 'base_term'
+#   else:
+#     terms = pt.name
+#     arg_types = '_'.join(secure_list(pt.arg_type))
+#     return_type = pt.return_type
+#     type = 'primitive'
+#   pm_setup.append({'terms':terms,'arg_types':arg_types,'return_type':return_type,'type':type,'count':1})
 
-pm_task = (pd.DataFrame.from_records(pm_setup)
-  .groupby(by=['terms','arg_types','return_type','type'], as_index=False)
-  .agg({'count': pd.Series.count})
-  .sort_values(by=['type','return_type','arg_types','terms'])
-  .reset_index(drop=1))
-pm_task.to_csv('data/task_pm.csv') # Later manually add [KB,I,I] & [B,I,I]
+# pm_task = (pd.DataFrame.from_records(pm_setup)
+#   .groupby(by=['terms','arg_types','return_type','type'], as_index=False)
+#   .agg({'count': pd.Series.count})
+#   .sort_values(by=['type','return_type','arg_types','terms'])
+#   .reset_index(drop=1))
+# # pm_task.to_csv('data/task_pm.csv')
 
 # %%

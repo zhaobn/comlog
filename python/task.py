@@ -15,8 +15,9 @@ class Task_lib(Program_lib):
   def sample_base(self, type, add):
     if type == 'obj':
       shape = self.sample_base('shape', add)
+      stripe = self.sample_base('stripe', add)
       length = self.sample_base('length', add)
-      sampled_props = [shape, length]
+      sampled_props = [shape, stripe, length]
       stone = 'Stone(' + ','.join([p['terms'] for p in sampled_props]) + ')'
       return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'type': 'base_term'}
     else:
@@ -32,27 +33,33 @@ class Task_lib(Program_lib):
   def get_all_objs(self):
     stones_df = pd.DataFrame({'terms': []})
     shape_df = self.content.query('return_type=="shape"&type=="base_term"')
+    stripe_df = self.content.query('return_type=="stripe"&type=="base_term"')
     length_df = self.content.query('return_type=="length"&type=="base_term"')
     for s in range(len(shape_df)):
-      for l in range(len(length_df)):
-        stone_feats = [
-          shape_df.iloc[s].at['terms'],
-          length_df.iloc[l].at['terms'],
-        ]
-        counts = [
-          shape_df.iloc[s].at['count'],
-          length_df.iloc[l].at['count'],
-        ]
-        stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
+      for r in range(len(stripe_df)):
+        for l in range(len(length_df)):
+          stone_feats = [
+            shape_df.iloc[s].at['terms'],
+            stripe_df.iloc[r].at['terms'],
+            length_df.iloc[l].at['terms'],
+          ]
+          counts = [
+            shape_df.iloc[s].at['count'],
+            stripe_df.iloc[r].at['count'],
+            length_df.iloc[l].at['count'],
+          ]
+          stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
     stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
     return stones_df[['terms', 'log_prob']]
 
-# # %%
+## %%
 # pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
 # pl = Task_lib(pm_task)
-# pl.calc_log_prob(init=True)
-# pl.calc_log_prob(init=False)
-# pl.content.reset_index(drop=True).to_csv('data/task_pm.csv')
+# pl.update_log_prob(init=True)
+# pl.update_log_prob(init=False)
+# (pl.content.sort_values(by=['type','return_type','arg_types','terms'])
+#   .reset_index(drop=True)
+#   .to_csv('data/task_pm.csv'))
 
 # pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 # pl = Task_lib(pm_init)
@@ -61,9 +68,7 @@ class Task_lib(Program_lib):
 # # rf = pl.typed_enum(t,1)
 # rf2 = pl.typed_enum(t,2)
 # rf2.to_csv('data/task_frames.csv')
-# # frames = rf2[rf2["terms"].str.contains("ifElse,bool")==False]
-# # frames = rf2.reset_index(drop=True)[['terms', 'log_prob']]
-# # frames.to_csv('data/task_frames.csv') # N=6,953,362
+
 
 # %%
 class Task_gibbs(Gibbs_sampler):
