@@ -117,6 +117,7 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 #   Circ, Rect,
 #   S0, S1, S2, S3, S4, S5,
 #   L1, L2, L3, L4, L5, L6, L7, L8, L9,
+#   1,2,3,
 #   {'terms': '[B,I,I]', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
 #   {'terms': '[KB,I,I]', 'arg_types': 'obj_obj', 'return_type': 'obj', 'type': 'program'},
 #   getShape, setShape, getStripe, setStripe, getLength, setLength,
@@ -151,6 +152,6 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 #   .agg({'count': pd.Series.count})
 #   .sort_values(by=['type','return_type','arg_types','terms'])
 #   .reset_index(drop=1))
-# # pm_task.to_csv('data/task_pm.csv')
+# pm_task.to_csv('data/task_pm.csv')
 
 # %%
