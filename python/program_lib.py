@@ -39,36 +39,7 @@ class Program_lib(Program_lib_light):
     self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'type': 'ERROR'}
     self.SET_MARKERS = set(list(self.content[self.content['type']=='base_term'].return_type))
 
-  def calc_log_prob(self, init=False):
-    df = pd.DataFrame(columns=['terms','arg_types','return_type','type','count','log_prob'])
-    type_qs = []
-    # check for base terms
-    for s in self.SET_MARKERS:
-      type_qs.append(f'return_type=="{s}"&type=="base_term"')
-    # check for primitives
-    for r in list(self.content[self.content['type']=='primitive'].return_type.unique()):
-      type_qs.append(f'return_type=="{r}"&type=="primitive"')
-    # check for programs
-    uniq_pm_type_df = self.content[self.content['type']=='program'].groupby(['arg_types','return_type']).size().reset_index()
-    for i in uniq_pm_type_df.index:
-      type_info = uniq_pm_type_df.iloc[i].to_dict()
-      qs = 'arg_types=="'+type_info['arg_types']+'"&return_type=="'+type_info['return_type']+'"&type=="program"'
-      type_qs.append(qs)
-
-    for qs in type_qs:
-      sub_df = self.content.query(qs)
-      if sub_df.type.values[0] == 'program':
-        if init == 1:
-          sub_df['log_prob'] = 0
-        else:
-          # complexity penalty, adjustable
-          sub_df['prior'] = sub_df.apply(lambda row: exp(row['log_prob']), axis=1)
-          sub_df['log_prob'] = self.log_dir(sub_df['count'], sub_df['prior'])
-      else:
-        sub_df['log_prob'] = self.log_dir(sub_df['count'])
-      df = df.append(sub_df[['terms','arg_types','return_type','type','count','log_prob']])
-    self.content = df.copy()
-
+  # Get log probs
   def update_log_prob(self, init=False):
     df = self.content.query(f'type=="primitive"')
     df['log_prob'] = self.log_dir(df['count'])
