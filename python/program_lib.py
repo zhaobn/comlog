@@ -402,6 +402,11 @@ class Program_lib(Program_lib_light):
     trimed = frames[~frames.terms.isin(to_ignore)]
     return trimed
 
+  def unfold_programs_with_lp(self, terms, log_prob, data):
+    programs = self.unfold_program(terms, data)
+    programs['log_prob'] = programs['log_prob'] + log_prob
+    return programs
+
   def unfold_program(self, terms, data):
     if terms[:2]=='PM':
       pm = eval(terms)
@@ -434,11 +439,7 @@ class Program_lib(Program_lib_light):
           unfolded_lps = list(unfolded['log_prob'])
         elif eval(tm).ctype == 'router':
           unfolded_terms = [tm]
-          unfolded_lps = [log(1/(4**len(tm)))]
-          next_tm = term_list[i+1].strip('[]')
-          if next_tm not in list(self.SET_MARKERS):
-            if eval(next_tm).ctype == 'primitive':
-              unfolded_lps = [0]
+          unfolded_lps = [0] # Taken care of by the frame base lp
         elif eval(tm).ctype == 'primitive':
           unfolded_terms = [tm]
           unfolded_lps = list(self.content.query(f'terms=="{tm}"&type=="primitive"').log_prob)
@@ -468,7 +469,7 @@ class Program_lib(Program_lib_light):
     for i in range(len(df)):
       to_unfold = df.iloc[i].at['terms']
       print(f'Unfolding {to_unfold}')
-      to_check = self.unfold_program(df.iloc[i].at['terms'], df.iloc[i].at['log_prob'], data)
+      to_check = self.unfold_programs_with_lp(df.iloc[i].at['terms'], df.iloc[i].at['log_prob'], data)
       if len(to_check) > 0:
         for j in range(len(data)):
           to_check[f'consistent_{j}'] = to_check.apply(lambda row: self.check_program(row['terms'], data[j]), axis=1)
@@ -553,9 +554,12 @@ class Program_lib(Program_lib_light):
 # ])
 # pm_init_test.to_csv('data/pm_init_test.csv')
 
-# %%
-# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
+# # %%
+# pm_init = pd.read_csv('data/task_pm_2.csv', index_col=0, na_filter=False)
 # pl = Program_lib(pm_init, 0.1)
+# pl.update_log_prob(init=1)
+# pl.update_log_prob()
+
 # pl.get_init_prior()
 # pl.content.to_csv('data/pm_init_cut.csv')
 
@@ -563,6 +567,7 @@ class Program_lib(Program_lib_light):
 # pl.generate_program(t)
 # rf = pl.typed_enum(t,1)
 # rf2 = pl.typed_enum(t,2)
+# rf2.to_csv('data/task_frames_2.csv')
 
 # rf.to_csv('data/pm_frames.csv')
 # rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)

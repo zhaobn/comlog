@@ -79,6 +79,11 @@ class Task_gibbs(Gibbs_sampler):
     merged_df = pd.merge(self.cur_programs.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
     merged_df['count'] = merged_df['count_x'] +  merged_df['count_y']
     set_df = merged_df.query('log_prob!=0|type=="primitive"')[['terms','arg_types','return_type','type','count','log_prob']]
+    # Update log prob
+    helper_lb = Task_lib(set_df)
+    helper_lb.update_log_prob()
+    set_df = helper_lb.content
+    # Now take care of programs
     to_set_df = merged_df.query('log_prob==0&type!="primitive"')[['terms','arg_types','return_type','type','count','log_prob']]
     to_set_df = to_set_df.reset_index(drop=True)
     for i in range(len(to_set_df)):
@@ -106,10 +111,9 @@ class Task_gibbs(Gibbs_sampler):
           else:
             log_prob += math.log(1/(4**len(tm)))
       to_set_df.at[i,'log_prob']=log_prob
-    return pd.concat([set_df, to_set_df],ignore_index=True)
+    return pd.concat([set_df, to_set_df],ignore_index=True).reset_index(drop=True)
 
   def run(self, frames, top_n=1, sample=True, frame_sample=20, base=0, logging=True, save_prefix=''):
-    # TODO: update frame log prob
     frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
     frames_left = frames.copy()
     for i in range(self.iter_start, self.iter):
@@ -149,7 +153,7 @@ class Task_gibbs(Gibbs_sampler):
           sampled_frames = sampled_frames.reset_index(drop=True)
           frames_left = frames_left[~frames_left['terms'].isin(sampled_frames['terms'])]
           for k in range(len(sampled_frames)):
-            all_programs = pl.unfold_program(sampled_frames.iloc[k].at['terms'], data)
+            all_programs = pl.unfold_programs_with_lp(sampled_frames.iloc[k].at['terms'], sampled_frames.iloc[k].at['log_prob'], data)
             if len(all_programs) > 0:
               for d in range(len(data)):
                 all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
@@ -172,31 +176,30 @@ class Task_gibbs(Gibbs_sampler):
             filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
             self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
 
-# %%
-task_data_df = pd.read_csv('data/task_data.csv',na_filter=False)
-sorted_indexes = [2,4,6] # ldg: [0,4,8]  # col: [1,4,7] # row: [3,4,5]
+# # %%
+# task_data_df = pd.read_csv('data/task_data.csv',na_filter=False)
+# sorted_indexes = [2,4,6] # ldg: [0,4,8]  # col: [1,4,7] # row: [3,4,5]
 
-task_data_df = task_data_df[task_data_df.index.isin(sorted_indexes)].reindex(sorted_indexes)
-task_data = []
+# task_data_df = task_data_df[task_data_df.index.isin(sorted_indexes)].reindex(sorted_indexes)
+# task_data = []
 
-task_data = []
-for i in range(len(task_data_df)):
-  tdata = task_data_df.iloc[i].to_dict()
-  task = {
-    'agent': eval(tdata['agent']),
-    'recipient': eval(tdata['recipient']),
-    'result': eval(tdata['result'])
-  }
-  task_data.append(task)
+# task_data = []
+# for i in range(len(task_data_df)):
+#   tdata = task_data_df.iloc[i].to_dict()
+#   task = {
+#     'agent': eval(tdata['agent']),
+#     'recipient': eval(tdata['recipient']),
+#     'result': eval(tdata['result'])
+#   }
+#   task_data.append(task)
 
-pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
-all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-g = Task_gibbs(Task_lib(pm_init), task_data, iteration=1)
+# pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
+# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
+# g = Task_gibbs(Task_lib(pm_init), task_data, iteration=1)
+# g.run(all_frames, sample=True, top_n=1, save_prefix='test/tmp')
 
-# # pl = Task_lib(pm_init)
-# # all_programs = pl.unfold_program(all_frames.iloc[4545]['terms'],task_data)
-# # pl.check_program(all_programs.at[0,'terms'], task_data[0])
-
-g.run(all_frames, sample=True, top_n=1, save_prefix='test/tmp')
+# pl = Task_lib(pm_init)
+# filtered = pd.read_csv('test/tmp_filtered_1_3.csv',index_col=0,na_filter=False)
+# extracted = g.extract(filtered, top_n=1)
 
 # %%
