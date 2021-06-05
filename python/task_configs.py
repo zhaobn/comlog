@@ -117,10 +117,10 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 #   Circ, Rect,
 #   S0, S1, S2, S3, S4, S5,
 #   L1, L2, L3, L4, L5, L6, L7, L8, L9,
-#   1,2,3,
+#   1,2,3,4,
 #   {'terms': '[B,I,I]', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
 #   {'terms': '[KB,I,I]', 'arg_types': 'obj_obj', 'return_type': 'obj', 'type': 'program'},
-#   getShape, setShape, getStripe, setStripe, getLength, setLength,
+#   getShape, getStripe, getLength, setLength, #setShape, setStripe
 #   addnn, mulnn, I,
 # ]
 
