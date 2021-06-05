@@ -108,21 +108,21 @@ class Gibbs_sampler:
     if self.is_all_K(terms_str):
       return df
     else:
-      # df = df.append(self.get_base_primitives(terms_eval))
-      # Add first primitive
-      all_primitives = list(self.cur_programs[self.cur_programs['type']=='primitive'].terms)
-      striped_terms = str(terms)
-      for r in (('Stone',''), ('(',''),(')',''),('[',''),(']','')):
-        striped_terms = striped_terms.replace(*r)
-      first_primitive = next(x for x in striped_terms.split(',') if x in all_primitives)
-      fp_info = self.cur_programs.query(f'terms=="{first_primitive}"&type=="primitive"').iloc[0].to_dict()
-      df = df.append(pd.DataFrame({
-        'terms': [ first_primitive ],
-        'arg_types': [ fp_info['arg_types'] ],
-        'return_type': [ fp_info['return_type']],
-        'type': [ 'primitive' ],
-        'count': [ 1 ],
-      }))
+      df = df.append(self.get_base_primitives(terms_eval))
+      # # # Add first primitive
+      # # all_primitives = list(self.cur_programs[self.cur_programs['type']=='primitive'].terms)
+      # # striped_terms = str(terms)
+      # # for r in (('Stone',''), ('(',''),(')',''),('[',''),(']','')):
+      # #   striped_terms = striped_terms.replace(*r)
+      # # first_primitive = next(x for x in striped_terms.split(',') if x in all_primitives)
+      # # fp_info = self.cur_programs.query(f'terms=="{first_primitive}"&type=="primitive"').iloc[0].to_dict()
+      # df = df.append(pd.DataFrame({
+      #   'terms': [ first_primitive ],
+      #   'arg_types': [ fp_info['arg_types'] ],
+      #   'return_type': [ fp_info['return_type']],
+      #   'type': [ 'primitive' ],
+      #   'count': [ 1 ],
+      # }))
       # Add subtrees
       df_pm = pd.DataFrame(self.get_sub_programs(terms_eval))
       if len(df_pm) > 0:
@@ -219,35 +219,37 @@ class Gibbs_sampler:
 
 
 # # %%
+# from base_terms import *
+
 # data_list = [
 #   {
-#     'agent': Stone(Red,S1,Triangle,S1), #,Dotted,S1),
-#     'recipient': Stone(Yellow,S1,Square,S2), #,Dotted,S2),
-#     'result': Stone(Red,S1,Square,S1), #,Dotted,S2)
+#     'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
+#     'recipient': Stone(Yellow,S1,Square,S2,Dotted,S2),
+#     'result': Stone(Red,S1,Square,S1,Dotted,S2)
 #   },
 #   {
-#     'agent': Stone(Yellow,S2,Square,S2), #,Dotted,S1),
-#     'recipient': Stone(Red,S1,Triangle,S1), #,Plain,S2),
-#     'result': Stone(Yellow,S1,Triangle,S2), #,Plain,S2)
+#     'agent': Stone(Yellow,S2,Square,S2,Dotted,S1),
+#     'recipient': Stone(Red,S1,Triangle,S1,Plain,S2),
+#     'result': Stone(Yellow,S1,Triangle,S2,Plain,S2)
 #   },
 #   {
-#     'agent': Stone(Yellow,S2,Triangle,S1), #,Plain,S1),
-#     'recipient': Stone(Yellow,S2,Square,S1), #,Dotted,S1),
-#     'result': Stone(Yellow,S2,Square,S2), #,Dotted,S1)
+#     'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
+#     'recipient': Stone(Yellow,S2,Square,S1,Dotted,S1),
+#     'result': Stone(Yellow,S2,Square,S2,Dotted,S1)
 #   },
 #   {
-#     'agent': Stone(Yellow,S2,Triangle,S1), #,Plain,S1),
-#     'recipient': Stone(Red,S1,Triangle,S1), #,Plain,S1),
-#     'result': Stone(Yellow,S1,Triangle,S2), #,Plain,S1)
+#     'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
+#     'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
+#     'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
 #   },
 # ]
 
-# pm_init = pd.read_csv('data/pm_init_test.csv', index_col=0, na_filter=False)
+# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
 # g = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=1, burnin=0, inc=1)
-# g.run(save_prefix='test', sample=False, top_n=2)
+# # g.run(save_prefix='test', sample=False, top_n=2)
 
-# filtered = pd.read_csv('tests/composition/phase_1/pm_filtered_1_2.csv', index_col=0, na_filter=False)
-# extracted = g.extract(filtered, 6, False)
+# filtered = pd.read_csv('data/pm_filtered_1_2.csv', index_col=0, na_filter=False)
+# extracted = g.extract(filtered, 1, sample=1)
 # print(extracted)
 
 # # %%
