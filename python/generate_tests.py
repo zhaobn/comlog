@@ -35,19 +35,34 @@ for i in range(len(task_data_df)):
 pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
 g = Task_gibbs(Task_lib(pm_init), task_data, iteration={iteration})
-g.run(all_frames, save_prefix='{test_name}/{test_name}', sample=True, top_n=1)
+g.run(all_frames, save_prefix='test/{test_name}/{test_name}', sample=True, top_n=1)
 """
 
 def generate_cmd(test_name):
   return f"""
-mkdir {test_name}
+mkdir test/{test_name}
 screen -dmS {test_name} python {test_name}.py
 """
 
 def generate_job(test_name):
   return f"""
-mkdir {test_name}
-screen -dmS {test_name} python {test_name}.py
+#!/bin/sh
+# Grid Engine options (lines prefixed with #$)
+#$ -N {test_name}
+#$ -cwd
+#$ -l h_rt=02:00:00
+#$ -l h_vmem=1G
+#  These options are:
+#  job name: -N
+#  use the current working directory: -cwd
+#  runtime limit of 5 minutes: -l h_rt
+#  memory limit of 1 Gbyte: -l h_vmem
+
+# Initialise the environment modules
+module load anaconda
+source activate comlog
+
+python ../python/{test_name}.py
 """
 
 def save_file(fname, fcontent, type='w'):
@@ -57,19 +72,30 @@ def save_file(fname, fcontent, type='w'):
 
 
 # %%
+for item in test_configs.items():
+  (test_name, trial_cond) = item
+  scripts = generate_scripts(test_name, trial_cond)
+  # print(scripts)
+  save_file(f'{test_name}.py', scripts)
+  bash_scripts += generate_cmd(test_name)
+
+save_file('run.sh', bash_scripts)
+
+# mkdir_cmds = ''
+# qsub_cmds = ''
+
 # for item in test_configs.items():
 #   (test_name, trial_cond) = item
 #   scripts = generate_scripts(test_name, trial_cond)
 #   # print(scripts)
 #   save_file(f'{test_name}.py', scripts)
-#   bash_scripts += generate_cmd(test_name)
+#   mkdir_cmds += f'mkdir {test_name}\n'
 
-# save_file('run.sh', bash_scripts)
+#   job = generate_job(test_name)
+#   save_file(f'run_{test_name}.sh', job)
+#   qsub_cmds += (f'qsub run_{test_name}.sh\n')
 
-for item in test_configs.items():
-  (test_name, trial_cond) = item
-  scripts = generate_scripts(test_name, trial_cond)
-  print(scripts)
-  save_file(f'{test_name}.py', scripts)
+# print(mkdir_cmds)
+# print(qsub_cmds)
 
 # %%
