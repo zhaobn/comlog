@@ -79,10 +79,6 @@ class Task_gibbs(Gibbs_sampler):
     merged_df = pd.merge(self.cur_programs.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
     merged_df['count'] = merged_df['count_x'] +  merged_df['count_y']
     set_df = merged_df.query('log_prob!=0|type=="primitive"')[['terms','arg_types','return_type','type','count','log_prob']]
-    # Update log prob
-    helper_lb = Task_lib(set_df)
-    helper_lb.update_log_prob()
-    set_df = helper_lb.content
     # Now take care of programs
     to_set_df = merged_df.query('log_prob==0&type!="primitive"')[['terms','arg_types','return_type','type','count','log_prob']]
     to_set_df = to_set_df.reset_index(drop=True)
@@ -143,14 +139,14 @@ class Task_gibbs(Gibbs_sampler):
         filtered = pd.DataFrame({'terms': [], 'log_prob': []})
         while (len(filtered)) < 1 and ns < 100000: # Safe to use a large ns, bc ground truth is covered - it will stop
           ns += 1
-          if ns == 1:
-            sampled_frames = pd.concat([
-              frames[frames.index==0], # 'PM("obj_obj_obj")'
-              frames[frames.index>0].sample(n=frame_sample, weights='prob')
-            ])
-          else:
-            sampled_frames = frames_left.sample(n=frame_sample, weights='prob')
-          sampled_frames = sampled_frames.reset_index(drop=True)
+          # if ns == 1:
+          #   sampled_frames = pd.concat([
+          #     frames[frames.index==0], # 'PM("obj_obj_obj")'
+          #     frames[frames.index>0].sample(n=frame_sample, weights='prob')
+          #   ])
+          # else:
+          #   sampled_frames = frames_left.sample(n=frame_sample, weights='prob')
+          sampled_frames = frames_left.sample(n=frame_sample, weights='prob').reset_index(drop=True)
           frames_left = frames_left[~frames_left['terms'].isin(sampled_frames['terms'])]
           for k in range(len(sampled_frames)):
             all_programs = pl.unfold_programs_with_lp(sampled_frames.iloc[k].at['terms'], sampled_frames.iloc[k].at['log_prob'], data)
