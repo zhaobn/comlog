@@ -44,6 +44,11 @@ mkdir test/{test_name}
 screen -dmS {test_name} python {test_name}.py
 """
 
+def generate_screen_cmd(test_name):
+  return f"""
+screen -dmS {test_name} python {test_name}.py
+"""
+
 def generate_job(test_name):
   return f"""
 #!/bin/sh
@@ -74,12 +79,13 @@ def save_file(fname, fcontent, type='w'):
 # %%
 for item in test_configs.items():
   (test_name, trial_cond) = item
-  scripts = generate_scripts(test_name, trial_cond)
-  # print(scripts)
-  save_file(f'{test_name}.py', scripts)
-  bash_scripts += generate_cmd(test_name)
+  print(generate_screen_cmd(test_name))
+#   scripts = generate_scripts(test_name, trial_cond)
+#   # print(scripts)
+#   save_file(f'{test_name}.py', scripts)
+#   bash_scripts += generate_cmd(test_name)
 
-save_file('run.sh', bash_scripts)
+# save_file('run.sh', bash_scripts)
 
 # mkdir_cmds = ''
 # qsub_cmds = ''

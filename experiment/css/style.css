@@ -205,11 +205,3 @@ button {
 .input-form p, select {
   font-size: 20px;
 }
-
-.dot {
-  height: 125px;
-  width: 125px;
-  background-color: #bbb;
-  border-radius: 50%;
-  display: inline-block;
-}
