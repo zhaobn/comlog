@@ -47,9 +47,10 @@ function createAgent(nStripes = 1, base = 40, r = 30) {
       `<line x1="${base+getDelta(15)+15}" y1="${base-getDelta(15)}" x2="${base-getDelta(15)}" y2="${base+getDelta(15)+15}" style="stroke:red;stroke-width:6" />`
       break;
     case 3:
-      stripes = `<line x1="${base+getDelta(15)}" y1="${base-getDelta(15)-15}" x2="${base-getDelta(15)-15}" y2="${base+getDelta(15)}" style="stroke:red;stroke-width:6" />` + '\n' +
+      stripes = `<line x1="${base+getDelta(0)}" y1="${base-getDelta(0)}" x2="${base-getDelta(0)}" y2="${base+getDelta(0)}" style="stroke:red;stroke-width:6" />` + '\n' +
       `<line x1="${base+getDelta(20)}" y1="${base-getDelta(20)-20}" x2="${base-getDelta(20)-20}" y2="${base+getDelta(20)}" style="stroke:red;stroke-width:6" />` + '\n' +
       `<line x1="${base+getDelta(20)+20}" y1="${base-getDelta(20)}" x2="${base-getDelta(20)}" y2="${base+getDelta(20)+20}" style="stroke:red;stroke-width:6" />`
+      break;
     case 4:
       stripes = `<line x1="${base+getDelta(8)}" y1="${base-getDelta(8)-8}" x2="${base-getDelta(8)-8}" y2="${base+getDelta(8)}" style="stroke:red;stroke-width:6" />` + '\n' +
       `<line x1="${base+getDelta(8)+8}" y1="${base-getDelta(8)}" x2="${base-getDelta(8)}" y2="${base+getDelta(8)+8}" style="stroke:red;stroke-width:6" />` + '\n' +
