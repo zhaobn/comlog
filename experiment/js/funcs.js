@@ -1,6 +1,6 @@
 const defaultStone = { 'borderWidth': '8px', 'mar': 5, 'len': 60 };
 const smallStone = { 'borderWidth': '3px', 'mar': 3, 'len': 20 };
-const maxBlocks = 8
+const maxBlocks = 12
 
 function createCustomElement (type = 'div', className, id) {
   let element = (["svg", "polygon"].indexOf(type) < 0)?
@@ -59,12 +59,45 @@ function createInitHistory(config, parentDiv) {
   parentDiv.append(recipientDiv)
   return(parentDiv);
 }
-function createAgentStone(id, stoneOpts) {
-  let div = createCustomElement("div", "agent-stone-div", `${id}-div`);
-  let svg = createCustomElement("svg", "stone-svg", `${id}-svg`);
-  svg.append(createPolygon('agent-stone', `${id}`, Math.floor(stoneOpts/10), 'default'))
-  div.append(svg)
-  return(div);
+// function createAgentStone(id, stoneOpts) {
+//   let div = createCustomElement("div", "agent-stone-div", `${id}-div`);
+//   let svg = createCustomElement("svg", "stone-svg", `${id}-svg`);
+//   svg.append(createPolygon('agent-stone', `${id}`, Math.floor(stoneOpts/10), 'default'))
+//   div.append(svg)
+//   return(div);
+// }
+function createAgentStone(id, nStripes = 1, base = 40, r = 25) {
+  nStripes = Math.floor(nStripes/10)
+  const getDelta = (x) => (-x + Math.sqrt(2*(r**2)-x**2))/2
+
+  let agentDiv = createCustomElement("div", "agent-stone-div", `${id}-div`);
+  let agentStoneSvg = createCustomElement('svg', 'stone-svg', id)
+  let circleSvg = '<circle class="agent-stone" cx="40" cy="40" r="30" />'
+  let stripes = ''
+
+  switch (nStripes) {
+    case 1:
+      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(0)}" y1="${base-getDelta(0)}" x2="${base-getDelta(0)}" y2="${base+getDelta(0)}" />`;
+      break;
+    case 2:
+      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(15)}" y1="${base-getDelta(15)-15}" x2="${base-getDelta(15)-15}" y2="${base+getDelta(15)}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(15)+15}" y1="${base-getDelta(15)}" x2="${base-getDelta(15)}" y2="${base+getDelta(15)+15}" />`
+      break;
+    case 3:
+      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(0)}" y1="${base-getDelta(0)}" x2="${base-getDelta(0)}" y2="${base+getDelta(0)}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(20)}" y1="${base-getDelta(20)-20}" x2="${base-getDelta(20)-20}" y2="${base+getDelta(20)}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(20)+20}" y1="${base-getDelta(20)}" x2="${base-getDelta(20)}" y2="${base+getDelta(20)+20}" />`
+      break;
+    case 4:
+      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(8)}" y1="${base-getDelta(8)-8}" x2="${base-getDelta(8)-8}" y2="${base+getDelta(8)}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(8)+8}" y1="${base-getDelta(8)}" x2="${base-getDelta(8)}" y2="${base+getDelta(8)+8}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(25)}" y1="${base-getDelta(25)-25}" x2="${base-getDelta(25)-25}" y2="${base+getDelta(25)}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(25)+25}" y1="${base-getDelta(25)}" x2="${base-getDelta(25)}" y2="${base+getDelta(25)+25}" />`
+      break;
+  }
+  agentStoneSvg.innerHTML = circleSvg + stripes
+  agentDiv.append(agentStoneSvg)
+  return agentDiv
 }
 function createBlocks(id, stoneOpts) {
   let div = createCustomElement("div", "recipient-stone-div", `${id}-blocks-all`);
@@ -223,24 +256,34 @@ function playEffects (config, clicked=0) {
   const startPos = getCurrentLocation(`learn${config.trial}-agent`).right;
   const endPos = getCurrentLocation(`learn${config.trial}-recipient-blocks-all`).left;
 
-  const delta = Math.round(endPos - startPos);
+  const delta = Math.round(endPos - startPos) + 8;
   (delta > 0) && (agentStone.style.left = `${delta}px`);
 
-  setTimeout(() => {
-    let initLen = config.recipient % 10
-    let targetLen = config.result % 10
-    let hist = document.getElementById(`task-training-displayhist-${config.trial}`)
-    for (let i = initLen; i < targetLen; i++ ) {
-      fadeIn(document.getElementById(`learn${config.trial}-recipient-block-${i}`))
-      if (clicked == 0) {
-        setTimeout(()=> {
-          hist.style.opacity = 0
-          hist.style.display = 'flex'
-          fadeIn(hist)
-        }, 1000)
+  let initLen = config.recipient % 10
+  let targetLen = config.result % 10
+  let hist = document.getElementById(`task-training-displayhist-${config.trial}`)
+
+  if (targetLen == 1) {
+    setTimeout(()=> {
+      hist.style.opacity = 0
+      hist.style.display = 'flex'
+      fadeIn(hist)
+    }, 2500)
+  } else {
+    setTimeout(() => {
+      for (let i = initLen; i < targetLen; i++ ) {
+        fadeIn(document.getElementById(`learn${config.trial}-recipient-block-${i}`))
+        if (clicked == 0) {
+          setTimeout(()=> {
+            hist.style.opacity = 0
+            hist.style.display = 'flex'
+            fadeIn(hist)
+          }, 1000)
+        }
       }
-    }
-  }, 1500);
+    }, 1500);
+  }
+
 }
 
 
@@ -302,7 +345,6 @@ function isFilled (formID) {
   });
   return (!notFilled)
 }
-
 
 function findAllIndex(element, array) {
   let indices = [];

@@ -1,13 +1,14 @@
 
-const mode = '' // '' for production, 'dev' for development, 'flask' for flask-app
+const mode = 'dev' // '' for production, 'dev' for development, 'flask' for flask-app
 
 /** Pick a condition */
-const cond = 'row'
+const cond = 'col'
 const cond_dict = {
   'row': [1,2,3],
-  'col': [1,4,7],
-  'ldg': [1,5,9],
-  'rdg': [3,5,7],
+  'col': [1,5,8],
+  'ldg': [1,6,10],
+  'rdg': [3,6,8],
+  'fix': [4,6,11]
 }
 console.log(cond)
 
@@ -57,25 +58,7 @@ genConfigs.forEach(c => {
   trialData['result'].push('0');
 })
 
-// // Demo pre-train materials
-// let ptDivPrefix = 'task-pretrain'
-// let box = createCustomElement("div", "box", `${ptDivPrefix}-box`);
-// let taskBox = createCustomElement("div", "task-box", `${ptDivPrefix}-taskbox`);
-
-// let taskNum = createText('h2', `Power detection results`);
-// taskBox.append(taskNum);
-
-// let displayBox = createCustomElement("div", "pt-display-box", `${ptDivPrefix}-displaybox`);
-// displayBox = createPretrainings(displayBox)
-
-// const buttonGroup = createCustomElement("div", "button-group-vc", `p`);
-// buttonGroup.append(createBtn(`${ptDivPrefix}-next-btn`, "Next", false));
-
-// taskBox.append(displayBox);
-// taskBox.append(buttonGroup);
-// box.append(taskBox);
-// document.getElementById(ptDivPrefix).append(box);
-
+console.log(genConfigs)
 
 // Generate learning frame
 learnDivPrefix = 'task-training'
@@ -89,7 +72,6 @@ for(let i = 0; i < learnConfigs.length; i++ ) {
 
   let box = createCustomElement("div", "box", `${learnDivPrefix}-box-${trialId}`);
   let taskBox = createCustomElement("div", "task-box", `${learnDivPrefix}-taskbox-${trialId}`);
-
 
   let taskNum = createText('h2', `${trialId}/${learnConfigs.length}`);
   taskBox.append(taskNum);

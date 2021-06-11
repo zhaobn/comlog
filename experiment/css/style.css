@@ -147,11 +147,16 @@ button {
   stroke-width: 2px;
 }
 
+.agent-stone-stripe {
+  stroke: red;
+  stroke-width:6;
+}
+
 .recipient-block {
   background-color: #404040;
   border: #C0C0C0 solid 2px;
   height: 40px;
-  width: 40px;
+  width: 30px;
   margin: 0;
   padding: 0;
 }
