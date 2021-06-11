@@ -58,8 +58,6 @@ genConfigs.forEach(c => {
   trialData['result'].push('0');
 })
 
-console.log(genConfigs)
-
 // Generate learning frame
 learnDivPrefix = 'task-training'
 coreLearnDiv = document.getElementById(learnDivPrefix)
