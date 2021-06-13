@@ -44,7 +44,7 @@ Alice and Bob are testing two sets of magic eggs.
    2. `(2, 1) => 2`
    3. `(3, 1) => 3`
 
-   What do you think the magic power of these eggs are? (Model: `[SC,[KB,mulnn,getLength],getStripe]`)
+   What do you think the magic power of these eggs are? (Model: `[B,getStripe,[B,I,I]]`)
 
    Make prediction for a new egg `(4, 1) => ?`
 
@@ -66,10 +66,12 @@ We have three candidates for Bob's set:
    2. `(2, 2) => 4`
    3. `(2, 3) => 6`
 
-- Hard (Model: `[KB,I,I]`):
+- Hard (Model: `[B,getStripe,[B,I,I]]`):
 
    1. `(1, 1) => 1`
    2. `(1, 2) => 2`
    3. `(1, 3) => 3`
 
 ## Normative model results
+
+All compositions are able to recover the groundtruth.
