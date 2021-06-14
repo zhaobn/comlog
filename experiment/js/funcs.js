@@ -260,10 +260,11 @@ function playEffects (config, clicked=0) {
   (delta > 0) && (agentStone.style.left = `${delta}px`);
 
   let initLen = config.recipient % 10
-  let targetLen = config.result % 10
+  let targetLen = parseInt(config.result) % 10
+  let agentStripe = Math.floor(parseInt(config.agent) % Math.pow(10,2) / Math.pow(10,1))
   let hist = document.getElementById(`task-training-displayhist-${config.trial}`)
 
-  if (targetLen == 1) {
+  if (agentStripe == 1) {
     setTimeout(()=> {
       hist.style.opacity = 0
       hist.style.display = 'flex'
