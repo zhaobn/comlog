@@ -48,7 +48,7 @@ Alice and Bob are testing two sets of magic eggs.
 
    Make prediction for a new egg `(4, 1) => ?`
 
-3. Actually, the eggs Aice and Bob tested are all from a same hen - meaning that they have the same magic power. (With two sets of history showing on top of the page) what is that power?
+3. Actually, the eggs Alice and Bob tested are all from a same hen - meaning that they have the same magic power. (With two sets of history showing on top of the page) what is that power?
 
    Make predictions with the rest of the trials (yellow stripy agent?)
 
@@ -73,3 +73,6 @@ We have three candidates for Bob's set:
    3. `(1, 3) => 3`
 
 ## Normative model results
+
+All compositions are able to recover the groundtruth. There is no difference between easy and hard composition.
+
