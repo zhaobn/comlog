@@ -29,142 +29,88 @@ const exp_conds = {
   }
 }
 
-let aliceLearn = fmtConfig(config.filter(c => exp_conds[cond]['alice']['learn'].indexOf(c.trial) > -1), 'alice', 'learn')
-let aliceGen = fmtConfig(config.filter(c => exp_conds[cond]['alice']['gen'].indexOf(c.trial) > -1), 'alice', 'gen')
+let aliceLearn = fmtConfig(config.filter(c => exp_conds[cond]['alice']['learn'].indexOf(c.trial) > -1), 'alice', 'learn', 'red')
+let aliceGen = fmtConfig(config.filter(c => exp_conds[cond]['alice']['gen'].indexOf(c.trial) > -1), 'alice', 'gen', 'red')
 
-let bobLearn = fmtConfig(config.filter(c => exp_conds[cond]['bob']['learn'].indexOf(c.trial) > -1), 'bob', 'learn')
-let bobGen = fmtConfig(config.filter(c => exp_conds[cond]['bob']['gen'].indexOf(c.trial) > -1), 'bob', 'gen')
+let bobLearn = fmtConfig(config.filter(c => exp_conds[cond]['bob']['learn'].indexOf(c.trial) > -1), 'bob', 'learn', 'green')
+let bobGen = fmtConfig(config.filter(c => exp_conds[cond]['bob']['gen'].indexOf(c.trial) > -1), 'bob', 'gen', 'green')
 
 let usedIndices = [ exp_conds[cond]['alice']['learn'], exp_conds[cond]['alice']['gen'], exp_conds[cond]['bob']['learn'], exp_conds[cond]['bob']['gen']].flat()
 let genConfigs =  config.filter(c => usedIndices.indexOf(c.trial) < 0)
-genConfigs = fmtConfig(shuffleArray(genConfigs), 'gen', 'gen')
+genConfigs = fmtConfig(shuffleArray(genConfigs), 'gen', 'gen', 'orange')
 
 // For page animation
-let aliceClicked = Array(aliceLearn.length).fill(0);
-let bobClicked = Array(bobLearn.length).fill(0);
+let aliceLearnClicked = Array(aliceLearn.length).fill(0);
+let aliceGenClicked = Array(aliceGen.length).fill(0);
+let bobLearnClicked = Array(bobLearn.length).fill(0);
+let bobGenClicked = Array(bobGen.length).fill(0);
 let genClicked = Array(genConfigs.length).fill(0);
 
 // Data to save
-let subjectData = prepSubjectData([aliceLearn, aliceGen, bobLearn, bobGen, genConfigs].flat())
+let subjectData = {}
+let trialData = prepTrialData([aliceLearn, aliceGen, bobLearn, bobGen, genConfigs].flat())
 
+// Key frame names
+const taskCoverA = 'task-cover-a'
+const taskTrainA = 'task-train-a'
+const taskInputA = 'task-input-a'
+const taskGenA = 'task-gen-a'
 
-/** Generate learning frames */
-function createLearnTask(learnDivPrefix, learnConfig) {
-  let trialId = learnConfig.trial;
-  let display = (mode==='dev'|trialId===1)? 'flex': 'none';
+const taskCoverB = 'task-cover-b'
+const taskTrainB = 'task-train-b'
+const taskInputB = 'task-input-b'
+const taskGenB = 'task-gen-b'
 
-  let box = createCustomElement("div", "box", `${learnDivPrefix}-box-${trialId}`);
-  let taskBox = createCustomElement("div", "task-box", `${learnDivPrefix}-taskbox-${trialId}`);
-  let taskNum = createText('h2', trialId);
-  taskBox.append(taskNum);
+const taskCoverC = 'task-cover-c'
+const taskTrainC = 'task-train-c'
+const taskInputC = 'task-input-c'
+const taskGenC = 'task-gen-c'
 
-  let displayBox = createCustomElement("div", "display-box", `${learnDivPrefix}-displaybox-${trialId}`);
-  let displayMain = createCustomElement("div", "display-main", `${learnDivPrefix}-displaymain-${trialId}`);
-  displayMain = createInitStones(learnConfig, displayMain, learnDivPrefix);
-
-  let displayHist = createCustomElement("div", "display-hist", `${learnDivPrefix}-displayhist-${trialId}`);
-  displayHist = createInitHistory(learnConfig, displayHist, learnDivPrefix)
-  displayHist.style.opacity = 0
-  displayBox.append(displayHist)
-  displayBox.append(displayMain)
-
-  const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
-  buttonGroup.append(createBtn(`${learnDivPrefix}-test-btn-${trialId}`, "Test", true));
-  buttonGroup.append(createBtn(`${learnDivPrefix}-next-btn-${trialId}`, "Next", false));
-  taskBox.append(displayBox);
-
-  // taskBox.append(buttonGroup);
-  box.append(taskBox);
-  box.append(buttonGroup)
-  box.style.display = display;
-
-  return box
-}
-
-
-let coreLearnDiv = document.getElementById('task-train-a')
+/** Alice */
+// learning
 for(let i = 0; i < aliceLearn.length; i++ ) {
-  coreLearnDiv.append(createLearnTask('task-train-a', aliceLearn[i]))
+  let config = aliceLearn[i]
+  document.getElementById(taskTrainA).append(createLearnTask(taskTrainA, config))
+  let trialId = config.trial
+
+  // Button functionalities
+  let playBtn = document.getElementById(`${taskTrainA}-test-btn-${trialId}`);
+  let nextBtn = document.getElementById(`${taskTrainA}-next-btn-${trialId}`);
+  playBtn.onclick = () => {
+    let displayMain = document.getElementById(`${taskTrainA}-displaymain-${trialId}`)
+    playBtn.disabled = true;
+    if (aliceLearnClicked[i] > 0) {
+      clearInitStones(taskTrainA, config)
+      createInitStones(config, displayMain, taskTrainA)
+    }
+    playEffects(config, taskTrainA, aliceLearnClicked[i]);
+    setTimeout(() => {
+      nextBtn.disabled = false;
+      playBtn.disabled = false;
+      playBtn.innerText = 'Test again'
+    }, 2000);
+    aliceLearnClicked[i] += 1;
+  }
+   nextBtn.onclick = () => {
+     nextBtn.disabled = true;
+     let nextDiv = (i === aliceLearn.length-1)? taskInputA: `${taskTrainA}-box-${i+2}`;
+     (mode !== 'dev')? hide(`box-${trialId}`): null;
+     showNext(nextDiv);
+   }
 }
-
-
-// coreLearnDiv = document.getElementById(learnDivPrefix)
-// for(let i = 0; i < learnConfigs.length; i++ ) {
-//   let { _, trial, agent, recipient, result } = learnConfigs[i];
-//   let config = { trial: i+1, taskId: trial, agent, recipient, result }
-
-//   let trialId = config.trial;
-//   let display = (mode==='dev'|i===0)? 'flex': 'none';
-
-//   let box = createCustomElement("div", "box", `${learnDivPrefix}-box-${trialId}`);
-//   let taskBox = createCustomElement("div", "task-box", `${learnDivPrefix}-taskbox-${trialId}`);
-
-//   let taskNum = createText('h2', `${trialId}/${learnConfigs.length}`);
-//   taskBox.append(taskNum);
-
-//   let displayBox = createCustomElement("div", "display-box", `${learnDivPrefix}-displaybox-${trialId}`);
-
-//   let displayMain = createCustomElement("div", "display-main", `${learnDivPrefix}-displaymain-${trialId}`);
-//   displayMain = createInitStones(config, displayMain);
-
-//   let displayHist = createCustomElement("div", "display-hist", `${learnDivPrefix}-displayhist-${trialId}`);
-//   displayHist = createInitHistory(config, displayHist)
-//   displayHist.style.opacity = 0
-
-//   displayBox.append(displayHist)
-//   displayBox.append(displayMain)
-
-//   const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
-//   buttonGroup.append(createBtn(`${learnDivPrefix}-test-btn-${trialId}`, "Test", true));
-//   buttonGroup.append(createBtn(`${learnDivPrefix}-next-btn-${trialId}`, "Next", false));
-
-//   taskBox.append(displayBox);
-//   // taskBox.append(buttonGroup);
-//   box.append(taskBox);
-//   box.append(buttonGroup)
-//   box.style.display = display;
-//   coreLearnDiv.append(box);
-
-//   /** Button functionalities */
-//   const playBtn = document.getElementById(`${learnDivPrefix}-test-btn-${trialId}`);
-//   const nextBtn = document.getElementById(`${learnDivPrefix}-next-btn-${trialId}`);
-
-//   playBtn.onclick = () => {
-//     playBtn.disabled = true;
-//     if (learnClicked[i] > 0) {
-//       clearElement(`${learnDivPrefix}-displaymainspace-${config.trial}`)
-//       clearElement(`${learnDivPrefix}-displaymainagent-${config.trial}`)
-//       clearElement(`${learnDivPrefix}-displaymainrecipient-${config.trial}`)
-//       createInitStones(config, displayMain)
-//     }
-//     playEffects(config, learnClicked[i]);
-//     setTimeout(() => {
-//       nextBtn.disabled = false;
-//       playBtn.disabled = false;
-//       playBtn.innerText = 'Test again'
-//     }, 2000);
-//     learnClicked[i] += 1;
-//   }
-//   nextBtn.onclick = () => {
-//     nextBtn.disabled = true;
-//     const nextDiv = (i === learnConfigs.length-1)? 'task-guess': `task-training-box-${i+2}`;
-//     // (mode !== 'dev')? hide(`box-${trialId}`): null;
-//     showNext(nextDiv);
-//   }
-
-// }
 
 // Free response
-(mode === 'dev')? document.getElementById('task-guess').style.display = 'flex': null;
-let inputForm = document.getElementById('task-guess-input-form')
-let okBtn = document.getElementById('task-guess-input-submit-btn')
+(mode === 'dev')? document.getElementById(taskInputA).style.display = 'flex': null;
+document.getElementById(taskInputA).append(createInputForm(taskInputA))
 
-inputForm.onchange = () => isFilled('task-guess-input-form')? okBtn.disabled = false: null;
-okBtn.onclick = () => {
-  let inputs = inputForm.elements;
+let aliceInputForm = document.getElementById(`${taskInputA}-input-form`)
+let aliceOkBtn = document.getElementById(`${taskInputA}-input-submit-btn`)
+aliceInputForm.onchange = () => isFilled(`${taskInputA}-input-form`)? aliceOkBtn.disabled = false: null;
+aliceOkBtn.onclick = () => {
+  let inputs = aliceInputForm.elements;
   Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
-  okBtn.disabled = true;
-  disableFormInputs('task-guess-input-form');
+  aliceOkBtn.disabled = true;
+  disableFormInputs(`${taskInputA}-input-form`);
   console.log(subjectData)
   if (mode !== 'dev') {
     // hide("core-learn-form-div");
@@ -172,55 +118,180 @@ okBtn.onclick = () => {
   }
 }
 
+// Generate gen tasks
+for(let i = 0; i < aliceGen.length; i++ ) {
+  let config = aliceGen[i]
+  // console.log(config)
+  document.getElementById(taskGenA).append(createGenTask(taskGenA, config))
 
-// // Generate gen tasks
-// let genDivPrefix = 'task-gen'
-// let genDiv = document.getElementById(genDivPrefix)
-// for(let i = 0; i < genConfigs.length; i++ ) {
+  /** Effects and button functionalities */
+  genBlocksEffects(config, taskGenA, aliceGenClicked)
+  handleGenSelection(config, taskGenA)
+  let resetBtn = document.getElementById(`${taskGenA}-reset-btn-${config.trial}`)
+  let confirmBtn = document.getElementById(`${taskGenA}-confirm-btn-${config.trial}`)
+  resetBtn.onclick = () => {
+    aliceGen[i] = 0
+    confirmBtn.disabled = true;
+    resetGenBlock(config, taskGenA, aliceGen)
+  }
+  confirmBtn.onclick = () => {
+    disableBlocks(config, taskGenA)
+    resetBtn.disabled = true
+    confirmBtn.disabled = true;
+    trialData.result[aliceLearn.length+i] = '0'+getCurrentSelection(config, taskGenA)
+    console.log(trialData)
+    if (mode!=='dev') {
+      const nextDiv = (i === aliceGen.length-1)? '': `${taskGenA}-box-${i+2}`;
+      showNext(nextDiv);
+    }
+  }
+}
 
-//   let trialId = genConfigs[i].trial
-//   let display = (mode==='dev')? 'flex': 'none';
 
-//   let box = createCustomElement("div", "box", `${genDivPrefix}-box-${trialId}`);
+/** Bob */
+// learning
+for(let i = 0; i < bobLearn.length; i++ ) {
+  let config = bobLearn[i]
+  document.getElementById(taskTrainB).append(createLearnTask(taskTrainB, config))
+  let trialId = config.trial
 
-//   let taskBox = createCustomElement("div", "task-box", `${genDivPrefix}-taskbox-${trialId}`);
-//   let taskNum = createText('h2', `${trialId}/${genConfigs.length}`);
-//   taskBox.append(taskNum);
+  // Button functionalities
+  let playBtn = document.getElementById(`${taskTrainB}-test-btn-${trialId}`);
+  let nextBtn = document.getElementById(`${taskTrainB}-next-btn-${trialId}`);
+  playBtn.onclick = () => {
+    let displayMain = document.getElementById(`${taskTrainB}-displaymain-${trialId}`)
+    playBtn.disabled = true;
+    if (bobLearnClicked[i] > 0) {
+      clearInitStones(taskTrainB, config)
+      createInitStones(config, displayMain, taskTrainB)
+    }
+    playEffects(config, taskTrainB, bobLearnClicked[i]);
+    setTimeout(() => {
+      nextBtn.disabled = false;
+      playBtn.disabled = false;
+      playBtn.innerText = 'Test again'
+    }, 2000);
+    bobLearnClicked[i] += 1;
+  }
+   nextBtn.onclick = () => {
+     nextBtn.disabled = true;
+     let nextDiv = (i === bobLearn.length-1)? taskInputB: `${taskTrainB}-box-${i+2}`;
+     (mode !== 'dev')? hide(`box-${trialId}`): null;
+     showNext(nextDiv);
+   }
+}
 
-//   let displayBox = createCustomElement("div", "display-box", `${genDivPrefix}-displaybox-${trialId}`);
-//   let displayMain = createCustomElement("div", "display-main", `${genDivPrefix}-displaymain-${trialId}`);
-//   displayMain = createGenStones(genConfigs[i], displayMain);
-//   displayBox.append(displayMain)
+// Free response
+(mode === 'dev')? document.getElementById(taskInputB).style.display = 'flex': null;
+document.getElementById(taskInputB).append(createInputForm(taskInputB))
 
-//   const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
-//   buttonGroup.append(createBtn(`${genDivPrefix}-reset-btn-${trialId}`, "Reset", false));
-//   buttonGroup.append(createBtn(`${genDivPrefix}-confirm-btn-${trialId}`, "Confirm", false));
+let bobInputForm = document.getElementById(`${taskInputB}-input-form`)
+let bobOkBtn = document.getElementById(`${taskInputB}-input-submit-btn`)
+bobInputForm.onchange = () => isFilled(`${taskInputB}-input-form`)? bobOkBtn.disabled = false: null;
+bobOkBtn.onclick = () => {
+  let inputs = bobInputForm.elements;
+  Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
+  bobOkBtn.disabled = true;
+  disableFormInputs(`${taskInputB}-input-form`);
+  console.log(subjectData)
+  if (mode !== 'dev') {
+    // hide("core-learn-form-div");
+    showNext("task-gen-box-1")
+  }
+}
 
-//   taskBox.append(displayBox);
-//   // taskBox.append(buttonGroup);
-//   box.append(taskBox);
-//   box.append(buttonGroup);
-//   genDiv.append(box);
-//   box.style.display = display
+// Generate gen tasks
+for(let i = 0; i < bobGen.length; i++ ) {
+  let config = bobGen[i]
+  // console.log(config)
+  document.getElementById(taskGenB).append(createGenTask(taskGenB, config))
 
-//   /** Effects and button functionalities */
-//   genBlocksEffects(genConfigs[i], genClicked)
-//   handleGenSelection(genConfigs[i])
-//   let resetBtn = document.getElementById(`${genDivPrefix}-reset-btn-${trialId}`)
-//   let confirmBtn = document.getElementById(`${genDivPrefix}-confirm-btn-${trialId}`)
-//   resetBtn.onclick = () => {
-//     genClicked[i] = 0
-//     confirmBtn.disabled = true;
-//     resetGenBlock(genConfigs[i], genClicked)
-//   }
-//   confirmBtn.onclick = () => {
-//     disableBlocks(genConfigs[i])
-//     resetBtn.disabled = true
-//     confirmBtn.disabled = true;
-//     trialData.result[learnConfigs.length+i] = '4'+getCurrentSelection(genConfigs[i])
-//     if (mode!=='dev') {
-//       const nextDiv = (i === genConfigs.length-1)? '': `task-gen-box-${i+2}`;
-//       showNext(nextDiv);
-//     }
-//   }
-// }
+  /** Effects and button functionalities */
+  genBlocksEffects(config, taskGenB, bobGenClicked)
+  handleGenSelection(config, taskGenB)
+  let resetBtn = document.getElementById(`${taskGenB}-reset-btn-${config.trial}`)
+  let confirmBtn = document.getElementById(`${taskGenB}-confirm-btn-${config.trial}`)
+  resetBtn.onclick = () => {
+    bobGen[i] = 0
+    confirmBtn.disabled = true;
+    resetGenBlock(config, taskGenB, bobGen)
+  }
+  confirmBtn.onclick = () => {
+    disableBlocks(config, taskGenB)
+    resetBtn.disabled = true
+    confirmBtn.disabled = true;
+    let prevs = [ aliceLearn.length, aliceGen,length, bobLearn.length ].reduce((a, b) => a + b, 0)
+    trialData.result[prevs+i] = '0'+getCurrentSelection(config, taskGenC)
+    console.log(trialData)
+    if (mode!=='dev') {
+      const nextDiv = (i === bobGen.length-1)? '': `${taskGenB}-box-${i+2}`;
+      showNext(nextDiv);
+    }
+  }
+}
+
+
+/** Composition */
+let compDiv = document.getElementById(taskTrainC);
+let aliceSummaryDiv = createCustomElement('div', 'summary-div', 'alice-summary-div');
+let bobSummaryDiv = createCustomElement('div', 'summary-div', 'bob-summary-div');
+
+for(let i = 0; i < aliceLearn.length; i++ ) {
+  aliceSummaryDiv.append(createSum(aliceLearn[i], 'alice-sum'))
+}
+
+for(let i = 0; i < bobLearn.length; i++ ) {
+  bobSummaryDiv.append(createSum(bobLearn[i], 'bob-sum'))
+}
+
+compDiv.append(aliceSummaryDiv);
+compDiv.append(bobSummaryDiv);
+
+// Free response
+(mode === 'dev')? document.getElementById(taskInputC).style.display = 'flex': null;
+document.getElementById(taskInputC).append(createInputForm(taskInputC))
+
+let compInputForm = document.getElementById(`${taskInputC}-input-form`)
+let compOkBtn = document.getElementById(`${taskInputC}-input-submit-btn`)
+compInputForm.onchange = () => isFilled(`${taskInputC}-input-form`)? compOkBtn.disabled = false: null;
+compOkBtn.onclick = () => {
+  let inputs = compInputForm.elements;
+  Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
+  compOkBtn.disabled = true;
+  disableFormInputs(`${taskInputC}-input-form`);
+  console.log(subjectData)
+  if (mode !== 'dev') {
+    // hide("core-learn-form-div");
+    showNext("task-gen-box-1")
+  }
+}
+
+// Generate gen tasks
+for(let i = 0; i < genConfigs.length; i++ ) {
+  let config = genConfigs[i]
+  // console.log(config)
+  document.getElementById(taskGenC).append(createGenTask(taskGenC, config))
+
+  /** Effects and button functionalities */
+  genBlocksEffects(config, taskGenC, genClicked)
+  handleGenSelection(config, taskGenC)
+  let resetBtn = document.getElementById(`${taskGenC}-reset-btn-${config.trial}`)
+  let confirmBtn = document.getElementById(`${taskGenC}-confirm-btn-${config.trial}`)
+  resetBtn.onclick = () => {
+    bobGen[i] = 0
+    confirmBtn.disabled = true;
+    resetGenBlock(config, taskGenC, bobGen)
+  }
+  confirmBtn.onclick = () => {
+    disableBlocks(config, taskGenC)
+    resetBtn.disabled = true
+    confirmBtn.disabled = true;
+    let prevs = [ aliceLearn.length, aliceGen,length, bobLearn.length, bobGen.length ].reduce((a, b) => a + b, 0)
+    trialData.result[prevs+i] = '0'+getCurrentSelection(config, taskGenC)
+    console.log(trialData)
+    if (mode!=='dev') {
+      const nextDiv = (i === bobGen.length-1)? '': `${taskGenC}-box-${i+2}`;
+      showNext(nextDiv);
+    }
+  }
+}

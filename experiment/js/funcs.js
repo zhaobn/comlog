@@ -41,25 +41,63 @@ function createInitStones(config, parentDiv, learnDivPrefix) {
   let spaceDiv = createCustomElement("div", "display-main-space", `${learnDivPrefix}-displaymainspace-${config.trial}`)
   let agentDiv = createCustomElement("div", "display-main-agent", `${learnDivPrefix}-displaymainagent-${config.trial}`)
   let recipientDiv = createCustomElement("div", "display-main-recipient", `${learnDivPrefix}-displaymainrecipient-${config.trial}`)
-  agentDiv.append(createAgentStone(`learn${config.trial}-agent`, config.agent))
-  recipientDiv.append(createBlocks(`learn${config.trial}-recipient`, config))
+  agentDiv.append(createAgentStone(`${learnDivPrefix}-${config.trial}-agent`, config.agent, config.color))
+  recipientDiv.append(createBlocks(`${learnDivPrefix}-${config.trial}-recipient`, config))
   parentDiv.append(spaceDiv)
   parentDiv.append(agentDiv)
   parentDiv.append(recipientDiv)
   return(parentDiv);
 }
-function createInitHistory(config, parentDiv, learnDivPrefix) {
+function createInitHistory(config, parentDiv, learnDivPrefix, showText = true) {
   let spaceDiv = createCustomElement("div", "display-main-space", `${learnDivPrefix}-displaymainspace-hist-${config.trial}`)
   let agentDiv = createCustomElement("div", "display-main-agent", `${learnDivPrefix}-displaymainagent-hist-${config.trial}`)
   let recipientDiv = createCustomElement("div", "display-main-recipient", `${learnDivPrefix}-displaymainrecipient-hist-${config.trial}`)
 
-  let textDiv = createCustomElement('div', 'hist-text', id=`learn${config.trial}-hist-text`)
-  textDiv.append(createText('h2', 'Before'))
-  spaceDiv.append(textDiv);
-  agentDiv.append(createAgentStone(`learn${config.trial}-hist-agent`, config.agent))
-  recipientDiv.append(createBlocks(`learn${config.trial}-hist-recipient`, config))
+  if (showText) {
+    let textDiv = createCustomElement('div', 'hist-text', id=`learn${config.trial}-hist-text`)
+    textDiv.append(createText('h2', 'Before'))
+    spaceDiv.append(textDiv);
+  }
+  agentDiv.append(createAgentStone(`${learnDivPrefix}-${config.trial}-hist-agent`, config.agent, config.color))
+  recipientDiv.append(createBlocks(`${learnDivPrefix}-${config.trial}-hist-recipient`, config))
 
   parentDiv.append(spaceDiv)
+  parentDiv.append(agentDiv)
+  parentDiv.append(recipientDiv)
+  return(parentDiv);
+}
+function createSum(config, divPrefix) {
+  let sumBox = createCustomElement('div', 'summary-box', `${divPrefix}-box-${config.trial}`);
+
+  let sumBoforeDiv = createCustomElement("div", "display-hist", `${divPrefix}-beforediv-${config.trial}`);
+  sumBoforeDiv = createSumBefore(config, sumBoforeDiv, divPrefix)
+
+  let sumAfterDiv = createCustomElement("div", "display-after", `${divPrefix}-afterdiv-${config.trial}`);
+  sumAfterDiv = createSumAfter(config, sumAfterDiv, divPrefix)
+
+  sumBox.append(sumBoforeDiv)
+  sumBox.append(sumAfterDiv)
+  return sumBox
+}
+function createSumBefore(config, parentDiv, divPrefix) {
+  let agentDiv = createCustomElement("div", "display-main-agent", `${divPrefix}-displaymainagent-after-${config.trial}`)
+  let recipientDiv = createCustomElement("div", "display-main-recipient", `${divPrefix}-displaymainrecipient-after-${config.trial}`)
+
+  agentDiv.append(createAgentStone(`${divPrefix}-${config.trial}-after-agent`, config.agent, config.color))
+  recipientDiv.append(createBlocks(`${divPrefix}-${config.trial}-after-recipient`, config))
+
+  parentDiv.append(agentDiv)
+  parentDiv.append(recipientDiv)
+  return(parentDiv);
+
+}
+function createSumAfter(config, parentDiv, divPrefix) {
+  let agentDiv = createCustomElement("div", "display-main-agent-after", `${divPrefix}-displaymainagent-after-${config.trial}`)
+  let recipientDiv = createCustomElement("div", "display-main-recipient", `${divPrefix}-displaymainrecipient-after-${config.trial}`)
+
+  agentDiv.append(createAgentStone(`${divPrefix}-${config.trial}-after-agent`, config.agent, config.color))
+  recipientDiv.append(createBlocks(`${divPrefix}-${config.trial}-after-recipient`, config, false))
+
   parentDiv.append(agentDiv)
   parentDiv.append(recipientDiv)
   return(parentDiv);
@@ -71,7 +109,7 @@ function createInitHistory(config, parentDiv, learnDivPrefix) {
 //   div.append(svg)
 //   return(div);
 // }
-function createAgentStone(id, nStripes = 1, base = 40, r = 25) {
+function createAgentStone(id, nStripes = 1, color='red', base = 40, r = 25) {
   nStripes = Math.floor(nStripes/10)
   const getDelta = (x) => (-x + Math.sqrt(2*(r**2)-x**2))/2
 
@@ -82,46 +120,46 @@ function createAgentStone(id, nStripes = 1, base = 40, r = 25) {
 
   switch (nStripes) {
     case 1:
-      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(0)}" y1="${base-getDelta(0)}" x2="${base-getDelta(0)}" y2="${base+getDelta(0)}" />`;
+      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(0)}" y1="${base-getDelta(0)}" x2="${base-getDelta(0)}" y2="${base+getDelta(0)}" stroke="${color}" />`;
       break;
     case 2:
-      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(15)}" y1="${base-getDelta(15)-15}" x2="${base-getDelta(15)-15}" y2="${base+getDelta(15)}" />` + '\n' +
-      `<line class="agent-stone-stripe" x1="${base+getDelta(15)+15}" y1="${base-getDelta(15)}" x2="${base-getDelta(15)}" y2="${base+getDelta(15)+15}" />`
+      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(15)}" y1="${base-getDelta(15)-15}" x2="${base-getDelta(15)-15}" y2="${base+getDelta(15)}" stroke="${color}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(15)+15}" y1="${base-getDelta(15)}" x2="${base-getDelta(15)}" y2="${base+getDelta(15)+15}" stroke="${color}" />`
       break;
     case 3:
-      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(0)}" y1="${base-getDelta(0)}" x2="${base-getDelta(0)}" y2="${base+getDelta(0)}" />` + '\n' +
-      `<line class="agent-stone-stripe" x1="${base+getDelta(20)}" y1="${base-getDelta(20)-20}" x2="${base-getDelta(20)-20}" y2="${base+getDelta(20)}" />` + '\n' +
-      `<line class="agent-stone-stripe" x1="${base+getDelta(20)+20}" y1="${base-getDelta(20)}" x2="${base-getDelta(20)}" y2="${base+getDelta(20)+20}" />`
+      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(0)}" y1="${base-getDelta(0)}" x2="${base-getDelta(0)}" y2="${base+getDelta(0)}" stroke="${color}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(20)}" y1="${base-getDelta(20)-20}" x2="${base-getDelta(20)-20}" y2="${base+getDelta(20)}" stroke="${color}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(20)+20}" y1="${base-getDelta(20)}" x2="${base-getDelta(20)}" y2="${base+getDelta(20)+20}" stroke="${color}" />`
       break;
     case 4:
-      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(8)}" y1="${base-getDelta(8)-8}" x2="${base-getDelta(8)-8}" y2="${base+getDelta(8)}" />` + '\n' +
-      `<line class="agent-stone-stripe" x1="${base+getDelta(8)+8}" y1="${base-getDelta(8)}" x2="${base-getDelta(8)}" y2="${base+getDelta(8)+8}" />` + '\n' +
-      `<line class="agent-stone-stripe" x1="${base+getDelta(25)}" y1="${base-getDelta(25)-25}" x2="${base-getDelta(25)-25}" y2="${base+getDelta(25)}" />` + '\n' +
-      `<line class="agent-stone-stripe" x1="${base+getDelta(25)+25}" y1="${base-getDelta(25)}" x2="${base-getDelta(25)}" y2="${base+getDelta(25)+25}" />`
+      stripes = `<line class="agent-stone-stripe" x1="${base+getDelta(8)}" y1="${base-getDelta(8)-8}" x2="${base-getDelta(8)-8}" y2="${base+getDelta(8)}" stroke="${color}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(8)+8}" y1="${base-getDelta(8)}" x2="${base-getDelta(8)}" y2="${base+getDelta(8)+8}" stroke="${color}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(25)}" y1="${base-getDelta(25)-25}" x2="${base-getDelta(25)-25}" y2="${base+getDelta(25)}" stroke="${color}" />` + '\n' +
+      `<line class="agent-stone-stripe" x1="${base+getDelta(25)+25}" y1="${base-getDelta(25)}" x2="${base-getDelta(25)}" y2="${base+getDelta(25)+25}" stroke="${color}" />`
       break;
   }
   agentStoneSvg.innerHTML = circleSvg + stripes
   agentDiv.append(agentStoneSvg)
   return agentDiv
 }
-function createBlocks(id, stoneOpts) {
+function createBlocks(id, stoneOpts, isInit = true) {
   let div = createCustomElement("div", "recipient-stone-div", `${id}-blocks-all`);
-  let length = stoneOpts.recipient % 10
-  let max =  (stoneOpts.task_phase=='gen')? maxBlocks: stoneOpts.result % 10
+  let length = isInit? stoneOpts.recipient % 10 : stoneOpts.result % 10
+  let max =  (stoneOpts.phase=='gen')? maxBlocks: stoneOpts.result % 10
   for(let i = 0; i < max; i++ ) {
     let block = createCustomElement("div", "recipient-block", `${id}-block-${i}`)
-    block.style.opacity = (i < length)? 1 : (stoneOpts.task_phase=='gen')? blockOpDecay(i, length) : 0
+    block.style.opacity = (i < length)? 1 : (stoneOpts.phase=='gen')? blockOpDecay(i, length) : 0
     div.append(block)
   }
   return(div);
 }
-function createGenStones(config, parentDiv) {
-  let spaceDiv = createCustomElement("div", "display-main-space", `gen${config.trial}-display-space-div`)
-  let agentDiv = createCustomElement("div", "display-main-agent", `gen${config.trial}-display-agent-div`)
-  let recipientDiv = createCustomElement("div", "display-main-recipient", `gen${config.trial}-display-recipient-div`)
+function createGenStones(config, parentDiv, genDivPrefix) {
+  let spaceDiv = createCustomElement("div", "display-main-space", `${genDivPrefix}-${config.trial}-display-space-div`)
+  let agentDiv = createCustomElement("div", "display-main-agent", `${genDivPrefix}-${config.trial}-display-agent-div`)
+  let recipientDiv = createCustomElement("div", "display-main-recipient", `${genDivPrefix}-${config.trial}-display-recipient-div`)
 
-  agentDiv.append(createAgentStone(`gen${config.trial}-agent`, config.agent));
-  recipientDiv.append(createBlocks(`gen${config.trial}-recipient`, config));
+  agentDiv.append(createAgentStone(`${genDivPrefix}-${config.trial}-agent`, config.agent, config.color));
+  recipientDiv.append(createBlocks(`${genDivPrefix}-${config.trial}-recipient`, config));
 
   parentDiv.append(spaceDiv)
   parentDiv.append(agentDiv)
@@ -131,9 +169,9 @@ function createGenStones(config, parentDiv) {
 function blockOpDecay(index, base) {
   return (index > base + 1)? 0: 0.1 - 0.001*(index - base)
 }
-function genBlocksEffects(config, genClicked) {
+function genBlocksEffects(config, genDivPrefix, genClicked) {
   for(let i = 0; i < maxBlocks; i++ ) {
-    let idPrefix = `gen${config.trial}-recipient-block-`
+    let idPrefix = `${genDivPrefix}-${config.trial}-recipient-block-`
     let base = config.recipient % 10
     let blockDiv = document.getElementById(`${idPrefix}${i}`)
     blockDiv.onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i, base)
@@ -157,27 +195,26 @@ function genBlocksEffects(config, genClicked) {
     }
   }
 }
-function handleGenSelection(config) {
-  let blocksDiv = document.getElementById(`gen${config.trial}-recipient-blocks-all`)
-  let resetBtn = document.getElementById(`task-gen-reset-btn-${config.trial}`)
-  let confirmBtn = document.getElementById(`task-gen-confirm-btn-${config.trial}`)
+function handleGenSelection(config,genDivPrefix) {
+  let blocksDiv = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-blocks-all`)
+  let resetBtn = document.getElementById(`${genDivPrefix}-reset-btn-${config.trial}`)
+  let confirmBtn = document.getElementById(`${genDivPrefix}-confirm-btn-${config.trial}`)
   blocksDiv.onclick = () => {
     resetBtn.disabled = false
     confirmBtn.disabled = false
   }
 }
-function getCurrentSelection(config) {
-  let blocksDiv = document.getElementById(`gen${config.trial}-recipient-blocks-all`)
+function getCurrentSelection(config, genDivPrefix) {
   let blockOps = []
   for(let i = 0; i < maxBlocks; i++ ) {
-    blockOps.push(document.getElementById(`gen${config.trial}-recipient-block-${i}`).style.opacity)
+    blockOps.push(document.getElementById(`${genDivPrefix}-${config.trial}-recipient-block-${i}`).style.opacity)
   }
   return(findAllIndex('1',blockOps).length)
 }
-function disableBlocks(config) {
-  document.getElementById(`gen${config.trial}-recipient-blocks-all`).onclick = null
+function disableBlocks(config, genDivPrefix) {
+  document.getElementById(`${genDivPrefix}-${config.trial}-recipient-blocks-all`).onclick = null
   for(let i = 0; i < maxBlocks; i++ ) {
-    let blockDiv = document.getElementById(`gen${config.trial}-recipient-block-${i}`)
+    let blockDiv = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-block-${i}`)
     blockDiv.onmousemove = () => null
     blockDiv.onmouseout = () => null
     blockDiv.onclick = () => null
@@ -197,13 +234,13 @@ function highlightBlocks(idPrefix, i, base) {
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
   noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), i))
 }
-function resetGenBlock(config, genClicked) {
+function resetGenBlock(config, genDivPrefix, genClicked) {
   let length = config.recipient % 10
   for(let i = 0; i < maxBlocks; i++ ) {
-    let block = document.getElementById(`gen${config.trial}-recipient-block-${i}`)
+    let block = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-block-${i}`)
     block.style.opacity = (i < length)? 1 : blockOpDecay(i, length)
   }
-  genBlocksEffects(config, genClicked)
+  genBlocksEffects(config, genDivPrefix, genClicked)
 }
 function createPolygon(className, id, sides, scale) {
   let polygon = createCustomElement("polygon", className, id);
@@ -240,24 +277,30 @@ function clearElement (id) {
   let clear = document.getElementById(id);
   clear.remove();
 }
-function playEffects (config, clicked=0) {
-  const getCurrentLocation = (id) => {
-    let rect = {top: 0, bottom: 0, left: 0, right: 0};
-    const pos = document.getElementById(id).getBoundingClientRect();
-    rect.top = pos.top;
-    rect.bottom = pos.bottom;
-    rect.left = pos.left;
-    rect.right = pos.right;
-    return rect;
+function clearInitStones(learnDivPrefix, config) {
+  clearElement(`${learnDivPrefix}-displaymainspace-${config.trial}`)
+  clearElement(`${learnDivPrefix}-displaymainagent-${config.trial}`)
+  clearElement(`${learnDivPrefix}-displaymainrecipient-${config.trial}`)
+}
+function getCurrentLocation (id) {
+  let rect = {top: 0, bottom: 0, left: 0, right: 0};
+  const pos = document.getElementById(id).getBoundingClientRect();
+  rect.top = pos.top;
+  rect.bottom = pos.bottom;
+  rect.left = pos.left;
+  rect.right = pos.right;
+  return rect;
+}
+
+function playEffects (config, learnDivPrefix, clicked=0) {
+
+  if (!(document.body.contains(document.getElementById(`${learnDivPrefix}-${config.trial}-agent-div`)))) {
+    console.log('???')
   }
 
-  if (!(document.body.contains(document.getElementById(`learn${config.trial}-agent-div`)))) {
-    createStones(config)
-  }
-
-  const agentStone = document.getElementById(`learn${config.trial}-agent-div`);
-  const startPos = getCurrentLocation(`learn${config.trial}-agent`).right;
-  const endPos = getCurrentLocation(`learn${config.trial}-recipient-blocks-all`).left;
+  const agentStone = document.getElementById(`${learnDivPrefix}-${config.trial}-agent-div`);
+  const startPos = getCurrentLocation(`${learnDivPrefix}-${config.trial}-agent`).right;
+  const endPos = getCurrentLocation(`${learnDivPrefix}-${config.trial}-recipient-blocks-all`).left;
 
   const delta = Math.round(endPos - startPos) + 8;
   (delta > 0) && (agentStone.style.left = `${delta}px`);
@@ -265,7 +308,7 @@ function playEffects (config, clicked=0) {
   let initLen = config.recipient % 10
   let targetLen = parseInt(config.result) % 10
   let agentStripe = Math.floor(parseInt(config.agent) % Math.pow(10,2) / Math.pow(10,1))
-  let hist = document.getElementById(`task-training-displayhist-${config.trial}`)
+  let hist = document.getElementById(`${learnDivPrefix}-displayhist-${config.trial}`)
 
   if (agentStripe == 1) {
     setTimeout(()=> {
@@ -276,7 +319,7 @@ function playEffects (config, clicked=0) {
   } else {
     setTimeout(() => {
       for (let i = initLen; i < targetLen; i++ ) {
-        fadeIn(document.getElementById(`learn${config.trial}-recipient-block-${i}`))
+        fadeIn(document.getElementById(`${learnDivPrefix}-${config.trial}-recipient-block-${i}`))
         if (clicked == 0) {
           setTimeout(()=> {
             hist.style.opacity = 0
@@ -309,20 +352,20 @@ function hide(id) {
   let div = document.getElementById(id);
   div.style.display = "none";
 }
-function createPretrainings(parentDiv) {
-  for(let i = 0; i < 3; i++ ) {
-    let obsId = i + 1
-    let div = createCustomElement('div', 'detect-div', `pretrain-detect-div-${obsId}`)
-    let agent = createCustomElement('div', 'detect-div-agent', `pretrain-detect-div-agent-${obsId}`)
-    agent.append(createAgentStone(`pretrain-detect-agent-${obsId}`, (i+3)*10+1))
-    let power = createCustomElement('div', 'detect-div-power', `pretrain-detect-div-power-${obsId}`)
-    power.innerHTML = `<p>${'&#9733;'.repeat(i+1)}</p>`
-    div.append(agent)
-    div.append(power)
-    parentDiv.append(div)
-  }
-  return parentDiv
-}
+// function createPretrainings(parentDiv) {
+//   for(let i = 0; i < 3; i++ ) {
+//     let obsId = i + 1
+//     let div = createCustomElement('div', 'detect-div', `pretrain-detect-div-${obsId}`)
+//     let agent = createCustomElement('div', 'detect-div-agent', `pretrain-detect-div-agent-${obsId}`)
+//     agent.append(createAgentStone(`pretrain-detect-agent-${obsId}`, (i+3)*10+1))
+//     let power = createCustomElement('div', 'detect-div-power', `pretrain-detect-div-power-${obsId}`)
+//     power.innerHTML = `<p>${'&#9733;'.repeat(i+1)}</p>`
+//     div.append(agent)
+//     div.append(power)
+//     parentDiv.append(div)
+//   }
+//   return parentDiv
+// }
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -357,7 +400,7 @@ function findAllIndex(element, array) {
 }
 
 /** Data functions */
-function fmtConfig(dataArr, batch, phase) {
+function fmtConfig(dataArr, batch, phase, agentColor = 'red') {
   let fmtted = []
   dataArr.forEach((data, idx) => {
     dd = {}
@@ -368,17 +411,19 @@ function fmtConfig(dataArr, batch, phase) {
     dd['agent'] = data['agent']
     dd['recipient'] = data['recipient']
     dd['result'] = (phase==='gen')? '': data['result']
+    dd['color'] = agentColor
     fmtted.push(dd)
   })
   return fmtted
 }
-function prepSubjectData (configsArr) {
+function prepTrialData (configsArr) {
   let trialData = {
     "batch": [],
     "phase": [],
     "trial": [],
     "id": [],
     "agent": [],
+    "agent-color": [],
     "recipient": [],
     "result": [],
   }
@@ -388,6 +433,7 @@ function prepSubjectData (configsArr) {
     trialData['trial'].push(conf['trial']);
     trialData['id'].push(conf['id']);
     trialData['agent'].push(conf['agent']);
+    trialData['agent-color'].push(conf['color']);
     trialData['recipient'].push(conf['recipient']);
     trialData['result'].push(conf['result']);
   })
@@ -395,3 +441,98 @@ function prepSubjectData (configsArr) {
 }
 
 /** Page functions */
+function createLearnTask(learnDivPrefix, learnConfig) {
+  let trialId = learnConfig.trial;
+  let display = (mode==='dev'|trialId===1)? 'flex': 'none';
+
+  let box = createCustomElement("div", "box", `${learnDivPrefix}-box-${trialId}`);
+  let taskBox = createCustomElement("div", "task-box", `${learnDivPrefix}-taskbox-${trialId}`);
+  let taskNum = createText('h2', trialId);
+  taskBox.append(taskNum);
+
+  let displayBox = createCustomElement("div", "display-box", `${learnDivPrefix}-displaybox-${trialId}`);
+  let displayMain = createCustomElement("div", "display-main", `${learnDivPrefix}-displaymain-${trialId}`);
+  displayMain = createInitStones(learnConfig, displayMain, learnDivPrefix);
+
+  let displayHist = createCustomElement("div", "display-hist", `${learnDivPrefix}-displayhist-${trialId}`);
+  displayHist = createInitHistory(learnConfig, displayHist, learnDivPrefix)
+  displayHist.style.opacity = 0
+  displayBox.append(displayHist)
+  displayBox.append(displayMain)
+
+  const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
+  buttonGroup.append(createBtn(`${learnDivPrefix}-test-btn-${trialId}`, "Test", true));
+  buttonGroup.append(createBtn(`${learnDivPrefix}-next-btn-${trialId}`, "Next", false));
+  taskBox.append(displayBox);
+
+  // taskBox.append(buttonGroup);
+  box.append(taskBox);
+  box.append(buttonGroup)
+  box.style.display = display;
+
+  return box
+}
+function createInputForm(formPrefix) {
+  let box = createCustomElement("div", "box", `${formPrefix}-box`);
+  box.innerHTML = `
+          <div class="display-box" id="${formPrefix}-display-box">
+            <form class="input-form" id="${formPrefix}-input-form">
+              <p>
+                <b>What is your best guess about how these mysterious stones work?</b>
+                (Please refer to stones as <i>active</i> and <i>inactive</i>,
+                and be specific about <i>what properties you think matter or do not matter for the effects,
+                and how they do so</i>.)
+                <br />
+              </p>
+              <textarea name="${formPrefix}_input" id="${formPrefix}_input" placeholder="Type here"></textarea>
+              <p class="incentive">Remember there is a $0.50 bonus if you guess correctly, and nonsense answers will result in a zero bonus or hit rejection.</p>
+              <p>How certain are you?
+                <select name="${formPrefix}_certainty" id="${formPrefix}_certainty" class="input-rule">
+                  <option value="--" SELECTED>
+                    <option value="10">10 - Very certain</option>
+                    <option value="9">9</option>
+                    <option value="8">8</option>
+                    <option value="7">7</option>
+                    <option value="6">6</option>
+                    <option value="5">5 - Moderately</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                    <option value="0">0 - Not sure at all</option>
+                </select>
+              </p>
+            </form>
+          </div>
+          <div class="button-group-vc" id="${formPrefix}-button-group-vc">
+            <button id="${formPrefix}-input-submit-btn" disabled=true>OK</button>
+          </div>`
+  return box
+}
+function createGenTask(genDivPrefix, genConfigs) {
+  let trialId = genConfigs.trial
+  let display = (mode==='dev')? 'flex': 'none';
+
+  let box = createCustomElement("div", "box", `${genDivPrefix}-box-${trialId}`);
+
+  let taskBox = createCustomElement("div", "task-box", `${genDivPrefix}-taskbox-${trialId}`);
+  let taskNum = createText('h2', `${trialId}`);
+  taskBox.append(taskNum);
+
+  let displayBox = createCustomElement("div", "display-box", `${genDivPrefix}-displaybox-${trialId}`);
+  let displayMain = createCustomElement("div", "display-main", `${genDivPrefix}-displaymain-${trialId}`);
+  displayMain = createGenStones(genConfigs, displayMain, genDivPrefix);
+  displayBox.append(displayMain)
+
+  const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
+  buttonGroup.append(createBtn(`${genDivPrefix}-reset-btn-${trialId}`, "Reset", false));
+  buttonGroup.append(createBtn(`${genDivPrefix}-confirm-btn-${trialId}`, "Confirm", false));
+
+  taskBox.append(displayBox);
+  // taskBox.append(buttonGroup);
+  box.append(taskBox);
+  box.append(buttonGroup);
+  box.style.display = display
+
+  return box
+}

@@ -74,9 +74,13 @@ button {
   width: 10%;
   height: 90%;
 }
-.display-main-agent {
-  width: 25%;
+.display-main-agent, .display-main-agent-after {
+  width: 40%;
   height: 90%;
+}
+.display-main-agent-after {
+  display: flex;
+  justify-content: flex-end;
 }
 .display-main-recipient {
   width: 60%;
@@ -90,6 +94,12 @@ button {
   justify-content: flex-start;
   align-items: center;
   background-color: #e0e0e0;
+}
+.display-after {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .task-box {
@@ -148,7 +158,7 @@ button {
 }
 
 .agent-stone-stripe {
-  stroke: red;
+  /* stroke: red; */
   stroke-width:6;
 }
 
@@ -209,4 +219,18 @@ button {
 }
 .input-form p, select {
   font-size: 20px;
+}
+
+.summary-div {
+  width: 50%;
+}
+.summary-box {
+  width: 95%;
+  border: 3px solid #e0e0e0;
+  margin: 8px;
+}
+
+#task-train-c {
+  display: flex;
+  flex-direction: row;
 }
