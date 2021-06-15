@@ -1,7 +1,10 @@
+
+/** Ad hoc setups */
 const defaultStone = { 'borderWidth': '8px', 'mar': 5, 'len': 60 };
 const smallStone = { 'borderWidth': '3px', 'mar': 3, 'len': 20 };
 const maxBlocks = 12
 
+/** Basic helper functions */
 function createCustomElement (type = 'div', className, id) {
   let element = (["svg", "polygon"].indexOf(type) < 0)?
     document.createElement(type):
@@ -32,7 +35,9 @@ function createBtn (btnId, text = "Button", on = true, className = "task-button"
   (text.length > 0) ? btn.append(document.createTextNode(text)): null;
   return(btn)
 }
-function createInitStones(config, parentDiv) {
+
+/** Task functions */
+function createInitStones(config, parentDiv, learnDivPrefix) {
   let spaceDiv = createCustomElement("div", "display-main-space", `${learnDivPrefix}-displaymainspace-${config.trial}`)
   let agentDiv = createCustomElement("div", "display-main-agent", `${learnDivPrefix}-displaymainagent-${config.trial}`)
   let recipientDiv = createCustomElement("div", "display-main-recipient", `${learnDivPrefix}-displaymainrecipient-${config.trial}`)
@@ -43,7 +48,7 @@ function createInitStones(config, parentDiv) {
   parentDiv.append(recipientDiv)
   return(parentDiv);
 }
-function createInitHistory(config, parentDiv) {
+function createInitHistory(config, parentDiv, learnDivPrefix) {
   let spaceDiv = createCustomElement("div", "display-main-space", `${learnDivPrefix}-displaymainspace-hist-${config.trial}`)
   let agentDiv = createCustomElement("div", "display-main-agent", `${learnDivPrefix}-displaymainagent-hist-${config.trial}`)
   let recipientDiv = createCustomElement("div", "display-main-recipient", `${learnDivPrefix}-displaymainrecipient-hist-${config.trial}`)
@@ -126,7 +131,6 @@ function createGenStones(config, parentDiv) {
 function blockOpDecay(index, base) {
   return (index > base + 1)? 0: 0.1 - 0.001*(index - base)
 }
-
 function genBlocksEffects(config, genClicked) {
   for(let i = 0; i < maxBlocks; i++ ) {
     let idPrefix = `gen${config.trial}-recipient-block-`
@@ -201,7 +205,6 @@ function resetGenBlock(config, genClicked) {
   }
   genBlocksEffects(config, genClicked)
 }
-
 function createPolygon(className, id, sides, scale) {
   let polygon = createCustomElement("polygon", className, id);
 
@@ -286,8 +289,6 @@ function playEffects (config, clicked=0) {
   }
 
 }
-
-
 function fadeIn(element) {
   let op = 0.1;
   let timer = setInterval(() => {
@@ -329,7 +330,6 @@ function shuffleArray(array) {
   }
   return array
 }
-
 function disableFormInputs (formId) {
   const form = document.getElementById(formId);
   const inputs = form.elements;
@@ -346,7 +346,6 @@ function isFilled (formID) {
   });
   return (!notFilled)
 }
-
 function findAllIndex(element, array) {
   let indices = [];
   let idx = array.indexOf(element);
@@ -356,3 +355,43 @@ function findAllIndex(element, array) {
   }
   return(indices);
 }
+
+/** Data functions */
+function fmtConfig(dataArr, batch, phase) {
+  let fmtted = []
+  dataArr.forEach((data, idx) => {
+    dd = {}
+    dd['id'] =`t${data['trial']}`
+    dd['trial'] = idx+1
+    dd['batch'] = batch
+    dd['phase'] = phase
+    dd['agent'] = data['agent']
+    dd['recipient'] = data['recipient']
+    dd['result'] = (phase==='gen')? '': data['result']
+    fmtted.push(dd)
+  })
+  return fmtted
+}
+function prepSubjectData (configsArr) {
+  let trialData = {
+    "batch": [],
+    "phase": [],
+    "trial": [],
+    "id": [],
+    "agent": [],
+    "recipient": [],
+    "result": [],
+  }
+  configsArr.forEach(conf => {
+    trialData['batch'].push(conf['batch']);
+    trialData['phase'].push(conf['phase']);
+    trialData['trial'].push(conf['trial']);
+    trialData['id'].push(conf['id']);
+    trialData['agent'].push(conf['agent']);
+    trialData['recipient'].push(conf['recipient']);
+    trialData['result'].push(conf['result']);
+  })
+  return trialData
+}
+
+/** Page functions */
