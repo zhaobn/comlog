@@ -1,9 +1,14 @@
 
-const mode = 'dev' // '' for production, 'dev' for development, 'flask' for flask-app
+const mode = 'test' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const cond = 'hard'
-console.log(cond)
+console.log(`${mode} mode; condition ${cond}.`);
+
+
+const start_time = Date.now();
+let start_task_time = 0;
+
 
 /** Prep data */
 const exp_conds = {
@@ -93,8 +98,8 @@ for(let i = 0; i < aliceLearn.length; i++ ) {
   }
    nextBtn.onclick = () => {
      nextBtn.disabled = true;
+     playBtn.disabled = true;
      let nextDiv = (i === aliceLearn.length-1)? taskInputA: `${taskTrainA}-box-${i+2}`;
-     (mode !== 'dev')? hide(`box-${trialId}`): null;
      showNext(nextDiv);
    }
 }
@@ -103,7 +108,7 @@ for(let i = 0; i < aliceLearn.length; i++ ) {
 (mode === 'dev')? document.getElementById(taskInputA).style.display = 'flex': null;
 document.getElementById(taskInputA).append(createInputForm(taskInputA))
 
-let aliceInputForm = document.getElementById(`${taskInputA}-input-form`)
+const aliceInputForm = document.getElementById(`${taskInputA}-input-form`)
 let aliceOkBtn = document.getElementById(`${taskInputA}-input-submit-btn`)
 aliceInputForm.onchange = () => isFilled(`${taskInputA}-input-form`)? aliceOkBtn.disabled = false: null;
 aliceOkBtn.onclick = () => {
@@ -113,12 +118,13 @@ aliceOkBtn.onclick = () => {
   disableFormInputs(`${taskInputA}-input-form`);
   console.log(subjectData)
   if (mode !== 'dev') {
-    // hide("core-learn-form-div");
-    showNext("task-gen-box-1")
+    hide('task-input-a-button-group-vc')
+    showNext(taskGenA, 'block')
   }
 }
 
 // Generate gen tasks
+// (mode === 'dev')? document.getElementById(taskGenA).style.display = 'block': null;
 for(let i = 0; i < aliceGen.length; i++ ) {
   let config = aliceGen[i]
   // console.log(config)
@@ -140,9 +146,15 @@ for(let i = 0; i < aliceGen.length; i++ ) {
     confirmBtn.disabled = true;
     trialData.result[aliceLearn.length+i] = '0'+getCurrentSelection(config, taskGenA)
     console.log(trialData)
-    if (mode!=='dev') {
-      const nextDiv = (i === aliceGen.length-1)? '': `${taskGenA}-box-${i+2}`;
-      showNext(nextDiv);
+    if (i < aliceGen.length-1) {
+      hide(`${taskGenA}-box-${i+1}`)
+      showNext(`${taskGenA}-box-${i+2}`);
+    } else {
+      hide(taskCoverA)
+      hide(taskTrainA)
+      hide(taskInputA)
+      hide(taskGenA)
+      showNext('task-bob', 'block');
     }
   }
 }
@@ -173,12 +185,12 @@ for(let i = 0; i < bobLearn.length; i++ ) {
     }, 2000);
     bobLearnClicked[i] += 1;
   }
-   nextBtn.onclick = () => {
-     nextBtn.disabled = true;
-     let nextDiv = (i === bobLearn.length-1)? taskInputB: `${taskTrainB}-box-${i+2}`;
-     (mode !== 'dev')? hide(`box-${trialId}`): null;
-     showNext(nextDiv);
-   }
+  nextBtn.onclick = () => {
+    nextBtn.disabled = true;
+    playBtn.disabled = true;
+    let nextDiv = (i === bobLearn.length-1)? taskInputB: `${taskTrainB}-box-${i+2}`;
+    showNext(nextDiv);
+  }
 }
 
 // Free response
@@ -195,10 +207,13 @@ bobOkBtn.onclick = () => {
   disableFormInputs(`${taskInputB}-input-form`);
   console.log(subjectData)
   if (mode !== 'dev') {
-    // hide("core-learn-form-div");
-    showNext("task-gen-box-1")
+    hide('task-input-b-button-group-vc')
+    showNext(taskGenB, 'block')
   }
 }
+
+
+
 
 // Generate gen tasks
 for(let i = 0; i < bobGen.length; i++ ) {
@@ -222,10 +237,15 @@ for(let i = 0; i < bobGen.length; i++ ) {
     confirmBtn.disabled = true;
     let prevs = [ aliceLearn.length, aliceGen,length, bobLearn.length ].reduce((a, b) => a + b, 0)
     trialData.result[prevs+i] = '0'+getCurrentSelection(config, taskGenC)
-    console.log(trialData)
-    if (mode!=='dev') {
-      const nextDiv = (i === bobGen.length-1)? '': `${taskGenB}-box-${i+2}`;
-      showNext(nextDiv);
+    if (i < aliceGen.length-1) {
+      hide(`${taskGenB}-box-${i+1}`);
+      showNext(`${taskGenB}-box-${i+2}`);
+    } else {
+      hide(taskCoverB)
+      hide(taskTrainB)
+      hide(taskInputB)
+      hide(taskGenB)
+      showNext('task-comp', 'block');
     }
   }
 }
@@ -261,8 +281,8 @@ compOkBtn.onclick = () => {
   disableFormInputs(`${taskInputC}-input-form`);
   console.log(subjectData)
   if (mode !== 'dev') {
-    // hide("core-learn-form-div");
-    showNext("task-gen-box-1")
+    hide('task-input-c-button-group-vc')
+    showNext(taskGenC, 'block')
   }
 }
 
@@ -271,6 +291,10 @@ for(let i = 0; i < genConfigs.length; i++ ) {
   let config = genConfigs[i]
   // console.log(config)
   document.getElementById(taskGenC).append(createGenTask(taskGenC, config, genConfigs.length))
+  if (mode !== 'dev' && i > 0) {
+    document.getElementById(`${taskGenC}-box-${i+1}`).style.display = 'none'
+  }
+
 
   /** Effects and button functionalities */
   genBlocksEffects(config, taskGenC, genClicked)
@@ -289,9 +313,151 @@ for(let i = 0; i < genConfigs.length; i++ ) {
     let prevs = [ aliceLearn.length, aliceGen,length, bobLearn.length, bobGen.length ].reduce((a, b) => a + b, 0)
     trialData.result[prevs+i] = '0'+getCurrentSelection(config, taskGenC)
     console.log(trialData)
-    if (mode!=='dev') {
-      const nextDiv = (i === bobGen.length-1)? '': `${taskGenC}-box-${i+2}`;
-      showNext(nextDiv);
+    hide(`${taskGenC}-box-${i+1}`)
+    if (i < genConfigs.length-1) {
+      showNext(`${taskGenC}-box-${i+2}`);
+    } else {
+      hide(taskCoverC)
+      hide(taskTrainC)
+      hide(taskInputC)
+      hide(taskGenC)
+      showNext('debrief', 'block');
     }
   }
+}
+
+
+// Instruction buttons
+const descNextBtn = document.getElementById('desc-next-btn')
+descNextBtn.onclick = () => {
+  hide('instruction')
+  showNext('comprehension', 'block')
+}
+
+// Quiz
+const checkBtn = document.getElementById('check-btn');
+const checks = [ 'check1', 'check2', 'check3', 'check4', 'check5', 'check6' ];
+const answers = [ true, false, true, false, true, true ];
+
+const passBtn = document.getElementById('pass-btn');
+const retryBtn = document.getElementById('retry-btn');
+
+checkBtn.onclick = () => {
+  checkBtn.style.display = 'none';
+  let inputs = [];
+  checks.map(check => {
+    const vals = document.getElementsByName(check);
+    inputs.push(vals[0].checked);
+  });
+  const pass = (inputs.join('') === answers.join(''));
+  if (pass) {
+    showNext('pass', 'block')
+  } else {
+    showNext('retry', 'block')
+  }
+}
+
+passBtn.onclick = () => {
+  start_task_time = Date.now();
+  hide("pass");
+  hide("comprehension");
+  showNext("task", "block");
+};
+retryBtn.onclick = () => {
+  hide("retry");
+  hide("comprehension");
+  showNext("instruction", "block")
+  checkBtn.style.display = 'flex';
+};
+
+document.getElementById('prequiz').onchange = () => compIsFilled() ? checkBtn.disabled = false : null;
+
+
+// Bebrief
+const doneBtn = document.getElementById('done-btn');
+const debriefForm = document.getElementById('postquiz');
+
+debriefForm.onchange = () => {
+  isFilled('postquiz')? doneBtn.disabled = false: null;
+}
+doneBtn.onclick = () => {
+  let inputs = debriefForm.elements;
+  Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
+
+  const end_time = new Date();
+  let token = generateToken(8);
+
+  let clientData = {};
+  clientData.subject = subjectData;
+  clientData.subject.condition = cond;
+  clientData.subject.date = formatDates(end_time, 'date');
+  clientData.subject.time = formatDates(end_time, 'time');
+  clientData.subject.instructions_duration = start_task_time - start_time,
+  clientData.subject.task_duration = end_time - start_task_time,
+  clientData.subject.token = token;
+  clientData.trials = trialData;
+
+  // /** Give feedback */
+  // const truths = genConfigs.map(c => c[4])
+  // const predicted = trialData.result.slice(learnConfigs.length,);
+  // let correct = 0;
+  // truths.forEach((t, i) => (t===predicted[i])? correct+=1: null);
+  // clientData.subject.correct = correct;
+
+  if (mode === 'flask') {
+    fetch(root_string, {
+        method: 'POST',
+        body: JSON.stringify(clientData),
+    })
+    .then(() => showCompletion(token))
+    .catch((error) => console.log(error));
+  } else {
+    showCompletion(token);
+    console.log(clientData);
+    // download(JSON.stringify(clientData), 'data.txt', '"text/csv"');
+  }
+};
+
+
+
+// Dev buttons
+const devSkipIntro = document.getElementById('dev-skip-intro')
+devSkipIntro.style.display = (mode==='dev'|mode==='test')? 'block': 'none'
+devSkipIntro.onclick = () => {
+  hide('instruction')
+  hide('comprehension')
+  hide('pass')
+  hide('retry')
+  showNext('task-alice', 'block')
+}
+
+const devSkipAlice = document.getElementById('dev-skip-alice')
+devSkipAlice.style.display = (mode==='dev'|mode==='test')? 'block': 'none'
+devSkipAlice.onclick = () => {
+  hide(taskCoverA)
+  hide(taskTrainA)
+  hide(taskInputA)
+  hide(taskGenA)
+  showNext('task-bob', 'block')
+}
+
+const devSkipBob = document.getElementById('dev-skip-bob')
+devSkipBob.style.display = (mode==='dev'|mode==='test')? 'block': 'none'
+devSkipBob.onclick = () => {
+  hide(taskCoverB)
+  hide(taskTrainB)
+  hide(taskInputB)
+  hide(taskGenB)
+  showNext('task-comp', 'block')
+}
+
+
+const devSkipComp = document.getElementById('dev-skip-comp')
+devSkipComp.style.display = (mode==='dev'|mode==='test')? 'block': 'none'
+devSkipComp.onclick = () => {
+  hide(taskCoverC)
+  hide(taskTrainC)
+  hide(taskInputC)
+  hide(taskGenC)
+  showNext('debrief', 'block')
 }

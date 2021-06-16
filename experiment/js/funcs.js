@@ -419,7 +419,52 @@ function findAllIndex(element, array) {
   }
   return(indices);
 }
-
+function compIsFilled () {
+  let radios = document.getElementsByTagName('input');
+  let checked = 0;
+  for (let i = 0; i < radios.length; i++) {
+      checked += radios[i].checked;
+  }
+  return (checked > checks.length-1)
+}
+function showPostCheckPage (isPass) {
+  const pageDiv = isPass? 'pass' : 'retry';
+  document.getElementById('check-btn').style.display = 'none';
+  document.getElementById(pageDiv).style.display = 'flex';
+}
+function showCompletion(code, nCorrect) {
+  hide("debrief")
+  showNext("completed")
+  let t = document.createTextNode(code);
+  // let co = createText('p', `Bonus will be paid after manual checks.`)
+  document.getElementById('completion-code').append(t);
+  // document.getElementById('completed').append(co);
+}
+function generateToken (length) {
+  let tokens = '';
+  let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  for (let i = 0; i < length; i ++) {
+      tokens += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return tokens;
+}
+function formatDates (date, option = 'date') {
+  let year = date.getFullYear();
+  let month = String(date.getMonth() + 1).padStart(2, '0');
+  let day = String(date.getDate() + 1).padStart(2, '0');
+  let hour = String(date.getHours()+ 1).padStart(2, '0');
+  let min = String(date.getMinutes() + 1).padStart(2, '0');
+  let sec = String(date.getSeconds() + 1).padStart(2, '0');
+  dateParts = (option === 'date') ? [ year, month, day ] : [ hour, min, sec ];
+  return dateParts.join('_');
+}
+function download(content, fileName, contentType) {
+  var a = document.createElement("a");
+  var file = new Blob([content], {type: contentType});
+  a.href = URL.createObjectURL(file);
+  a.download = fileName;
+  a.click();
+}
 /** Data functions */
 function fmtConfig(dataArr, batch, phase, agentColor = 'red') {
   let fmtted = []
@@ -502,9 +547,8 @@ function createInputForm(formPrefix) {
           <div class="display-box" id="${formPrefix}-display-box">
             <form class="input-form" id="${formPrefix}-input-form">
               <p>
-                <b>What is your best guess about how these mysterious stones work?</b>
-                (Please refer to stones as <i>active</i> and <i>inactive</i>,
-                and be specific about <i>what properties you think matter or do not matter for the effects,
+                <b>What is your best guess about these magic eggs?</b>
+                (Please be specific about <i>what properties you think matter or do not matter for the effects,
                 and how they do so</i>.)
                 <br />
               </p>
@@ -535,7 +579,6 @@ function createInputForm(formPrefix) {
 }
 function createGenTask(genDivPrefix, genConfigs, total = 0) {
   let trialId = genConfigs.trial
-  let display = (mode==='dev')? 'flex': 'none';
 
   let box = createCustomElement("div", "box", `${genDivPrefix}-box-${trialId}`);
   let taskBox = createCustomElement("div", "task-box", `${genDivPrefix}-taskbox-${trialId}`);
@@ -558,7 +601,6 @@ function createGenTask(genDivPrefix, genConfigs, total = 0) {
   // taskBox.append(buttonGroup);
   box.append(taskBox);
   box.append(buttonGroup);
-  box.style.display = display
 
   return box
 }

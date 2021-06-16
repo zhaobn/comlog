@@ -9,104 +9,63 @@
       <h1>Instructions</h1>
       <div id="box-desc-1">
         <div class="frame" >
-          <p>
-            In this task you are playing the role of a space scientist on an astrological field trip.
-            You have just discovered some curious stones with mysterious powers!
-            The stones do not all look the same, and how they look seems to be important for how they interact with one another.
-          </p>
-          <p>The stones discovered so far:</p>
+          <p>Alice and Bob are playing in the field of wonders.</p>
+          <p>Ala! They found some magic eggs, and they are curious to find out what magic power these eggs have.</p>
+          <p>What we know about magic eggs:</p>
           <ul>
-            <li>come in a range of shades:
-              <span style="color: #c9daf8; font-weight: bold;">light</span>,
-              <span style="color: #6d9eeb; font-weight: bold;">medium</span>,
-              <span style="color: #1155cc; font-weight: bold;">dark</span>, to
-              <span style="color: #052e54; font-weight: bold;">very dark</span>;
-            </li>
-            <li>and a variety of shapes:
-              triangular <svg height="20px" width="20px"><polygon fill="#6d9eeb" points="10,1 19,19 1,19"></polygon></svg>,
-              square <svg height="20px" width="20px"><polygon fill="#6d9eeb" points="1,1 1,19 19,19 19,1"></polygon></svg>,
-              pentagon <svg height="20px" width="20px"><polygon fill="#6d9eeb" points="13,20 2,16 2,4 13,0 20,10"></polygon></svg>,
-              hexagon <svg height="20px" width="20px"><polygon fill="#6d9eeb" points="15,19 5,19 0,10 5,1 15,1 20,10"></polygon></svg>,
-              etc.
-            </li>
+            <li>If you let a magic egg touch upon some stuff, the magic egg may cause the properties of the stuff it touched upon to change. </li>
+            <li>Properties of the magic egg indicate what magic power it has.</li>
+            <li>Magic eggs laid by the same hen share the same magic power.</li>
           </ul>
-          <p>
-            Sometimes the stones go into an <b><em>active state</em></b> in which they glow with a strange light
-            <svg height="24px" width="24px"><polygon fill="#6d9eeb" stroke-width="3px" stroke="yellow" points="12,2 22,22 2,22"></polygon></svg>.
-            When an active stone is tapped against an inactive stone, it causes the properties of the inactive stone to change.
-          </p>
-          <p>Any of the mysterious stones can be active or inactive.</p>
-          <p>Your task is to come up with theories about what determines these changes,
-            and make some predictions about how some novel stones will affect one another.
-          </p>
+          <p>In this task, you will first check Alice’s findings, and then Bob’s.</p>
+          <p>For each of them, you will see three magic eggs, and you can click the “test” button to watch the effect a magic egg brings about. You can test as many times as you want.</p>
+          <p>After watching these effects, you will write down your best guess of what the magic power Alice’s magic eggs have.</p>
+          <p>Then, we ask you to make one prediction on a new magic egg from Alice’s collection.</p>
+          <p>You will do the same thing for Bob’s.</p>
+          <p>After that, you will need to make predictions for some brand new magic eggs.</p>
+          <p>Think carefully! You will be paid a $0.5 bonus for each correct guess you write down, and an additional $0.2 bonus for each correct prediction you make. In total, you may get up to a $3.1 bonus on top of your base pay.</p>
+          <p>Also note that your answers will be human checked. Nonsensical or copy pasted responses will result in a zero bonus or outright rejection of the HIT.</p>
         </div>
         <div class='button-group-vc'>
           <button class='big-button' id='desc-next-btn'>Next</button>
+          <button class='big-button' id='dev-skip-intro'>Dev skip</button>
         </div>
       </div>
-      <div id="box-desc-2" >
-        <div class="frame">
-          <p>
-            Your task has three phases:
-            <ol>
-              <li>
-                First you will perform 6 tests in which you hit an active stone against an inactive stone and see what happens.
-                <div id="instruction-demo-display">
-                  <svg height="50px" width="50px"><polygon fill="#c9daf8" stroke-width="8px" stroke="yellow" points="5,5 5,45, 45,45 45,5"></polygon></svg>
-                  <svg height="50px" width="50px"><polygon fill="#6d9eeb" stroke-width="0px" points="5,5 5,45, 45,45 45,5"></polygon></svg>
-                </div>
-                You can hit the "test" button to knock the active stone against the inactive stone and see what happens.
-                You will then see a summary showing what the stones looked like before and after the interaction.
-              </li>
-              <li>Then, you will be asked to write your best guess of how the phenomena works:
-                <b><em>what causal rule (or rules) determine when, whether and how the Active stones change the Inactive stones?</em></b>
-                You will be paid <span style="color:red;font-weight:bold;font-style:italic">$0.50 bonus</span> if you write the correct hidden causal relation.
-              </li>
-              <li>
-                You will then see 16 new pairs of Active and Inactive stones and make predictions about what will happen to the Inactive stone if it is hit by the Active stone.
-                <!-- You can compose your answer by selecting from the provided drop-down menus. A color scale will be presented to help you identify the color shades. -->
-                You will be paid <span style="color:red"><b><em>$0.10 bonus</em></b></span> for each guess that you make correctly (according to the true hidden powers of the stones).
-                While making these predictions, the summaries you saw earlier will still be shown at the top of the page.
-              </li>
-            </ol>
-          </p>
-          <p>You will see how many predictions you get correct, and how much bonus you will be paid after completing the task.</p>
-          <p>Think carefully, your predictions are important for science.
-            <span style="color:red;font-weight:bold;font-style:italic">Also note that your answers will be human checked.  Nonsensical or copy pasted responses will result in a zero bonus, or outright rejection of the HIT.</span></p>
-        </div>
-        <div class='button-group-vc'>
-          <button class='big-button' id='desc-btn'>Next</button>
-        </div>
-      </div></div>
-    <div id="comprehension" class="base" >
-      <h1>Comprehension questions</h1>
+    </div>
+    <div id="comprehension" class="base" style="display: none;">
+      <h1>Check your understanding</h1>
       <div class="frame">
         <form id='prequiz'>
           <ol>
-            <li>Inactive stones stones glow (have a thick border around them)</li>
+            <li>Magic eggs cause the properties of other stuff to change.</li>
             <p>
-              <input type="radio" name="check1">Correct
+              <input type="radio" name="check1">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input type="radio" name="check1">False
             </p>
-            <li>Your goal is to memorise what effect Active stones have on Inactive stones</li>
+            <li>All the magic eggs have the same magic power.</li>
             <p>
-              <input type="radio" name="check2">Correct
+              <input type="radio" name="check2">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input type="radio" name="check2">False
             </p>
-            <li>You will be paid $0.50 bonus for writing the correct causal rule(s).</li>
+            <li>Magic eggs laid by the same hen share the same magic power.</li>
             <p>
-              <input type="radio" name="check3">Correct
+              <input type="radio" name="check3">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input type="radio" name="check3">False
             </p>
-            <li>You will have to make predictions about <i>new</i> pairs of stones</li>
+            <li>There is no indication of what magic power a magic egg has from observing it.</li>
             <p>
-              <input type="radio" name="check4">Correct
+              <input type="radio" name="check4">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input type="radio" name="check4">False
             </p>
-            <li>You will be paid $0.10 bonus for each guess that you make correctly (according to the true hidden powers of the stones).</li>
+            <li>You will be bonused for writing down the correct magic power.</li>
             <p>
-              <input type="radio" name="check5">Correct
+              <input type="radio" name="check5">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input type="radio" name="check5">False
+            </p>
+            <li>You will be bonused for making correct predictions.</li>
+            <p>
+              <input type="radio" name="check6">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              <input type="radio" name="check6">False
             </p>
           </ol>
         </form>
@@ -115,45 +74,55 @@
         <button class='big-button' id='check-btn' disabled>Check</button>
       </div>
     </div>
-    <div id="pass">
+    <div id="pass" style="display: none;">
       <h2>Congratulations! Now proceed to the experiment.</h2>
       <div class='button-group-vc'>
         <button class='big-button' id='pass-btn'>&gt;&gt;</button>
       </div>
     </div>
-    <div id="retry">
+    <div id="retry" style="display: none;">
       <h2>Oooops, please read the instructions carefully and try again.</h2>
       <div class='button-group-vc'>
         <button class='big-button' id='retry-btn'>&lt;&lt;</button>
       </div>
     </div>
     <div id="task" class="base">
-      <div id="task-cover-a" >
-        <h1>Alice</h1>
+      <div id='task-alice' style="display: none;" >
+        <div id="task-cover-a" >
+          <h1>Alice is testing these magic eggs:</h1>
+          <button class='big-button' id='dev-skip-alice'>Skip A</button>
+        </div>
+        <div id="task-train-a"></div>
+        <div id="task-input-a" style="display: none;" ></div>
+        <div id="task-gen-a" style="display: none;" >
+          <h3><b>How will the blocks look like after being touched with this magic egg?</b> (You can compose answer by clicking on the blocks)</h3>
+        </div>
       </div>
-      <div id="task-train-a"></div>
-      <div id="task-input-a"></div>
-      <div id="task-gen-a">
-        <h1>What do you think</h1>
+      <div id="task-bob" style="display: none;" >
+        <div id="task-cover-b">
+          <h1>Bob is testing these magic eggs:</h1>
+          <button class='big-button' id='dev-skip-bob'>Skip B</button>
+        </div>
+        <div id="task-train-b" ></div>
+        <div id="task-input-b" style="display: none;"></div>
+        <div id="task-gen-b" style="display: none;">
+          <h3><b>How will the blocks look like after being touched with this magic egg?</b> (You can compose answer by clicking on the blocks)</h3>
+        </div>
       </div>
-      <div id="task-cover-b">
-        <h1>Bob</h1>
-      </div>
-      <div id="task-train-b"></div>
-      <div id="task-input-b"></div>
-      <div id="task-gen-b">
-        <h1>What do you think</h1>
-      </div>
-      <div id="task-cover-c">
-        <h1>They found that</h1>
-      </div>
-      <div id="task-train-c"></div>
-      <div id="task-input-c"></div>
-      <div id="task-gen-c">
-        <h1>What do you think</h1>
+      <div id="task-comp" style="display: none;" >
+        <div id="task-cover-c">
+          <button class='big-button' id='dev-skip-comp'>Skip C</button>
+          <h3><b>Actually, the magic eggs Alice and Bob found are from the same hen! In other words, all of the magic eggs you tested share the <em>same</em> magic power.</b></h3>
+          <h3>Here is a summary of all the tests you did so far:</h3>
+        </div>
+        <div id="task-train-c"></div>
+        <div id="task-input-c"></div>
+        <div id="task-gen-c" style="display: none;">
+          <h3><b>How will the following blocks look like after being touched with the provided magic egg?</b> (You can compose answer by clicking on the blocks)</h3>
+        </div>
       </div>
     </div>
-    <div id="debrief" class="base" >
+    <div id="debrief" class="base" style="display: none;" >
       <h1>Thank you for your contributions to science</h1>
       <h4>You will be eligible for full payment once you answer the following questions.</h4>
       <h4><b>Note</b>: To continue, please answer <span style="color:red">all questions</span>.</h4>
@@ -215,7 +184,7 @@
         <button class='big-button' id='done-btn' disabled>Done</button>
       </div>
     </div>
-    <div id="completed" class="base" >
+    <div id="completed" class="base" style="display: none;" >
       <div id="code-div">
         <h1>Your completion code is:</h1>
         <h1 id="completion-code"></h1>

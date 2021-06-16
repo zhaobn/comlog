@@ -8,11 +8,14 @@ h2 {
   text-align: center;
   font-size: 20px;
 }
+h3 {
+  font-size: 22px;
+  font-weight: 500;
+}
 button {
   font-size: 18px;
   width: 120px;
 }
-
 .base {
   width:800px;
   margin:0 auto;
@@ -230,7 +233,6 @@ button {
 .input-form p, select {
   font-size: 20px;
 }
-
 .summary-div {
   width: 50%;
 }
@@ -239,7 +241,10 @@ button {
   border: 3px solid #e0e0e0;
   margin: 8px;
 }
-
+.task-gen-desc {
+  display: flex;
+  flex-direction: column;
+}
 #task-train-c {
   display: flex;
   flex-direction: row;
