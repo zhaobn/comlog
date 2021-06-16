@@ -167,7 +167,16 @@ function createGenStones(config, parentDiv, genDivPrefix) {
   return(parentDiv);
 }
 function blockOpDecay(index, base) {
-  return (index > base + 1)? 0: 0.1 - 0.001*(index - base)
+  if ((index === base) && (index < maxBlocks)) {
+    return 0.15
+  } else {
+    if ((index === base+1) && (index < maxBlocks)) {
+      return 0.05
+    } else {
+      return 0
+    }
+  }
+  // return (index > base + 1)? 0: 0.1 - 0.001*(index - base)
 }
 function genBlocksEffects(config, genDivPrefix, genClicked) {
   for(let i = 0; i < maxBlocks; i++ ) {
@@ -223,16 +232,28 @@ function disableBlocks(config, genDivPrefix) {
 function highlightBlocksOnMouseOver(idPrefix, i, base) {
   let baseBlocks = Array.from(Array(base).keys()).map(m => `${idPrefix}${m}`)
   let yesBlocks = Array.from(Array(maxBlocks).keys()).filter(b => (b>=base && b <= i)).map(m => `${idPrefix}${m}`)
-  let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
+  let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i+2).map(m => `${idPrefix}${m}`)
   baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=0.5)
-  noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), i))
+  noBlocks.forEach(b => document.getElementById(b).style.opacity=0)
+  if (i+1 < maxBlocks) {
+    document.getElementById(`${idPrefix}${i+1}`).style.opacity = 0.15
+  }
+  if (i+2 < maxBlocks) {
+    document.getElementById(`${idPrefix}${i+2}`).style.opacity = 0.05
+  }
 }
 function highlightBlocks(idPrefix, i, base) {
   let yesBlocks = Array.from(Array(maxBlocks).keys()).map(m => `${idPrefix}${m}`)
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
-  noBlocks.forEach(b => document.getElementById(b).style.opacity=blockOpDecay(parseInt(b.split('-')[3]), i))
+  noBlocks.forEach(b => document.getElementById(b).style.opacity=0) //blockOpDecay(parseInt(b.split('-')[3]), i))
+  if (i+1 < maxBlocks) {
+    document.getElementById(`${idPrefix}${i+1}`).style.opacity = 0.15
+  }
+  if (i+2 < maxBlocks) {
+    document.getElementById(`${idPrefix}${i+2}`).style.opacity = 0.05
+  }
 }
 function resetGenBlock(config, genDivPrefix, genClicked) {
   let length = config.recipient % 10
@@ -441,14 +462,17 @@ function prepTrialData (configsArr) {
 }
 
 /** Page functions */
-function createLearnTask(learnDivPrefix, learnConfig) {
+function createLearnTask(learnDivPrefix, learnConfig, total=0) {
   let trialId = learnConfig.trial;
   let display = (mode==='dev'|trialId===1)? 'flex': 'none';
 
   let box = createCustomElement("div", "box", `${learnDivPrefix}-box-${trialId}`);
   let taskBox = createCustomElement("div", "task-box", `${learnDivPrefix}-taskbox-${trialId}`);
-  let taskNum = createText('h2', trialId);
-  taskBox.append(taskNum);
+
+  if (total > 1) {
+    let taskNum = createText('h2', `${trialId}/${total}`);
+    taskBox.append(taskNum);
+  }
 
   let displayBox = createCustomElement("div", "display-box", `${learnDivPrefix}-displaybox-${trialId}`);
   let displayMain = createCustomElement("div", "display-main", `${learnDivPrefix}-displaymain-${trialId}`);
@@ -509,15 +533,17 @@ function createInputForm(formPrefix) {
           </div>`
   return box
 }
-function createGenTask(genDivPrefix, genConfigs) {
+function createGenTask(genDivPrefix, genConfigs, total = 0) {
   let trialId = genConfigs.trial
   let display = (mode==='dev')? 'flex': 'none';
 
   let box = createCustomElement("div", "box", `${genDivPrefix}-box-${trialId}`);
-
   let taskBox = createCustomElement("div", "task-box", `${genDivPrefix}-taskbox-${trialId}`);
-  let taskNum = createText('h2', `${trialId}`);
-  taskBox.append(taskNum);
+
+  if (total > 1) {
+    let taskNum = createText('h2', `${trialId}/${total}`);
+    taskBox.append(taskNum);
+  }
 
   let displayBox = createCustomElement("div", "display-box", `${genDivPrefix}-displaybox-${trialId}`);
   let displayMain = createCustomElement("div", "display-main", `${genDivPrefix}-displaymain-${trialId}`);
