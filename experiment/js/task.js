@@ -1,5 +1,5 @@
 
-const mode = 'test' // '', 'dev', 'test', 'flask'
+const mode = '' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const cond = 'hard'
@@ -117,10 +117,8 @@ aliceOkBtn.onclick = () => {
   aliceOkBtn.disabled = true;
   disableFormInputs(`${taskInputA}-input-form`);
   console.log(subjectData)
-  if (mode !== 'dev') {
-    hide('task-input-a-button-group-vc')
-    showNext(taskGenA, 'block')
-  }
+  hide('task-input-a-button-group-vc')
+  showNext(taskGenA, 'block')
 }
 
 // Generate gen tasks
@@ -206,10 +204,8 @@ bobOkBtn.onclick = () => {
   bobOkBtn.disabled = true;
   disableFormInputs(`${taskInputB}-input-form`);
   console.log(subjectData)
-  if (mode !== 'dev') {
-    hide('task-input-b-button-group-vc')
-    showNext(taskGenB, 'block')
-  }
+  hide('task-input-b-button-group-vc')
+  showNext(taskGenB, 'block')
 }
 
 
@@ -235,7 +231,7 @@ for(let i = 0; i < bobGen.length; i++ ) {
     disableBlocks(config, taskGenB)
     resetBtn.disabled = true
     confirmBtn.disabled = true;
-    let prevs = [ aliceLearn.length, aliceGen,length, bobLearn.length ].reduce((a, b) => a + b, 0)
+    let prevs = [ aliceLearn.length, aliceGen.length, bobLearn.length ].reduce((a, b) => a + b, 0)
     trialData.result[prevs+i] = '0'+getCurrentSelection(config, taskGenC)
     if (i < aliceGen.length-1) {
       hide(`${taskGenB}-box-${i+1}`);
@@ -280,10 +276,8 @@ compOkBtn.onclick = () => {
   compOkBtn.disabled = true;
   disableFormInputs(`${taskInputC}-input-form`);
   console.log(subjectData)
-  if (mode !== 'dev') {
-    hide('task-input-c-button-group-vc')
-    showNext(taskGenC, 'block')
-  }
+  hide('task-input-c-button-group-vc')
+  showNext(taskGenC, 'block')
 }
 
 // Generate gen tasks
@@ -310,7 +304,7 @@ for(let i = 0; i < genConfigs.length; i++ ) {
     disableBlocks(config, taskGenC)
     resetBtn.disabled = true
     confirmBtn.disabled = true;
-    let prevs = [ aliceLearn.length, aliceGen,length, bobLearn.length, bobGen.length ].reduce((a, b) => a + b, 0)
+    let prevs = [ aliceLearn.length, aliceGen.length, bobLearn.length, bobGen.length ].reduce((a, b) => a + b, 0)
     trialData.result[prevs+i] = '0'+getCurrentSelection(config, taskGenC)
     console.log(trialData)
     hide(`${taskGenC}-box-${i+1}`)
@@ -361,7 +355,7 @@ passBtn.onclick = () => {
   start_task_time = Date.now();
   hide("pass");
   hide("comprehension");
-  showNext("task", "block");
+  showNext("task-alice", "block");
 };
 retryBtn.onclick = () => {
   hide("retry");
