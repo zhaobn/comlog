@@ -70,7 +70,7 @@ const taskGenC = 'task-gen-c'
 // learning
 for(let i = 0; i < aliceLearn.length; i++ ) {
   let config = aliceLearn[i]
-  document.getElementById(taskTrainA).append(createLearnTask(taskTrainA, config))
+  document.getElementById(taskTrainA).append(createLearnTask(taskTrainA, config, aliceLearn.length))
   let trialId = config.trial
 
   // Button functionalities
@@ -122,7 +122,7 @@ aliceOkBtn.onclick = () => {
 for(let i = 0; i < aliceGen.length; i++ ) {
   let config = aliceGen[i]
   // console.log(config)
-  document.getElementById(taskGenA).append(createGenTask(taskGenA, config))
+  document.getElementById(taskGenA).append(createGenTask(taskGenA, config, aliceGen.length))
 
   /** Effects and button functionalities */
   genBlocksEffects(config, taskGenA, aliceGenClicked)
@@ -152,7 +152,7 @@ for(let i = 0; i < aliceGen.length; i++ ) {
 // learning
 for(let i = 0; i < bobLearn.length; i++ ) {
   let config = bobLearn[i]
-  document.getElementById(taskTrainB).append(createLearnTask(taskTrainB, config))
+  document.getElementById(taskTrainB).append(createLearnTask(taskTrainB, config, bobLearn.length))
   let trialId = config.trial
 
   // Button functionalities
@@ -204,7 +204,7 @@ bobOkBtn.onclick = () => {
 for(let i = 0; i < bobGen.length; i++ ) {
   let config = bobGen[i]
   // console.log(config)
-  document.getElementById(taskGenB).append(createGenTask(taskGenB, config))
+  document.getElementById(taskGenB).append(createGenTask(taskGenB, config, bobGen.length))
 
   /** Effects and button functionalities */
   genBlocksEffects(config, taskGenB, bobGenClicked)
@@ -270,7 +270,7 @@ compOkBtn.onclick = () => {
 for(let i = 0; i < genConfigs.length; i++ ) {
   let config = genConfigs[i]
   // console.log(config)
-  document.getElementById(taskGenC).append(createGenTask(taskGenC, config))
+  document.getElementById(taskGenC).append(createGenTask(taskGenC, config, genConfigs.length))
 
   /** Effects and button functionalities */
   genBlocksEffects(config, taskGenC, genClicked)
