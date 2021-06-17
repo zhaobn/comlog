@@ -1,5 +1,5 @@
 
-const mode = 'test' // '', 'dev', 'test', 'flask'
+const mode = '' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const cond = 'hard'
@@ -232,7 +232,7 @@ for(let i = 0; i < bobGen.length; i++ ) {
     resetBtn.disabled = true
     confirmBtn.disabled = true;
     let prevs = [ aliceLearn.length, aliceGen.length, bobLearn.length ].reduce((a, b) => a + b, 0)
-    trialData.result[prevs+i] = '0'+getCurrentSelection(config, taskGenC)
+    trialData.result[prevs+i] = '0|'+getCurrentSelection(config, taskGenC)
     if (i < aliceGen.length-1) {
       hide(`${taskGenB}-box-${i+1}`);
       showNext(`${taskGenB}-box-${i+2}`);
@@ -305,7 +305,7 @@ for(let i = 0; i < genConfigs.length; i++ ) {
     resetBtn.disabled = true
     confirmBtn.disabled = true;
     let prevs = [ aliceLearn.length, aliceGen.length, bobLearn.length, bobGen.length ].reduce((a, b) => a + b, 0)
-    trialData.result[prevs+i] = '0'+getCurrentSelection(config, taskGenC)
+    trialData.result[prevs+i] = '0|'+getCurrentSelection(config, taskGenC)
     // console.log(trialData)
     hide(`${taskGenC}-box-${i+1}`)
     if (i < genConfigs.length-1) {
