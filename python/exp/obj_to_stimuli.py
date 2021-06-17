@@ -1,11 +1,10 @@
 
 # %%
-from task import Task_lib
 import pandas as pd
 
 # %%
-task_csv = pd.read_csv('../data/task_data.csv', na_filter=False)
-task_csv = task_csv.drop(['phase'], axis=1)
+task_csv = pd.read_csv('../data/task_data_new.csv', na_filter=False)
+# task_csv = task_csv.drop(['phase'], axis=1)
 task_csv['trial'] = task_csv.index + 1
 task_csv = task_csv.set_index('trial')
 # %%
@@ -27,8 +26,7 @@ def translate_name(name):
     #   edge = 6
     # elif name[:4] == 'Hept':
     #   edge = 7
-    return str(stripes)+str(length)
-
+    return f'{str(stripes)}|{str(length)}'
 task_csv['agent'] = task_csv.apply(lambda row: translate_name(row['agent']), axis=1)
 task_csv['recipient'] = task_csv.apply(lambda row: translate_name(row['recipient']), axis=1)
 task_csv['result'] = task_csv.apply(lambda row: translate_name(row['result']), axis=1)
