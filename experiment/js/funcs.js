@@ -37,6 +37,9 @@ function createBtn (btnId, text = "Button", on = true, className = "task-button"
 }
 
 /** Task functions */
+const getStripes= (stone) => parseInt(stone.split('|')[0])
+const getLength = (stone) => parseInt(stone.split('|')[1])
+
 function createInitStones(config, parentDiv, learnDivPrefix) {
   let spaceDiv = createCustomElement("div", "display-main-space", `${learnDivPrefix}-displaymainspace-${config.trial}`)
   let agentDiv = createCustomElement("div", "display-main-agent", `${learnDivPrefix}-displaymainagent-${config.trial}`)
@@ -109,8 +112,8 @@ function createSumAfter(config, parentDiv, divPrefix) {
 //   div.append(svg)
 //   return(div);
 // }
-function createAgentStone(id, nStripes = 1, color='red', base = 40, r = 25) {
-  nStripes = Math.floor(nStripes/10)
+function createAgentStone(id, agent = '1|1', color='red', base = 40, r = 25) {
+  let nStripes = getStripes(agent)
   const getDelta = (x) => (-x + Math.sqrt(2*(r**2)-x**2))/2
 
   let agentDiv = createCustomElement("div", "agent-stone-div", `${id}-div`);
@@ -144,8 +147,8 @@ function createAgentStone(id, nStripes = 1, color='red', base = 40, r = 25) {
 }
 function createBlocks(id, stoneOpts, isInit = true) {
   let div = createCustomElement("div", "recipient-stone-div", `${id}-blocks-all`);
-  let length = isInit? stoneOpts.recipient % 10 : stoneOpts.result % 10
-  let max =  (stoneOpts.phase=='gen')? maxBlocks: stoneOpts.result % 10
+  let length = isInit? getLength(stoneOpts.recipient) : getLength(stoneOpts.result)
+  let max =  (stoneOpts.phase=='gen')? maxBlocks: getLength(stoneOpts.result)
   for(let i = 0; i < max; i++ ) {
     let block = createCustomElement("div", "recipient-block", `${id}-block-${i}`)
     block.style.opacity = (i < length)? 1 : (stoneOpts.phase=='gen')? blockOpDecay(i, length) : 0
@@ -181,7 +184,7 @@ function blockOpDecay(index, base) {
 function genBlocksEffects(config, genDivPrefix, genClicked) {
   for(let i = 0; i < maxBlocks; i++ ) {
     let idPrefix = `${genDivPrefix}-${config.trial}-recipient-block-`
-    let base = config.recipient % 10
+    let base = getLength(config.recipient)
     let blockDiv = document.getElementById(`${idPrefix}${i}`)
     blockDiv.onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i, base)
     blockDiv.onmouseout = () => highlightBlocks(idPrefix, i, base)
@@ -233,17 +236,18 @@ function highlightBlocksOnMouseOver(idPrefix, i, base) {
   let baseBlocks = Array.from(Array(base).keys()).map(m => `${idPrefix}${m}`)
   let yesBlocks = Array.from(Array(maxBlocks).keys()).filter(b => (b>=base && b <= i)).map(m => `${idPrefix}${m}`)
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i+2).map(m => `${idPrefix}${m}`)
-  baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
-  yesBlocks.forEach(b => document.getElementById(b).style.opacity=0.5)
   noBlocks.forEach(b => document.getElementById(b).style.opacity=0)
+  yesBlocks.forEach(b => document.getElementById(b).style.opacity=0.5)
   if (i+1 < maxBlocks) {
     document.getElementById(`${idPrefix}${i+1}`).style.opacity = 0.15
   }
   if (i+2 < maxBlocks) {
     document.getElementById(`${idPrefix}${i+2}`).style.opacity = 0.05
   }
+  baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
 }
 function highlightBlocks(idPrefix, i, base) {
+  let baseBlocks = Array.from(Array(base).keys()).map(m => `${idPrefix}${m}`)
   let yesBlocks = Array.from(Array(maxBlocks).keys()).map(m => `${idPrefix}${m}`)
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
@@ -254,9 +258,10 @@ function highlightBlocks(idPrefix, i, base) {
   if (i+2 < maxBlocks) {
     document.getElementById(`${idPrefix}${i+2}`).style.opacity = 0.05
   }
+  baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
 }
 function resetGenBlock(config, genDivPrefix, genClicked) {
-  let length = config.recipient % 10
+  let length = getLength(config.recipient)
   for(let i = 0; i < maxBlocks; i++ ) {
     let block = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-block-${i}`)
     block.style.opacity = (i < length)? 1 : blockOpDecay(i, length)
@@ -326,9 +331,9 @@ function playEffects (config, learnDivPrefix, clicked=0) {
   const delta = Math.round(endPos - startPos) + 8;
   (delta > 0) && (agentStone.style.left = `${delta}px`);
 
-  let initLen = config.recipient % 10
-  let targetLen = parseInt(config.result) % 10
-  let agentStripe = Math.floor(parseInt(config.agent) % Math.pow(10,2) / Math.pow(10,1))
+  let initLen = getLength(config.recipient)
+  let targetLen = getLength(config.result)
+  let agentStripe = getStripes(config.agent) // Math.floor(config.agent % Math.pow(10,2) / Math.pow(10,1))
   let hist = document.getElementById(`${learnDivPrefix}-displayhist-${config.trial}`)
 
   if (agentStripe == 1) {
@@ -364,10 +369,10 @@ function fadeIn(element) {
     op += op * 0.1;
   }, 20);
 }
-function showNext(id, display = "flex") {
+function showNext(id, display = "flex", center = true) {
   let div = document.getElementById(id);
   div.style.display = display;
-  div.scrollIntoView(true);
+  div.scrollIntoView(center);
 }
 function hide(id) {
   let div = document.getElementById(id);

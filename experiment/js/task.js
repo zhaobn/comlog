@@ -1,5 +1,5 @@
 
-const mode = '' // '', 'dev', 'test', 'flask'
+const mode = 'test' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const cond = 'hard'
@@ -14,12 +14,12 @@ let start_task_time = 0;
 const exp_conds = {
   'easy': {
     'alice': {
-      'learn': [1,2,3],
-      'gen': [4],
+      'learn': [5,6,7],
+      'gen': [8],
     },
     'bob': {
-      'learn': [1,5,8],
-      'gen': [11],
+      'learn': [2,6,10],
+      'gen': [14],
     }
   },
   'hard': {
@@ -28,8 +28,8 @@ const exp_conds = {
       'gen': [4],
     },
     'bob': {
-      'learn': [4,6,11],
-      'gen': [10],
+      'learn': [4,6,13],
+      'gen': [11],
     }
   }
 }
@@ -116,7 +116,7 @@ aliceOkBtn.onclick = () => {
   Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
   aliceOkBtn.disabled = true;
   disableFormInputs(`${taskInputA}-input-form`);
-  console.log(subjectData)
+  // console.log(subjectData)
   hide('task-input-a-button-group-vc')
   showNext(taskGenA, 'block')
 }
@@ -142,8 +142,8 @@ for(let i = 0; i < aliceGen.length; i++ ) {
     disableBlocks(config, taskGenA)
     resetBtn.disabled = true
     confirmBtn.disabled = true;
-    trialData.result[aliceLearn.length+i] = '0'+getCurrentSelection(config, taskGenA)
-    console.log(trialData)
+    trialData.result[aliceLearn.length+i] = '0|'+getCurrentSelection(config, taskGenA)
+    // console.log(trialData)
     if (i < aliceGen.length-1) {
       hide(`${taskGenA}-box-${i+1}`)
       showNext(`${taskGenA}-box-${i+2}`);
@@ -203,7 +203,7 @@ bobOkBtn.onclick = () => {
   Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
   bobOkBtn.disabled = true;
   disableFormInputs(`${taskInputB}-input-form`);
-  console.log(subjectData)
+  // console.log(subjectData)
   hide('task-input-b-button-group-vc')
   showNext(taskGenB, 'block')
 }
@@ -275,7 +275,7 @@ compOkBtn.onclick = () => {
   Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
   compOkBtn.disabled = true;
   disableFormInputs(`${taskInputC}-input-form`);
-  console.log(subjectData)
+  // console.log(subjectData)
   hide('task-input-c-button-group-vc')
   showNext(taskGenC, 'block')
 }
@@ -306,10 +306,10 @@ for(let i = 0; i < genConfigs.length; i++ ) {
     confirmBtn.disabled = true;
     let prevs = [ aliceLearn.length, aliceGen.length, bobLearn.length, bobGen.length ].reduce((a, b) => a + b, 0)
     trialData.result[prevs+i] = '0'+getCurrentSelection(config, taskGenC)
-    console.log(trialData)
+    // console.log(trialData)
     hide(`${taskGenC}-box-${i+1}`)
     if (i < genConfigs.length-1) {
-      showNext(`${taskGenC}-box-${i+2}`);
+      showNext(`${taskGenC}-box-${i+2}`, 'flex', false);
     } else {
       hide(taskCoverC)
       hide(taskTrainC)
@@ -322,11 +322,17 @@ for(let i = 0; i < genConfigs.length; i++ ) {
 
 
 // Instruction buttons
+// const checkScrollHeight = (text, btn) => ((text.scrollTop + text.offsetHeight) >= text.scrollHeight) ? btn.disabled = false : null;
 const descNextBtn = document.getElementById('desc-next-btn')
+
+// const instructionText = document.getElementById("instruction-text");
+// instructionText.addEventListener("scroll", () => checkScrollHeight(instructionText, descNextBtn), false);
 descNextBtn.onclick = () => {
   hide('instruction')
   showNext('comprehension', 'block')
 }
+
+
 
 // Quiz
 const checkBtn = document.getElementById('check-btn');
@@ -407,8 +413,8 @@ doneBtn.onclick = () => {
     .catch((error) => console.log(error));
   } else {
     showCompletion(token);
-    console.log(clientData);
-    // download(JSON.stringify(clientData), 'data.txt', '"text/csv"');
+    // console.log(clientData);
+    download(JSON.stringify(clientData), 'data.txt', '"text/csv"');
   }
 };
 

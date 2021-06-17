@@ -9,12 +9,15 @@ h2 {
   font-size: 20px;
 }
 h3 {
-  font-size: 22px;
+  font-size: 25px;
   font-weight: 500;
 }
 button {
   font-size: 18px;
   width: 120px;
+}
+a {
+  text-decoration: none;
 }
 .base {
   width:800px;
@@ -125,7 +128,7 @@ button {
 
 .task-box h2 {
   text-align: left;
-  font-size: 30px;
+  font-size: 25px;
   width: 10%;
   padding: 0;
   margin: 0;
@@ -205,7 +208,8 @@ button {
 }
 
 .task-button:hover:enabled,
-.big-button:hover:enabled {
+.big-button:hover:enabled,
+#sure-btn:hover {
   background-color: #116466;
   color: #e0e0e0;
 }
@@ -219,7 +223,7 @@ button {
 }
 
 .big-button {
-  font-size: 15px;
+  font-size: 18px;
   padding: 10px 30px;
 }
 
@@ -227,10 +231,14 @@ button {
   height: 120px;
   width: 98%;
   border: #bbbbbb solid 0.5px;
-  font-size: 20px;
+  font-size: 25px;
   font-family: Arial, Helvetica, sans-serif;
 }
-.input-form p, select {
+.input-form p {
+  font-size: 25px;
+}
+
+.input-form select {
   font-size: 20px;
 }
 .summary-div {
@@ -248,4 +256,9 @@ button {
 #task-train-c {
   display: flex;
   flex-direction: row;
+}
+#consent-info {
+  height: 400px;
+  overflow: scroll;
+  padding: 0 0 20px 0;
 }

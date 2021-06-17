@@ -8,23 +8,25 @@
     <div id="instruction" class="base" >
       <h1>Instructions</h1>
       <div id="box-desc-1">
-        <div class="frame" >
-          <p>Alice and Bob are playing in the field of wonders.</p>
-          <p>Ala! They found some magic eggs, and they are curious to find out what magic power these eggs have.</p>
-          <p>What we know about magic eggs:</p>
-          <ul>
-            <li>If you let a magic egg touch upon some stuff, the magic egg may cause the properties of the stuff it touched upon to change. </li>
-            <li>Properties of the magic egg indicate what magic power it has.</li>
-            <li>Magic eggs laid by the same hen share the same magic power.</li>
-          </ul>
-          <p>In this task, you will first check Alice’s findings, and then Bob’s.</p>
-          <p>For each of them, you will see three magic eggs, and you can click the “test” button to watch the effect a magic egg brings about. You can test as many times as you want.</p>
-          <p>After watching these effects, you will write down your best guess of what the magic power Alice’s magic eggs have.</p>
-          <p>Then, we ask you to make one prediction on a new magic egg from Alice’s collection.</p>
-          <p>You will do the same thing for Bob’s.</p>
-          <p>After that, you will need to make predictions for some brand new magic eggs.</p>
-          <p>Think carefully! You will be paid a $0.5 bonus for each correct guess you write down, and an additional $0.2 bonus for each correct prediction you make. In total, you may get up to a $3.1 bonus on top of your base pay.</p>
-          <p>Also note that your answers will be human checked. Nonsensical or copy pasted responses will result in a zero bonus or outright rejection of the HIT.</p>
+        <div class="frame">
+          <div id="instruction-text">
+            <p>Alice and Bob are playing in the field of wonders.</p>
+            <p>Ala! They found some magic eggs, and they are curious to find out what magic power these eggs have.</p>
+            <p>What we know about magic eggs:</p>
+            <ul>
+              <li>If you let a magic egg touch upon some stuff, the magic egg may cause the properties of the stuff it touched upon to change. </li>
+              <li>Properties of the magic egg indicate what magic power it has.</li>
+              <li>Magic eggs laid by the same hen share the same magic power.</li>
+            </ul>
+            <p>In this task, you will first check Alice’s findings, and then Bob’s.</p>
+            <p>For each of them, you will see three magic eggs, and you can click the “test” button to watch the effect a magic egg brings about. You can test as many times as you want.</p>
+            <p>After watching these effects, you will write down your best guess of what the magic power Alice’s magic eggs have.</p>
+            <p>Then, we ask you to make one prediction on a new magic egg from Alice’s collection.</p>
+            <p>You will do the same thing for Bob’s.</p>
+            <p>After that, you will need to make predictions for some brand new magic eggs.</p>
+            <p>Think carefully! You will be paid a $0.5 bonus for each correct guess you write down, and an additional $0.2 bonus for each correct prediction you make. In total, you may get up to a $3.1 bonus on top of your base pay.</p>
+            <p>Also note that your answers will be human checked. Nonsensical or copy pasted responses will result in a zero bonus or outright rejection of the HIT.</p>
+          </div>
         </div>
         <div class='button-group-vc'>
           <button class='big-button' id='desc-next-btn'>Next</button>
@@ -89,13 +91,15 @@
     <div id="task" class="base">
       <div id='task-alice' style="display: none;" >
         <div id="task-cover-a" >
-          <h1>Alice is testing these magic eggs:</h1>
+          <!-- <h1>Alice is testing these magic eggs:</h1> -->
+          <h3><b>Alice is testing these magic eggs:</b></h3>
           <button class='big-button' id='dev-skip-alice'>Skip A</button>
         </div>
         <div id="task-train-a"></div>
         <div id="task-input-a" style="display: none;" ></div>
         <div id="task-gen-a" style="display: none;" >
           <h3><b>How will the blocks look like after being touched with this magic egg?</b> (You can compose answer by clicking on the blocks)</h3>
+          <p class="incentive" style="font-size: 25px;">Remember there is a $0.20 bonus if you make a correct prediction.</p>
         </div>
       </div>
       <div id="task-bob" style="display: none;" >
@@ -107,11 +111,14 @@
         <div id="task-input-b" style="display: none;"></div>
         <div id="task-gen-b" style="display: none;">
           <h3><b>How will the blocks look like after being touched with this magic egg?</b> (You can compose answer by clicking on the blocks)</h3>
+          <p class="incentive" style="font-size: 25px;">Remember there is a $0.20 bonus if you make a correct prediction.</p>
         </div>
       </div>
       <div id="task-comp" style="display: none;" >
         <div id="task-cover-c">
           <button class='big-button' id='dev-skip-comp'>Skip C</button>
+          <!-- <h1>Actually, the magic eggs Alice and Bob found are from the same hen!</h1>
+          <h1>In other words, all of the magic eggs you tested share the <em>same</em> magic power.</h1> -->
           <h3><b>Actually, the magic eggs Alice and Bob found are from the same hen! In other words, all of the magic eggs you tested share the <em>same</em> magic power.</b></h3>
           <h3>Here is a summary of all the tests you did so far:</h3>
         </div>
@@ -119,6 +126,7 @@
         <div id="task-input-c"></div>
         <div id="task-gen-c" style="display: none;">
           <h3><b>How will the following blocks look like after being touched with the provided magic egg?</b> (You can compose answer by clicking on the blocks)</h3>
+          <p class="incentive" style="font-size: 25px;">Remember there is a $0.20 bonus if you make a correct prediction.</p>
         </div>
       </div>
     </div>
