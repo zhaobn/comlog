@@ -6,12 +6,12 @@
 - Row 2 + col 2: <https://eco.ppls.ed.ac.uk/~s1941626/eggs_easy/p/welcome.html>
 - Row 1 + set 4: <https://eco.ppls.ed.ac.uk/~s1941626/eggs_hard/p/welcome.html>
 
-Notes:
+  Subset batch description:
 
-- Row 1: `(1, 1) => 1`, `(1, 2) => 2`, `(1, 3) => 3`, model preds: no change
-- Row 2: `(2, 1) => 2`, `(2, 2) => 4`, `(2, 3) => 6`, model preds: doubles R
-- Col 2: `(1, 2) => 2`, `(2, 2) => 4`, `(3, 2) => 6`, model preds: doubles A, A + A
-- Set 4: `(1, 4) => 4`, `(2, 2) => 4`, `(4, 1) => 4`, model preds: 4
+  - Row 1: `(1, 1) => 1`, `(1, 2) => 2`, `(1, 3) => 3`, model preds: no change
+  - Row 2: `(2, 1) => 2`, `(2, 2) => 4`, `(2, 3) => 6`, model preds: doubles R
+  - Col 2: `(1, 2) => 2`, `(2, 2) => 4`, `(3, 2) => 6`, model preds: doubles A, A + A
+  - Set 4: `(1, 4) => 4`, `(2, 2) => 4`, `(4, 1) => 4`, model preds: 4
 
 To edit the instruction text, use this link: <https://docs.google.com/document/d/19TEv5uSu9-Pb3Bf_5ayo5u49FgiI_vVwfDIFDjK3PCw/edit?usp=sharing>
 
