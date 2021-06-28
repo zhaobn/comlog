@@ -8,14 +8,16 @@
 
   Subset batch description:
 
-  - Row 1: `(1, 1) => 1`, `(1, 2) => 2`, `(1, 3) => 3`, model preds: no change
-  - Row 2: `(2, 1) => 2`, `(2, 2) => 4`, `(2, 3) => 6`, model preds: doubles R
-  - Col 2: `(1, 2) => 2`, `(2, 2) => 4`, `(3, 2) => 6`, model preds: doubles A, A + A
-  - Set 4: `(1, 4) => 4`, `(2, 2) => 4`, `(4, 1) => 4`, model preds: 4
+  - Row 1: `(1,1) => 1`, `(1,2) => 2`, `(1,3) => 3`, model preds: no change
+  - Row 2: `(2,1) => 2`, `(2,2) => 4`, `(2,3) => 6`, model preds: doubles R
+  - Col 2: `(1,2) => 2`, `(2,2) => 4`, `(3,2) => 6`, model preds: doubles A, A + A
+  - Set 4: `(1,4) => 4`, `(2,2) => 4`, `(4,1) => 4`, model preds: 4
 
 To edit the instruction text, use this link: <https://docs.google.com/document/d/19TEv5uSu9-Pb3Bf_5ayo5u49FgiI_vVwfDIFDjK3PCw/edit?usp=sharing>
 
 ## Design sketch
+
+A working title: The constructive nature of causal generalization
 
 1. Bootstrapping
 
@@ -29,9 +31,7 @@ To edit the instruction text, use this link: <https://docs.google.com/document/d
    2. When combined together, people will be able to conclude the ground truth by composing the learned info together
    3. In the control condition, people may fail to generalize the ground truth (?)
 
-   **Alternatively**, we could drop the Alice/Bob framing, and simply present two batches of three eggs as if they are from the same hen.
-
-   By doing this, we expect to observe the change from a minimal causal relation expanded to the ground truth one in order to account for the second batch of observations.
+   **Alternatively**, we could drop the Alice/Bob/Combined, and simply present two batches of three eggs as if they are from the same hen. By doing this, we expect to observe the change from a minimal causal relation expanded to the ground truth one in order to account for the second batch of observations.
 
 2. Misguided
 
@@ -43,7 +43,7 @@ To edit the instruction text, use this link: <https://docs.google.com/document/d
 
    Some people may be able to get the ground truth, as it is not too complicated anyways. We may observe two groups of answers: one failed, and one got it. Use decision time to measure difficulty???
 
-   **Alternatively**, we can drop the Alice/Bob phasing design and use col 1 + col 2 to contrast row 2 + col 2.
+   **Alternatively**, we can drop the Alice/Bob/Combined design and use col 1 + col 2 to contrast row 2 + col 2.
 
 3. Color-variants
 
