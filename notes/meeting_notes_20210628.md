@@ -17,7 +17,7 @@ To edit the instruction text, use this link: <https://docs.google.com/document/d
 
 ## Design sketch
 
-A working title: The constructive nature of causal generalization
+A working title: **The constructive nature of causal generalization**
 
 1. Bootstrapping
 
@@ -31,7 +31,7 @@ A working title: The constructive nature of causal generalization
    2. When combined together, people will be able to conclude the ground truth by composing the learned info together
    3. In the control condition, people may fail to generalize the ground truth (?)
 
-   **Alternatively**, we could drop the Alice/Bob/Combined, and simply present two batches of three eggs as if they are from the same hen. By doing this, we expect to observe the change from a minimal causal relation expanded to the ground truth one in order to account for the second batch of observations.
+   **Alternatively**, we can drop the Alice/Bob/Combined, and simply present two batches of three eggs as if they are from the same hen. By doing this, we expect to observe the change from a minimal causal relation expanded to the ground truth one in order to account for the second batch of observations.
 
 2. Misguided
 
