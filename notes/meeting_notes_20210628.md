@@ -43,7 +43,7 @@ A working title: **The constructive nature of causal generalization**
 
    Some people may be able to get the ground truth, as it is not too complicated anyways. We may observe two groups of answers: one failed, and one got it. Use decision time to measure difficulty???
 
-   **Alternatively**, we can drop the Alice/Bob/Combined design and use col 1 + col 2 to contrast row 2 + col 2.
+   **Alternatively**, we can drop the Alice/Bob/Combined design and *use col 1 + col 2 to contrast row 2 + col 2*.
 
 3. Color-variants
 
