@@ -1,8 +1,8 @@
 
-const mode = '' // '', 'dev', 'test', 'flask'
+const mode = 'test' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
-const cond = 'hard'
+const cond = 'easy'
 console.log(`${mode} mode; condition ${cond}.`);
 
 
