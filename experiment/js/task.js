@@ -1,5 +1,5 @@
 
-const mode = 'test' // '', 'dev', 'test', 'flask'
+const mode = 'dev' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const cond = 'default'

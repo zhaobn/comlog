@@ -233,7 +233,7 @@ function disableBlocks(config, genDivPrefix) {
 }
 function highlightBlocksOnMouseOver(idPrefix, i, base) {
   let baseBlocks = Array.from(Array(base).keys()).map(m => `${idPrefix}${m}`)
-  let yesBlocks = Array.from(Array(maxBlocks).keys()).filter(b => (b>=base && b <= i)).map(m => `${idPrefix}${m}`)
+  let yesBlocks = Array.from(Array(maxBlocks).keys()).filter(b => (b <= i)).map(m => `${idPrefix}${m}`)
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i+2).map(m => `${idPrefix}${m}`)
   noBlocks.forEach(b => document.getElementById(b).style.opacity=0)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=0.5)
@@ -243,21 +243,23 @@ function highlightBlocksOnMouseOver(idPrefix, i, base) {
   if (i+2 < maxBlocks) {
     document.getElementById(`${idPrefix}${i+2}`).style.opacity = 0.05
   }
-  baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
+  if (i>=base) {
+    baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
+  }
 }
 function highlightBlocks(idPrefix, i, base) {
-  let baseBlocks = Array.from(Array(base).keys()).map(m => `${idPrefix}${m}`)
+  // let baseBlocks = Array.from(Array(base).keys()).map(m => `${idPrefix}${m}`)
   let yesBlocks = Array.from(Array(maxBlocks).keys()).map(m => `${idPrefix}${m}`)
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
   noBlocks.forEach(b => document.getElementById(b).style.opacity=0) //blockOpDecay(parseInt(b.split('-')[3]), i))
-  if (i+1 < maxBlocks) {
-    document.getElementById(`${idPrefix}${i+1}`).style.opacity = 0.15
-  }
-  if (i+2 < maxBlocks) {
-    document.getElementById(`${idPrefix}${i+2}`).style.opacity = 0.05
-  }
-  baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
+  // if (i+1 < maxBlocks) {
+  //   document.getElementById(`${idPrefix}${i+1}`).style.opacity = 0.15
+  // }
+  // if (i+2 < maxBlocks) {
+  //   document.getElementById(`${idPrefix}${i+2}`).style.opacity = 0.05
+  // }
+  // baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
 }
 function resetGenBlock(config, genDivPrefix, genClicked) {
   let length = readLength(config.recipient)
