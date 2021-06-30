@@ -540,7 +540,7 @@ function download(content, fileName, contentType) {
   a.click();
 }
 /** Data functions */
-function fmtConfig(dataArr, batch, phase, agentColor = 'red') {
+function fmtConfig(dataArr, batch, phase, agentColor = 'tomato') {
   let fmtted = []
   dataArr.forEach((data, idx) => {
     dd = {}
@@ -552,7 +552,7 @@ function fmtConfig(dataArr, batch, phase, agentColor = 'red') {
     dd['recipient'] = data['recipient'].replace(/\s/g, '');
     dd['result'] = data['result'].replace(/\s/g, '');
     dd['color'] = agentColor
-    dd['agentSvg'] = getAgentStoneSvg(dd['agent'])
+    dd['agentSvg'] = getAgentStoneSvg(dd['agent'], agentColor)
     fmtted.push(dd)
   })
   return fmtted
