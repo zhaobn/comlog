@@ -2,47 +2,24 @@
 const mode = 'test' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
-const cond = 'easy'
+const cond = 'default'
 console.log(`${mode} mode; condition ${cond}.`);
-
 
 const start_time = Date.now();
 let start_task_time = 0;
 
 
 /** Prep data */
-const exp_conds = {
-  'easy': {
-    'alice': {
-      'learn': [5,6,7],
-      'gen': [8],
-    },
-    'bob': {
-      'learn': [2,6,10],
-      'gen': [14],
-    }
-  },
-  'hard': {
-    'alice': {
-      'learn': [1,2,3],
-      'gen': [4],
-    },
-    'bob': {
-      'learn': [4,6,13],
-      'gen': [11],
-    }
-  }
-}
+let aliceLearn = fmtConfig(config.filter(c => c['subs']==1), 'alice', 'learn')
+let aliceGen = fmtConfig(config.filter(c => c['trial_id']==34), 'alice', 'gen')
 
-let aliceLearn = fmtConfig(config.filter(c => exp_conds[cond]['alice']['learn'].indexOf(c.trial) > -1), 'alice', 'learn', 'red')
-let aliceGen = fmtConfig(config.filter(c => exp_conds[cond]['alice']['gen'].indexOf(c.trial) > -1), 'alice', 'gen', 'red')
+let bobLearn = fmtConfig(config.filter(c => c['subs_pd']==1), 'bob', 'learn')
+let bobGen = fmtConfig(config.filter(c => c['trial_id']==10), 'bob', 'gen')
 
-let bobLearn = fmtConfig(config.filter(c => exp_conds[cond]['bob']['learn'].indexOf(c.trial) > -1), 'bob', 'learn', 'green')
-let bobGen = fmtConfig(config.filter(c => exp_conds[cond]['bob']['gen'].indexOf(c.trial) > -1), 'bob', 'gen', 'green')
+let usedIndices = [ aliceLearn, aliceGen, bobLearn, bobGen].flat().map(c => parseInt(c['id'].substring(1)))
+let genConfigs =  config.filter(c => usedIndices.indexOf(c.trial) < 0).slice(0,15)
+genConfigs = fmtConfig(shuffleArray(genConfigs), 'gen', 'gen')
 
-let usedIndices = [ exp_conds[cond]['alice']['learn'], exp_conds[cond]['alice']['gen'], exp_conds[cond]['bob']['learn'], exp_conds[cond]['bob']['gen']].flat()
-let genConfigs =  config.filter(c => usedIndices.indexOf(c.trial) < 0)
-genConfigs = fmtConfig(shuffleArray(genConfigs), 'gen', 'gen', 'orange')
 
 // For page animation
 let aliceLearnClicked = Array(aliceLearn.length).fill(0);

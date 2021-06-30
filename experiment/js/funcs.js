@@ -37,14 +37,15 @@ function createBtn (btnId, text = "Button", on = true, className = "task-button"
 }
 
 /** Task functions */
-const getStripes= (stone) => parseInt(stone.split('|')[0])
-const getLength = (stone) => parseInt(stone.split('|')[1])
+const readStripes= (stone) => parseInt(stone.replace(/[()]/g, '').split(',')[0])
+const readDots= (stone) => parseInt(stone.replace(/[()]/g, '').split(',')[1])
+const readLength = (stone) => parseInt(stone.replace(/[()]/g, '').split(',')[2])
 
 function createInitStones(config, parentDiv, learnDivPrefix) {
   let spaceDiv = createCustomElement("div", "display-main-space", `${learnDivPrefix}-displaymainspace-${config.trial}`)
   let agentDiv = createCustomElement("div", "display-main-agent", `${learnDivPrefix}-displaymainagent-${config.trial}`)
   let recipientDiv = createCustomElement("div", "display-main-recipient", `${learnDivPrefix}-displaymainrecipient-${config.trial}`)
-  agentDiv.append(createAgentStone(`${learnDivPrefix}-${config.trial}-agent`, config.agent, config.color))
+  agentDiv.append(createAgentStone(`${learnDivPrefix}-${config.trial}-agent`, config.agentSvg))
   recipientDiv.append(createBlocks(`${learnDivPrefix}-${config.trial}-recipient`, config))
   parentDiv.append(spaceDiv)
   parentDiv.append(agentDiv)
@@ -61,7 +62,7 @@ function createInitHistory(config, parentDiv, learnDivPrefix, showText = true) {
     textDiv.append(createText('h2', 'Before'))
     spaceDiv.append(textDiv);
   }
-  agentDiv.append(createAgentStone(`${learnDivPrefix}-${config.trial}-hist-agent`, config.agent, config.color))
+  agentDiv.append(createAgentStone(`${learnDivPrefix}-${config.trial}-hist-agent`, config.agentSvg))
   recipientDiv.append(createBlocks(`${learnDivPrefix}-${config.trial}-hist-recipient`, config))
 
   parentDiv.append(spaceDiv)
@@ -86,7 +87,7 @@ function createSumBefore(config, parentDiv, divPrefix) {
   let agentDiv = createCustomElement("div", "display-main-agent", `${divPrefix}-displaymainagent-after-${config.trial}`)
   let recipientDiv = createCustomElement("div", "display-main-recipient", `${divPrefix}-displaymainrecipient-after-${config.trial}`)
 
-  agentDiv.append(createAgentStone(`${divPrefix}-${config.trial}-after-agent`, config.agent, config.color))
+  agentDiv.append(createAgentStone(`${divPrefix}-${config.trial}-after-agent`, config.agentSvg))
   recipientDiv.append(createBlocks(`${divPrefix}-${config.trial}-after-recipient`, config))
 
   parentDiv.append(agentDiv)
@@ -98,28 +99,19 @@ function createSumAfter(config, parentDiv, divPrefix) {
   let agentDiv = createCustomElement("div", "display-main-agent-after", `${divPrefix}-displaymainagent-after-${config.trial}`)
   let recipientDiv = createCustomElement("div", "display-main-recipient", `${divPrefix}-displaymainrecipient-after-${config.trial}`)
 
-  agentDiv.append(createAgentStone(`${divPrefix}-${config.trial}-after-agent`, config.agent, config.color))
+  agentDiv.append(createAgentStone(`${divPrefix}-${config.trial}-after-agent`, config.agentSvg))
   recipientDiv.append(createBlocks(`${divPrefix}-${config.trial}-after-recipient`, config, false))
 
   parentDiv.append(agentDiv)
   parentDiv.append(recipientDiv)
   return(parentDiv);
 }
-// function createAgentStone(id, stoneOpts) {
-//   let div = createCustomElement("div", "agent-stone-div", `${id}-div`);
-//   let svg = createCustomElement("svg", "stone-svg", `${id}-svg`);
-//   svg.append(createPolygon('agent-stone', `${id}`, Math.floor(stoneOpts/10), 'default'))
-//   div.append(svg)
-//   return(div);
-// }
-function createAgentStone(id, agent = '1|1', color='red', base = 40, r = 25) {
-  let nStripes = getStripes(agent)
+function getAgentStoneSvg(agent = '(1,1,1)', color='red', base = 40, r = 25) {
+  let nStripes = readStripes(agent)
+  let nDots = readDots(agent)
   const getDelta = (x) => (-x + Math.sqrt(2*(r**2)-x**2))/2
 
-  let agentDiv = createCustomElement("div", "agent-stone-div", `${id}-div`);
-  let agentStoneSvg = createCustomElement('svg', 'stone-svg', id)
-  let circleSvg = '<circle class="agent-stone" cx="40" cy="40" r="30" />'
-  let stripes = ''
+  let circleSvg = `<circle class="agent-stone" cx="${base}" cy="${base}" r="${r+5}" />`
 
   switch (nStripes) {
     case 1:
@@ -141,14 +133,21 @@ function createAgentStone(id, agent = '1|1', color='red', base = 40, r = 25) {
       `<line class="agent-stone-stripe" x1="${base+getDelta(25)+25}" y1="${base-getDelta(25)}" x2="${base-getDelta(25)}" y2="${base+getDelta(25)+25}" stroke="${color}" />`
       break;
   }
-  agentStoneSvg.innerHTML = circleSvg + stripes
+
+  return (circleSvg + stripes + '\n' + addDots(nDots))
+
+}
+function createAgentStone(id, svgText='') {
+  let agentDiv = createCustomElement("div", "agent-stone-div", `${id}-div`);
+  let agentStoneSvg = createCustomElement('svg', 'stone-svg', id)
+  agentStoneSvg.innerHTML = svgText
   agentDiv.append(agentStoneSvg)
   return agentDiv
 }
 function createBlocks(id, stoneOpts, isInit = true) {
   let div = createCustomElement("div", "recipient-stone-div", `${id}-blocks-all`);
-  let length = isInit? getLength(stoneOpts.recipient) : getLength(stoneOpts.result)
-  let max =  (stoneOpts.phase=='gen')? maxBlocks: getLength(stoneOpts.result)
+  let length = isInit? readLength(stoneOpts.recipient) : readLength(stoneOpts.result)
+  let max =  (stoneOpts.phase=='gen')? maxBlocks: Math.max(readLength(stoneOpts.result), readLength(stoneOpts.recipient))
   for(let i = 0; i < max; i++ ) {
     let block = createCustomElement("div", "recipient-block", `${id}-block-${i}`)
     block.style.opacity = (i < length)? 1 : (stoneOpts.phase=='gen')? blockOpDecay(i, length) : 0
@@ -161,7 +160,7 @@ function createGenStones(config, parentDiv, genDivPrefix) {
   let agentDiv = createCustomElement("div", "display-main-agent", `${genDivPrefix}-${config.trial}-display-agent-div`)
   let recipientDiv = createCustomElement("div", "display-main-recipient", `${genDivPrefix}-${config.trial}-display-recipient-div`)
 
-  agentDiv.append(createAgentStone(`${genDivPrefix}-${config.trial}-agent`, config.agent, config.color));
+  agentDiv.append(createAgentStone(`${genDivPrefix}-${config.trial}-agent`, config.agentSvg));
   recipientDiv.append(createBlocks(`${genDivPrefix}-${config.trial}-recipient`, config));
 
   parentDiv.append(spaceDiv)
@@ -184,7 +183,7 @@ function blockOpDecay(index, base) {
 function genBlocksEffects(config, genDivPrefix, genClicked) {
   for(let i = 0; i < maxBlocks; i++ ) {
     let idPrefix = `${genDivPrefix}-${config.trial}-recipient-block-`
-    let base = getLength(config.recipient)
+    let base = readLength(config.recipient)
     let blockDiv = document.getElementById(`${idPrefix}${i}`)
     blockDiv.onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i, base)
     blockDiv.onmouseout = () => highlightBlocks(idPrefix, i, base)
@@ -261,7 +260,7 @@ function highlightBlocks(idPrefix, i, base) {
   baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
 }
 function resetGenBlock(config, genDivPrefix, genClicked) {
-  let length = getLength(config.recipient)
+  let length = readLength(config.recipient)
   for(let i = 0; i < maxBlocks; i++ ) {
     let block = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-block-${i}`)
     block.style.opacity = (i < length)? 1 : blockOpDecay(i, length)
@@ -299,6 +298,67 @@ function createPolygon(className, id, sides, scale) {
   setAttributes(polygon, { "points": output.join(" ") });
   return(polygon);
 }
+function getDotPos(base=40, maxR=30) {
+  let angle =  Math.floor(Math.random() * 90)
+  let direction = Math.floor(Math.random() * 4)
+  let sr = Math.floor(Math.random() * maxR)
+  let sx = sr * Math.sin(angle)
+  let sy = sr * Math.cos(angle)
+  switch (direction) {
+    case 0:
+      x = base + sx
+      y = base - sy
+      break;
+    case 1:
+      x = base + sy
+      y = base + sx
+      break;
+    case 2:
+      x = base - sx
+      y = base + sy
+      break;
+    case 3:
+      x = base - sy
+      y = base - sx
+      break;
+  }
+  return({'x': x, 'y': y})
+}
+function isOverlapWith(pos1, pos2, delta = 20) {
+  let distance = Math.sqrt((pos1.x-pos2.x)**2 + (pos1.y-pos2.y)**2)
+  return (distance < delta)
+}
+function getDots (n, base=40, maxR=28) {
+  let dotPos = []
+  if (n<2) {
+    dotPos.push(getDotPos(base, maxR))
+  } else {
+    while(dotPos.length < n) {
+      let newPos = getDotPos(base, maxR)
+      let overlap = 0
+      for (let i=0; i<dotPos.length; i++) {
+        let isOverlap = isOverlapWith(newPos, dotPos[i])
+        overlap += isOverlap
+      }
+      if (overlap==0) {
+        dotPos.push(newPos)
+      }
+    }
+  }
+  return dotPos
+}
+function addDots(n, base=40, maxR=26, color="black", size=4) {
+  if (n==0) {
+    return ''
+  } else {
+    const dotPos = getDots(n, base, maxR)
+    let dotHTML = []
+    for (let i=0; i<dotPos.length; i++) {
+      dotHTML.push(`<circle cx="${dotPos[i].x}" cy="${dotPos[i].y}" r="${size}" stroke="${color}" stroke-width="${size}"/>`)
+    }
+    return dotHTML.join('\n')
+  }
+}
 function clearElement (id) {
   let clear = document.getElementById(id);
   clear.remove();
@@ -331,17 +391,29 @@ function playEffects (config, learnDivPrefix, clicked=0) {
   const delta = Math.round(endPos - startPos) + 8;
   (delta > 0) && (agentStone.style.left = `${delta}px`);
 
-  let initLen = getLength(config.recipient)
-  let targetLen = getLength(config.result)
-  let agentStripe = getStripes(config.agent) // Math.floor(config.agent % Math.pow(10,2) / Math.pow(10,1))
+  let initLen = readLength(config.recipient)
+  let targetLen = readLength(config.result)
   let hist = document.getElementById(`${learnDivPrefix}-displayhist-${config.trial}`)
 
-  if (agentStripe == 1) {
+  if (targetLen == initLen) {
     setTimeout(()=> {
       hist.style.opacity = 0
       hist.style.display = 'flex'
       fadeIn(hist)
     }, 2500)
+  } else if (targetLen < initLen) {
+    setTimeout(() => {
+      for (let i = initLen; i > targetLen; i-- ) {
+        fadeOut(document.getElementById(`${learnDivPrefix}-${config.trial}-recipient-block-${i-1}`))
+        if (clicked == 0) {
+          setTimeout(()=> {
+            hist.style.opacity = 0
+            hist.style.display = 'flex'
+            fadeIn(hist)
+          }, 1000)
+        }
+      }
+    }, 1500);
   } else {
     setTimeout(() => {
       for (let i = initLen; i < targetLen; i++ ) {
@@ -369,6 +441,17 @@ function fadeIn(element) {
     op += op * 0.1;
   }, 20);
 }
+function fadeOut(element) {
+  let op = 1;
+  let timer = setInterval(() => {
+    if (op <= 0) {
+        clearInterval(timer);
+    }
+    element.style.opacity = op;
+    element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+    op -= op * 0.1;
+  }, 20);
+}
 function showNext(id, display = "flex", center = true) {
   let div = document.getElementById(id);
   div.style.display = display;
@@ -378,20 +461,6 @@ function hide(id) {
   let div = document.getElementById(id);
   div.style.display = "none";
 }
-// function createPretrainings(parentDiv) {
-//   for(let i = 0; i < 3; i++ ) {
-//     let obsId = i + 1
-//     let div = createCustomElement('div', 'detect-div', `pretrain-detect-div-${obsId}`)
-//     let agent = createCustomElement('div', 'detect-div-agent', `pretrain-detect-div-agent-${obsId}`)
-//     agent.append(createAgentStone(`pretrain-detect-agent-${obsId}`, (i+3)*10+1))
-//     let power = createCustomElement('div', 'detect-div-power', `pretrain-detect-div-power-${obsId}`)
-//     power.innerHTML = `<p>${'&#9733;'.repeat(i+1)}</p>`
-//     div.append(agent)
-//     div.append(power)
-//     parentDiv.append(div)
-//   }
-//   return parentDiv
-// }
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -475,14 +544,15 @@ function fmtConfig(dataArr, batch, phase, agentColor = 'red') {
   let fmtted = []
   dataArr.forEach((data, idx) => {
     dd = {}
-    dd['id'] =`t${data['trial']}`
+    dd['id'] =`t${data['trial_id']}`
     dd['trial'] = idx+1
     dd['batch'] = batch
     dd['phase'] = phase
-    dd['agent'] = data['agent']
-    dd['recipient'] = data['recipient']
-    dd['result'] = (phase==='gen')? '': data['result']
+    dd['agent'] = data['agent'].replace(/\s/g, '');
+    dd['recipient'] = data['recipient'].replace(/\s/g, '');
+    dd['result'] = data['result'].replace(/\s/g, '');
     dd['color'] = agentColor
+    dd['agentSvg'] = getAgentStoneSvg(dd['agent'])
     fmtted.push(dd)
   })
   return fmtted
