@@ -188,7 +188,7 @@ a {
 }
 
 .agent-stone {
-  fill: WhiteSmoke;
+  fill: snow;
   stroke: black;
   stroke-width: 2px;
 }
@@ -282,4 +282,13 @@ a {
   height: 400px;
   overflow: scroll;
   padding: 0 0 20px 0;
+}
+.intro-eg {
+  height: 80px;
+  width: 80px;
+  margin-right: 30px;
+}
+#intro-eg {
+  display: flex;
+  justify-content: center;
 }

@@ -8,6 +8,12 @@ console.log(`${mode} mode; condition ${cond}.`);
 const start_time = Date.now();
 let start_task_time = 0;
 
+/** Example egg in introduction */
+let introEg = document.getElementById('intro-eg')
+let introEgConfigs = [
+  "(1,0,1)", "(2,1,1)", "(3,4,1)"
+]
+introEg.innerHTML = introEgConfigs.map(ic => `<svg class="intro-eg">${getAgentStoneSvg(ic,"tomato")}</svg>`)
 
 /** Prep data */
 let aliceLearn = fmtConfig(config.filter(c => c['subs']==1), 'alice', 'learn')
