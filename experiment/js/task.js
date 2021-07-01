@@ -1,5 +1,5 @@
 
-const mode = 'dev' // '', 'dev', 'test', 'flask'
+const mode = 'test' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const cond = 'default'
@@ -109,11 +109,17 @@ for(let i = 0; i < aliceGen.length; i++ ) {
   genBlocksEffects(config, taskGenA, aliceGenClicked)
   handleGenSelection(config, taskGenA)
   let resetBtn = document.getElementById(`${taskGenA}-reset-btn-${config.trial}`)
+  let disapperBtn = document.getElementById(`${taskGenA}-disapper-btn-${config.trial}`)
   let confirmBtn = document.getElementById(`${taskGenA}-confirm-btn-${config.trial}`)
   resetBtn.onclick = () => {
     aliceGen[i] = 0
     confirmBtn.disabled = true;
     resetGenBlock(config, taskGenA, aliceGen)
+  }
+  disapperBtn.onclick = () => {
+    hideBlocks(config, taskGenA)
+    resetBtn.disabled = false
+    confirmBtn.disabled = false
   }
   confirmBtn.onclick = () => {
     disableBlocks(config, taskGenA)
@@ -187,7 +193,6 @@ bobOkBtn.onclick = () => {
 
 
 
-
 // Generate gen tasks
 for(let i = 0; i < bobGen.length; i++ ) {
   let config = bobGen[i]
@@ -198,18 +203,24 @@ for(let i = 0; i < bobGen.length; i++ ) {
   genBlocksEffects(config, taskGenB, bobGenClicked)
   handleGenSelection(config, taskGenB)
   let resetBtn = document.getElementById(`${taskGenB}-reset-btn-${config.trial}`)
+  let disapperBtn = document.getElementById(`${taskGenB}-disapper-btn-${config.trial}`)
   let confirmBtn = document.getElementById(`${taskGenB}-confirm-btn-${config.trial}`)
   resetBtn.onclick = () => {
     bobGen[i] = 0
     confirmBtn.disabled = true;
     resetGenBlock(config, taskGenB, bobGen)
   }
+  disapperBtn.onclick = () => {
+    hideBlocks(config, taskGenB)
+    resetBtn.disabled = false
+    confirmBtn.disabled = false
+  }
   confirmBtn.onclick = () => {
     disableBlocks(config, taskGenB)
     resetBtn.disabled = true
     confirmBtn.disabled = true;
     let prevs = [ aliceLearn.length, aliceGen.length, bobLearn.length ].reduce((a, b) => a + b, 0)
-    trialData.result[prevs+i] = '0|'+getCurrentSelection(config, taskGenC)
+    trialData.result[prevs+i] = '(0,0,'+getCurrentSelection(config, taskGenC)+')'
     if (i < aliceGen.length-1) {
       hide(`${taskGenB}-box-${i+1}`);
       showNext(`${taskGenB}-box-${i+2}`);
@@ -271,11 +282,17 @@ for(let i = 0; i < genConfigs.length; i++ ) {
   genBlocksEffects(config, taskGenC, genClicked)
   handleGenSelection(config, taskGenC)
   let resetBtn = document.getElementById(`${taskGenC}-reset-btn-${config.trial}`)
+  let disapperBtn = document.getElementById(`${taskGenC}-disapper-btn-${config.trial}`)
   let confirmBtn = document.getElementById(`${taskGenC}-confirm-btn-${config.trial}`)
   resetBtn.onclick = () => {
     bobGen[i] = 0
     confirmBtn.disabled = true;
     resetGenBlock(config, taskGenC, bobGen)
+  }
+  disapperBtn.onclick = () => {
+    hideBlocks(config, taskGenC)
+    resetBtn.disabled = false
+    confirmBtn.disabled = false
   }
   confirmBtn.onclick = () => {
     disableBlocks(config, taskGenC)

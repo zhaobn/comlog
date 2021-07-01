@@ -144,28 +144,32 @@ function createAgentStone(id, svgText='') {
   agentDiv.append(agentStoneSvg)
   return agentDiv
 }
-function createBlocks(id, stoneOpts, isInit = true) {
+function createBlocks(id, stoneOpts, isInit = true, after = false) {
   let div = createCustomElement("div", "recipient-stone-div", `${id}-blocks-all`);
   let length = isInit? readLength(stoneOpts.recipient) : readLength(stoneOpts.result)
   let max =  (stoneOpts.phase=='gen')? maxBlocks: Math.max(readLength(stoneOpts.result), readLength(stoneOpts.recipient))
   for(let i = 0; i < max; i++ ) {
     let block = createCustomElement("div", "recipient-block", `${id}-block-${i}`)
-    block.style.opacity = (i < length)? 1 : (stoneOpts.phase=='gen')? blockOpDecay(i, length) : 0
+    block.style.opacity = (i < length)? 1 : (stoneOpts.phase=='gen' && after)? blockOpDecay(i, length) : 0
     div.append(block)
   }
   return(div);
 }
-function createGenStones(config, parentDiv, genDivPrefix) {
-  let spaceDiv = createCustomElement("div", "display-main-space", `${genDivPrefix}-${config.trial}-display-space-div`)
-  let agentDiv = createCustomElement("div", "display-main-agent", `${genDivPrefix}-${config.trial}-display-agent-div`)
-  let recipientDiv = createCustomElement("div", "display-main-recipient", `${genDivPrefix}-${config.trial}-display-recipient-div`)
+function createGenStones(config, parentDiv, genDivPrefix, after = false) {
+  let phase = (after==0)? 'before': 'after';
+  let agentCSS =  (after==0)? 'display-main-agent': 'display-main-agent-after';
 
-  agentDiv.append(createAgentStone(`${genDivPrefix}-${config.trial}-agent`, config.agentSvg));
-  recipientDiv.append(createBlocks(`${genDivPrefix}-${config.trial}-recipient`, config));
+  let spaceDiv = createCustomElement("div", "display-main-space", `${genDivPrefix}-${config.trial}-display-space-${phase}-div`)
+  let agentDiv = createCustomElement("div", agentCSS, `${genDivPrefix}-${config.trial}-display-agent-${phase}-div`)
+  let recipientDiv = createCustomElement("div", "display-main-recipient", `${genDivPrefix}-${config.trial}-display-recipient-${phase}-div`)
+
+  agentDiv.append(createAgentStone(`${genDivPrefix}-${config.trial}-agent-${phase}`, config.agentSvg));
+  recipientDiv.append(createBlocks(`${genDivPrefix}-${config.trial}-recipient-${phase}`, config, true, after));
 
   parentDiv.append(spaceDiv)
   parentDiv.append(agentDiv)
   parentDiv.append(recipientDiv)
+
   return(parentDiv);
 }
 function blockOpDecay(index, base) {
@@ -182,7 +186,7 @@ function blockOpDecay(index, base) {
 }
 function genBlocksEffects(config, genDivPrefix, genClicked) {
   for(let i = 0; i < maxBlocks; i++ ) {
-    let idPrefix = `${genDivPrefix}-${config.trial}-recipient-block-`
+    let idPrefix = `${genDivPrefix}-${config.trial}-recipient-after-block-`
     let base = readLength(config.recipient)
     let blockDiv = document.getElementById(`${idPrefix}${i}`)
     blockDiv.onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i, base)
@@ -207,7 +211,7 @@ function genBlocksEffects(config, genDivPrefix, genClicked) {
   }
 }
 function handleGenSelection(config,genDivPrefix) {
-  let blocksDiv = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-blocks-all`)
+  let blocksDiv = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-after-blocks-all`)
   let resetBtn = document.getElementById(`${genDivPrefix}-reset-btn-${config.trial}`)
   let confirmBtn = document.getElementById(`${genDivPrefix}-confirm-btn-${config.trial}`)
   blocksDiv.onclick = () => {
@@ -218,14 +222,14 @@ function handleGenSelection(config,genDivPrefix) {
 function getCurrentSelection(config, genDivPrefix) {
   let blockOps = []
   for(let i = 0; i < maxBlocks; i++ ) {
-    blockOps.push(document.getElementById(`${genDivPrefix}-${config.trial}-recipient-block-${i}`).style.opacity)
+    blockOps.push(document.getElementById(`${genDivPrefix}-${config.trial}-recipient-after-block-${i}`).style.opacity)
   }
   return(findAllIndex('1',blockOps).length)
 }
 function disableBlocks(config, genDivPrefix) {
-  document.getElementById(`${genDivPrefix}-${config.trial}-recipient-blocks-all`).onclick = null
+  document.getElementById(`${genDivPrefix}-${config.trial}-recipient-after-blocks-all`).onclick = null
   for(let i = 0; i < maxBlocks; i++ ) {
-    let blockDiv = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-block-${i}`)
+    let blockDiv = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-after-block-${i}`)
     blockDiv.onmousemove = () => null
     blockDiv.onmouseout = () => null
     blockDiv.onclick = () => null
@@ -252,7 +256,7 @@ function highlightBlocks(idPrefix, i, base) {
   let yesBlocks = Array.from(Array(maxBlocks).keys()).map(m => `${idPrefix}${m}`)
   let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
   yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
-  noBlocks.forEach(b => document.getElementById(b).style.opacity=0) //blockOpDecay(parseInt(b.split('-')[3]), i))
+  noBlocks.forEach(b => document.getElementById(b).style.opacity=0)
   // if (i+1 < maxBlocks) {
   //   document.getElementById(`${idPrefix}${i+1}`).style.opacity = 0.15
   // }
@@ -261,10 +265,19 @@ function highlightBlocks(idPrefix, i, base) {
   // }
   // baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
 }
+function hideBlocks(config, genDivPrefix) {
+  for(let i = 0; i < maxBlocks; i++ ) {
+    let block = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-after-block-${i}`)
+    block.style.opacity = 0
+    block.onmousemove = () => {}
+    block.onmouseout = () => {}
+  }
+
+}
 function resetGenBlock(config, genDivPrefix, genClicked) {
   let length = readLength(config.recipient)
   for(let i = 0; i < maxBlocks; i++ ) {
-    let block = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-block-${i}`)
+    let block = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-after-block-${i}`)
     block.style.opacity = (i < length)? 1 : blockOpDecay(i, length)
   }
   genBlocksEffects(config, genDivPrefix, genClicked)
@@ -630,7 +643,7 @@ function createInputForm(formPrefix) {
                 <br />
               </p>
               <textarea name="${formPrefix}_input" id="${formPrefix}_input" placeholder="Type here"></textarea>
-              <p class="incentive">Remember there is a $0.50 bonus if you guess correctly, and nonsense answers will result in a zero bonus or hit rejection.</p>
+              <!-- <p class="incentive">Remember there is a $0.50 bonus if you guess correctly, and nonsense answers will result in a zero bonus or hit rejection.</p> -->
               <p>How certain are you?
                 <select name="${formPrefix}_certainty" id="${formPrefix}_certainty" class="input-rule">
                   <option value="--" SELECTED>
@@ -658,20 +671,30 @@ function createGenTask(genDivPrefix, genConfigs, total = 0) {
   let trialId = genConfigs.trial
 
   let box = createCustomElement("div", "box", `${genDivPrefix}-box-${trialId}`);
-  let taskBox = createCustomElement("div", "task-box", `${genDivPrefix}-taskbox-${trialId}`);
+  let taskBox = createCustomElement("div", "gen-task-box", `${genDivPrefix}-taskbox-${trialId}`);
 
-  if (total > 1) {
-    let taskNum = createText('h2', `${trialId}/${total}`);
-    taskBox.append(taskNum);
-  }
+  // if (total > 1) {
+  //   let taskNum = createText('h2', `${trialId}/${total}`);
+  //   taskBox.append(taskNum);
+  // }
 
-  let displayBox = createCustomElement("div", "display-box", `${genDivPrefix}-displaybox-${trialId}`);
+  let taskNumText = (total>1)? `[${trialId}/${total}] `: '';
+
+  let beforeMain = createCustomElement("div", "display-main", `${genDivPrefix}-beforemain-${trialId}`);
+  beforeMain = createGenStones(genConfigs, beforeMain, genDivPrefix);
+
+  let displayBox = createCustomElement("div", "display-box-2", `${genDivPrefix}-displaybox-${trialId}`);
   let displayMain = createCustomElement("div", "display-main", `${genDivPrefix}-displaymain-${trialId}`);
-  displayMain = createGenStones(genConfigs, displayMain, genDivPrefix);
+  displayMain = createGenStones(genConfigs, displayMain, genDivPrefix, true);
+
+  displayBox.append(createText('h2', taskNumText + 'What will the blocks look like if touched by this magic egg?'))
+  displayBox.append(beforeMain)
+  displayBox.append(createText('h3', 'Make your prediction by clicking on the blocks:'))
   displayBox.append(displayMain)
 
   const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
   buttonGroup.append(createBtn(`${genDivPrefix}-reset-btn-${trialId}`, "Reset", false));
+  buttonGroup.append(createBtn(`${genDivPrefix}-disapper-btn-${trialId}`, "Disapper", true));
   buttonGroup.append(createBtn(`${genDivPrefix}-confirm-btn-${trialId}`, "Confirm", false));
 
   taskBox.append(displayBox);
