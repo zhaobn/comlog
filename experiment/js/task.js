@@ -2,7 +2,7 @@
 const mode = 'test' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
-const cond = 'default'
+const cond = 'comp_mult' // 'simple_easy', 'simple_hard', 'comp_mult', 'comp_mult_reverse', 'comp_subs', 'comp_subs_reverse'
 console.log(`${mode} mode; condition ${cond}.`);
 
 const start_time = Date.now();
@@ -18,17 +18,17 @@ document.getElementById('intro-blocks-1').append(createBlocks('intro-blocks-1-bl
 document.getElementById('intro-blocks-2').append(createBlocks('intro-blocks-2-blocks', {'recipient': '(0,0,3)', 'phase': 'learn', 'result': '(0,0,0)'}))
 
 /** Prep data */
+const taskIds = getConfigs(config, cond)
 
+let aliceLearn = fmtConfig(config.filter(c => taskIds['learnA'].indexOf(c.trial_id) > -1), 'alice', 'learn')
+let aliceGen = fmtConfig(config.filter(c => taskIds['genA'].indexOf(c.trial_id) > -1), 'alice', 'gen')
 
+let bobLearn = fmtConfig(config.filter(c => taskIds['learnB'].indexOf(c.trial_id) > -1), 'bob', 'learn')
+let bobGen = fmtConfig(config.filter(c => taskIds['genB'].indexOf(c.trial_id) > -1), 'bob', 'gen')
 
-let aliceLearn = fmtConfig(config.filter(c => c['subs']==1), 'alice', 'learn')
-let aliceGen = fmtConfig(config.filter(c => c['trial_id']==34), 'alice', 'gen')
-
-let bobLearn = fmtConfig(config.filter(c => c['subs_pd']==1), 'bob', 'learn')
-let bobGen = fmtConfig(config.filter(c => c['trial_id']==10), 'bob', 'gen')
-
-let usedIndices = [ aliceLearn, aliceGen, bobLearn, bobGen].flat().map(c => parseInt(c['id'].substring(1)))
-let genConfigs =  config.filter(c => usedIndices.indexOf(c.trial) < 0).slice(0,15)
+// let usedIndices = [ aliceLearn, aliceGen, bobLearn, bobGen].flat().map(c => parseInt(c['id'].substring(1)))
+// let genConfigs =  config.filter(c => usedIndices.indexOf(c.trial) < 0).slice(0,15)
+let genConfigs =  config.filter(c => taskIds['genC'].indexOf(c.trial_id) > -1)
 genConfigs = fmtConfig(shuffleArray(genConfigs), 'gen', 'gen')
 
 

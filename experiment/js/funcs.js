@@ -5,6 +5,10 @@ const smallStone = { 'borderWidth': '3px', 'mar': 3, 'len': 20 };
 const maxBlocks = 12
 
 /** Basic helper functions */
+const readStripes= (stone) => parseInt(stone.replace(/[()]/g, '').split(',')[0])
+const readDots= (stone) => parseInt(stone.replace(/[()]/g, '').split(',')[1])
+const readLength = (stone) => parseInt(stone.replace(/[()]/g, '').split(',')[2])
+
 function createCustomElement (type = 'div', className, id) {
   let element = (["svg", "polygon"].indexOf(type) < 0)?
     document.createElement(type):
@@ -37,10 +41,6 @@ function createBtn (btnId, text = "Button", on = true, className = "task-button"
 }
 
 /** Task functions */
-const readStripes= (stone) => parseInt(stone.replace(/[()]/g, '').split(',')[0])
-const readDots= (stone) => parseInt(stone.replace(/[()]/g, '').split(',')[1])
-const readLength = (stone) => parseInt(stone.replace(/[()]/g, '').split(',')[2])
-
 function createInitStones(config, parentDiv, learnDivPrefix) {
   let spaceDiv = createCustomElement("div", "display-main-space", `${learnDivPrefix}-displaymainspace-${config.trial}`)
   let agentDiv = createCustomElement("div", "display-main-agent", `${learnDivPrefix}-displaymainagent-${config.trial}`)
@@ -555,6 +555,63 @@ function download(content, fileName, contentType) {
   a.click();
 }
 /** Data functions */
+function getConfigs(config, type) {
+  // console.log(config)
+  let setups = {
+    'learnA': [],
+    'genA': [],
+    'learnB': [],
+    'genB': [],
+    'genC': [],
+  }
+  if (type=='simple_easy') {
+    setups.learnA = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==2 && readLength(c.recipient)<4).map(c => c.trial_id)
+    setups.genA = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==2 && readLength(c.recipient)==4).map(c => c.trial_id)
+    setups.learnB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)<4 && readLength(c.recipient)==2).map(c => c.trial_id)
+    setups.genB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==4 && readLength(c.recipient)==2).map(c => c.trial_id)
+    setups.genC = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)!=2 && readLength(c.recipient)!=2).map(c => c.trial_id)
+  } else if (type=='simple_hard') {
+    setups.learnA = config.filter(c => readDots(c.agent)<1 && readLength(c.result)==4).map(c => c.trial_id)
+    setups.genA = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==3 && readLength(c.recipient)==2).map(c => c.trial_id)
+    setups.learnB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==1 && readLength(c.recipient)<4).map(c => c.trial_id)
+    setups.genB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==1 && readLength(c.recipient)==4).map(c => c.trial_id)
+    setups.genC = config.filter(c => readDots(c.agent)<1 && [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
+  } else if (type=='comp_mult') {
+    setups.learnA = [3,16,33]
+    setups.genA = [17]
+    setups.learnB = [12,24,36]
+    setups.genB = [21]
+    setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
+  } else if (type=='comp_mult_reverse') {
+    setups.learnA = [12,24,36]
+    setups.genA = [21]
+    setups.learnB = [3,16,33]
+    setups.genB = [17]
+    setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
+  } else if (type=='comp_subs') {
+    setups.learnA = config.filter(c => readDots(c.agent)<4 && readStripes(c.agent)==1 && readLength(c.recipient)==3).map(c => c.trial_id)
+    setups.genA = config.filter(c => readDots(c.agent)==1 && readStripes(c.agent)==3 && readLength(c.recipient)==4).map(c => c.trial_id)
+    setups.learnB = [12,24,36]
+    setups.genB = [21]
+    setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
+  } else if (type=='comp_subs_reverse') {
+    setups.learnA = [12,24,36]
+    setups.genA = [21]
+    setups.learnB = config.filter(c => readDots(c.agent)<4 && readStripes(c.agent)==1 && readLength(c.recipient)==3).map(c => c.trial_id)
+    setups.genB = config.filter(c => readDots(c.agent)==1 && readStripes(c.agent)==3 && readLength(c.recipient)==4).map(c => c.trial_id)
+    setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
+  } else if (type=='comp_comp') {
+    setups.learnA = [3,16,33]
+    setups.genA = [17]
+    setups.learnB = config.filter(c => readDots(c.agent)<4 && readStripes(c.agent)==1 && readLength(c.recipient)==3).map(c => c.trial_id)
+    setups.genB = config.filter(c => readDots(c.agent)==1 && readStripes(c.agent)==3 && readLength(c.recipient)==4).map(c => c.trial_id)
+    setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
+  } else {
+    console.log('Cond type not found')
+  }
+  return setups
+}
+
 function fmtConfig(dataArr, batch, phase, agentColor = 'tomato') {
   let fmtted = []
   dataArr.forEach((data, idx) => {
