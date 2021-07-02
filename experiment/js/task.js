@@ -10,12 +10,17 @@ let start_task_time = 0;
 
 /** Example egg in introduction */
 let introEg = document.getElementById('intro-eg')
-let introEgConfigs = [
-  "(1,0,1)", "(2,1,1)", "(3,4,1)"
-]
-introEg.innerHTML = introEgConfigs.map(ic => `<svg class="intro-eg">${getAgentStoneSvg(ic,"tomato")}</svg>`)
+let introEgConfigs = [ "(1,0,1)", "(2,1,1)", "(3,4,1)" ]
+introEg.innerHTML = introEgConfigs.map(ic => `<svg class="intro-eg">${getAgentStoneSvg(ic,"tomato")}</svg>`).join('\n')
+
+/** Example blocks */
+document.getElementById('intro-blocks-1').append(createBlocks('intro-blocks-1-blocks', {'recipient': '(0,0,2)', 'phase': 'learn', 'result': '(0,0,0)'}))
+document.getElementById('intro-blocks-2').append(createBlocks('intro-blocks-2-blocks', {'recipient': '(0,0,3)', 'phase': 'learn', 'result': '(0,0,0)'}))
 
 /** Prep data */
+
+
+
 let aliceLearn = fmtConfig(config.filter(c => c['subs']==1), 'alice', 'learn')
 let aliceGen = fmtConfig(config.filter(c => c['trial_id']==34), 'alice', 'gen')
 
@@ -337,7 +342,7 @@ descNextBtn.onclick = () => {
 // Quiz
 const checkBtn = document.getElementById('check-btn');
 const checks = [ 'check1', 'check2', 'check3', 'check4', 'check5', 'check6' ];
-const answers = [ true, false, true, false, true, true ];
+const answers = [ true, false, false, true, true, true ];
 
 const passBtn = document.getElementById('pass-btn');
 const retryBtn = document.getElementById('retry-btn');
