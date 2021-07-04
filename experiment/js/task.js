@@ -2,7 +2,7 @@
 const mode = 'test' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
-const cond = 'comp_mult' // 'simple_easy', 'simple_hard', 'comp_mult', 'comp_mult_reverse', 'comp_subs', 'comp_subs_reverse'
+const cond = 'simple_easy' // 'simple_easy', 'simple_hard', 'comp_mult', 'comp_mult_reverse', 'comp_subs', 'comp_subs_reverse', 'comp_mult
 console.log(`${mode} mode; condition ${cond}.`);
 
 const start_time = Date.now();
