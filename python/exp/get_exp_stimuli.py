@@ -1,6 +1,5 @@
 
 # %%
-from numpy import int32
 import pandas as pd
 
 # %%
@@ -13,6 +12,7 @@ all_recipients = []
 
 trials = []
 
+# %%
 for s in stripes:
   for d in dots:
     agent = (s,d,1)
@@ -41,5 +41,3 @@ trials_df.to_csv('trials.csv')
 trials_df = pd.read_csv('trials_labeled.csv', index_col=0).fillna(0).astype({"subs": int, 'subs_pd': int, 'subd': int})
 trials_df.to_csv('trials_labeled.csv')
 trials_df.reset_index().to_json('exp_config.json', orient='records')
-
-# %%

@@ -198,4 +198,20 @@ class Task_gibbs(Gibbs_sampler):
 # filtered = pd.read_csv('test/tmp_filtered_1_3.csv',index_col=0,na_filter=False)
 # extracted = g.extract(filtered, top_n=1)
 
-# %%
+# # %% Data
+# exp_trials = pd.read_csv('exp/trials.csv')
+# task_trials = pd.DataFrame(columns=['trial', 'agent', 'recipient', 'result'])
+# def format_stone (config_str):
+#   vals = config_str.replace(' ','')[1:-1].split(',')
+#   return f'Stone(S{vals[0]},O{vals[1]},L{vals[2]})'
+
+
+# for i in exp_trials.index:
+#   task_trials = task_trials.append(pd.DataFrame({
+#     'trial': [ exp_trials.iloc[i].trial_id],
+#     'agent': [ format_stone(exp_trials.iloc[i].agent)],
+#     'recipient': [ format_stone(exp_trials.iloc[i].recipient)],
+#     'result': [ format_stone(exp_trials.iloc[i].result)],
+#   }))
+
+# task_trials.set_index('trial').to_csv('data/task_data.csv')
