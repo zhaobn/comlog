@@ -14,10 +14,10 @@ class Task_lib(Program_lib):
     Program_lib.__init__(self, df, dir_alpha)
   def sample_base(self, type, add):
     if type == 'obj':
-      shape = self.sample_base('shape', add)
       stripe = self.sample_base('stripe', add)
+      dot = self.sample_base('dot', add)
       length = self.sample_base('length', add)
-      sampled_props = [shape, stripe, length]
+      sampled_props = [stripe, dot, length]
       stone = 'Stone(' + ','.join([p['terms'] for p in sampled_props]) + ')'
       return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'type': 'base_term'}
     else:
@@ -32,20 +32,20 @@ class Task_lib(Program_lib):
         return sampled
   def get_all_objs(self):
     stones_df = pd.DataFrame({'terms': []})
-    shape_df = self.content.query('return_type=="shape"&type=="base_term"')
     stripe_df = self.content.query('return_type=="stripe"&type=="base_term"')
+    dot_df = self.content.query('return_type=="dot"&type=="base_term"')
     length_df = self.content.query('return_type=="length"&type=="base_term"')
-    for s in range(len(shape_df)):
-      for r in range(len(stripe_df)):
+    for s in range(len(stripe_df)):
+      for o in range(len(dot_df)):
         for l in range(len(length_df)):
           stone_feats = [
-            shape_df.iloc[s].at['terms'],
-            stripe_df.iloc[r].at['terms'],
+            stripe_df.iloc[s].at['terms'],
+            dot_df.iloc[o].at['terms'],
             length_df.iloc[l].at['terms'],
           ]
           counts = [
-            shape_df.iloc[s].at['count'],
-            stripe_df.iloc[r].at['count'],
+            stripe_df.iloc[s].at['count'],
+            dot_df.iloc[o].at['count'],
             length_df.iloc[l].at['count'],
           ]
           stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
