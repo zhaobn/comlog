@@ -393,7 +393,7 @@ function getCurrentLocation (id) {
   return rect;
 }
 
-function playEffects (config, learnDivPrefix, clicked=0) {
+function playEffects (config, learnDivPrefix, clicked=0, demo=false) {
 
   if (!(document.body.contains(document.getElementById(`${learnDivPrefix}-${config.trial}-agent-div`)))) {
     console.log('???')
@@ -408,42 +408,51 @@ function playEffects (config, learnDivPrefix, clicked=0) {
 
   let initLen = readLength(config.recipient)
   let targetLen = readLength(config.result)
-  let hist = document.getElementById(`${learnDivPrefix}-displayhist-${config.trial}`)
 
-  if (targetLen == initLen) {
-    setTimeout(()=> {
-      hist.style.opacity = 0
-      hist.style.display = 'flex'
-      fadeIn(hist)
-    }, 2500)
-  } else if (targetLen < initLen) {
-    setTimeout(() => {
-      for (let i = initLen; i > targetLen; i-- ) {
-        fadeOut(document.getElementById(`${learnDivPrefix}-${config.trial}-recipient-block-${i-1}`))
-        if (clicked == 0) {
-          setTimeout(()=> {
-            hist.style.opacity = 0
-            hist.style.display = 'flex'
-            fadeIn(hist)
-          }, 1000)
+   if (demo==false) {
+    let hist = document.getElementById(`${learnDivPrefix}-displayhist-${config.trial}`)
+    if (targetLen == initLen) {
+      setTimeout(()=> {
+        hist.style.opacity = 0
+        hist.style.display = 'flex'
+        fadeIn(hist)
+      }, 2500)
+    } else if (targetLen < initLen) {
+      setTimeout(() => {
+        for (let i = initLen; i > targetLen; i-- ) {
+          fadeOut(document.getElementById(`${learnDivPrefix}-${config.trial}-recipient-block-${i-1}`))
+          if (clicked == 0) {
+            setTimeout(()=> {
+              hist.style.opacity = 0
+              hist.style.display = 'flex'
+              fadeIn(hist)
+            }, 1000)
+          }
         }
-      }
-    }, 1500);
+      }, 1500);
+    } else {
+      setTimeout(() => {
+        for (let i = initLen; i < targetLen; i++ ) {
+          fadeIn(document.getElementById(`${learnDivPrefix}-${config.trial}-recipient-block-${i}`))
+          if (clicked == 0) {
+            setTimeout(()=> {
+              hist.style.opacity = 0
+              hist.style.display = 'flex'
+              fadeIn(hist)
+            }, 1000)
+          }
+        }
+      }, 1500);
+    }
   } else {
-    setTimeout(() => {
-      for (let i = initLen; i < targetLen; i++ ) {
-        fadeIn(document.getElementById(`${learnDivPrefix}-${config.trial}-recipient-block-${i}`))
-        if (clicked == 0) {
-          setTimeout(()=> {
-            hist.style.opacity = 0
-            hist.style.display = 'flex'
-            fadeIn(hist)
-          }, 1000)
-        }
-      }
-    }, 1500);
+    showQuestionMark(document.getElementById(`${learnDivPrefix}-${config.trial}-recipient-block-${initLen}`))
   }
-
+}
+function showQuestionMark (blockDiv) {
+  blockDiv.innerHTML = '<p style="font-size:30px;color:red ">??<p>'
+  blockDiv.style.backgroundColor = "white"
+  blockDiv.style.borderWidth = 0
+  blockDiv.style.opacity = 1
 }
 function fadeIn(element) {
   let op = 0.1;
@@ -654,7 +663,7 @@ function prepTrialData (configsArr) {
 }
 
 /** Page functions */
-function createLearnTask(learnDivPrefix, learnConfig, total=0) {
+function createLearnTask(learnDivPrefix, learnConfig, total=0, isMainTask = true) {
   let trialId = learnConfig.trial;
   let display = (mode==='dev'|trialId===1)? 'flex': 'none';
 
@@ -673,12 +682,12 @@ function createLearnTask(learnDivPrefix, learnConfig, total=0) {
   let displayHist = createCustomElement("div", "display-hist", `${learnDivPrefix}-displayhist-${trialId}`);
   displayHist = createInitHistory(learnConfig, displayHist, learnDivPrefix)
   displayHist.style.opacity = 0
-  displayBox.append(displayHist)
+  isMainTask? displayBox.append(displayHist): null;
   displayBox.append(displayMain)
 
   const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
   buttonGroup.append(createBtn(`${learnDivPrefix}-test-btn-${trialId}`, "Test", true));
-  buttonGroup.append(createBtn(`${learnDivPrefix}-next-btn-${trialId}`, "Next", false));
+  isMainTask? buttonGroup.append(createBtn(`${learnDivPrefix}-next-btn-${trialId}`, "Next", false)) : null;
   taskBox.append(displayBox);
 
   // taskBox.append(buttonGroup);

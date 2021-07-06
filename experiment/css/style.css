@@ -202,7 +202,7 @@ a {
   background-color: #404040;
   border: #C0C0C0 solid 2px;
   height: 40px;
-  width: 30px;
+  width: 25px;
   margin: 0;
   padding: 0;
 }
@@ -290,9 +290,32 @@ a {
 }
 #intro-eg, #intro-blocks {
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
 }
 #intro-blocks-arrow {
   height: 40px;
   padding: 0.5em 1em 0 1em;
+}
+#intro-touch {
+  display: flex;
+  justify-content: center;
+}
+#intro-touch-1 {
+  height: 80px;
+  width: 80px;
+}
+#intro-touch-2 {
+  display: flex;
+  align-items: center;
+}
+#intro-demo {
+  display: flex;
+  justify-content: center;
+}
+#intro-demo-box-1 {
+  height: 150px;
+  width: 80%;
+}
+#intro-demo-taskbox-1 {
+  height: 120px;
 }

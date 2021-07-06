@@ -14,8 +14,26 @@ let introEgConfigs = [ "(1,0,1)", "(2,1,1)", "(3,4,1)" ]
 introEg.innerHTML = introEgConfigs.map(ic => `<svg class="intro-eg">${getAgentStoneSvg(ic,"tomato")}</svg>`).join('\n')
 
 /** Example blocks */
-document.getElementById('intro-blocks-1').append(createBlocks('intro-blocks-1-blocks', {'recipient': '(0,0,2)', 'phase': 'learn', 'result': '(0,0,0)'}))
-document.getElementById('intro-blocks-2').append(createBlocks('intro-blocks-2-blocks', {'recipient': '(0,0,3)', 'phase': 'learn', 'result': '(0,0,0)'}))
+document.getElementById('intro-blocks-1').append(createBlocks('intro-blocks-1-blocks', {'recipient': '(0,0,3)', 'phase': 'learn', 'result': '(0,0,0)'}))
+document.getElementById('intro-blocks-2').append(createBlocks('intro-blocks-2-blocks', {'recipient': '(0,0,2)', 'phase': 'learn', 'result': '(0,0,0)'}))
+document.getElementById('intro-blocks-3').append(createBlocks('intro-blocks-2-blocks', {'recipient': '(0,0,4)', 'phase': 'learn', 'result': '(0,0,0)'}))
+
+/** Example touch moment */
+document.getElementById('intro-touch-1').innerHTML = `<svg class="intro-eg">${getAgentStoneSvg("(2,2,1)","tomato")}</svg>`
+document.getElementById('intro-touch-2').append(createBlocks('intro-touch-2-blocks', {'recipient': '(0,0,4)', 'phase': 'learn', 'result': '(0,0,0)'}))
+showQuestionMark(document.getElementById('intro-touch-2-blocks-block-3'))
+
+/** Example interface */
+const demoConfig = fmtConfig(config.filter(c => c.trial_id==26), 'demo', 'learn')
+document.getElementById('intro-demo').append(createLearnTask('intro-demo', demoConfig[0], 0, false))
+document.getElementById('intro-demo-test-btn-1').onclick = () => {
+  playEffects(demoConfig[0], 'intro-demo', 1, true);
+  setTimeout(() => {
+    clearInitStones('intro-demo', demoConfig[0])
+    createInitStones(demoConfig[0], document.getElementById('intro-demo-displaymain-1'), 'intro-demo')
+    document.getElementById('intro-demo-test-btn-1').innerText = 'Test again'
+  }, 2000);
+}
 
 /** Prep data */
 const taskIds = getConfigs(config, cond)
