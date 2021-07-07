@@ -137,7 +137,7 @@ class Task_gibbs(Gibbs_sampler):
         # Sample frames
         ns = 0
         filtered = pd.DataFrame({'terms': [], 'log_prob': []})
-        while (len(filtered)) < 1 and ns < 100000: # Safe to use a large ns, bc ground truth is covered - it will stop
+        while (len(filtered)) < 1 and ns < 10000: # NOT TRUE: Safe to use a large ns, bc ground truth is covered - it will stop
           ns += 1
           # if ns == 1:
           #   sampled_frames = pd.concat([
@@ -215,3 +215,16 @@ class Task_gibbs(Gibbs_sampler):
 #   }))
 
 # task_trials.set_index('trial').to_csv('data/task_data.csv')
+
+# %%
+def df_to_data(df):
+  task_data = []
+  for i in range(len(df)):
+    tdata = df.iloc[i].to_dict()
+    task = {
+      'agent': eval(tdata['agent']),
+      'recipient': eval(tdata['recipient']),
+      'result': eval(tdata['result'])
+    }
+    task_data.append(task)
+  return task_data
