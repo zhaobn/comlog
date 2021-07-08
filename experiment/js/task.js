@@ -1,5 +1,5 @@
 
-const mode = 'test' // '', 'dev', 'test', 'flask'
+const mode = 'dev' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const cond = 'simple_easy' // 'simple_easy', 'simple_hard', 'comp_mult', 'comp_mult_reverse', 'comp_subs', 'comp_subs_reverse', 'comp_mult
@@ -138,17 +138,11 @@ for(let i = 0; i < aliceGen.length; i++ ) {
   genBlocksEffects(config, taskGenA, aliceGenClicked)
   handleGenSelection(config, taskGenA)
   let resetBtn = document.getElementById(`${taskGenA}-reset-btn-${config.trial}`)
-  let disapperBtn = document.getElementById(`${taskGenA}-disapper-btn-${config.trial}`)
   let confirmBtn = document.getElementById(`${taskGenA}-confirm-btn-${config.trial}`)
   resetBtn.onclick = () => {
     aliceGen[i] = 0
     confirmBtn.disabled = true;
     resetGenBlock(config, taskGenA, aliceGen)
-  }
-  disapperBtn.onclick = () => {
-    hideBlocks(config, taskGenA)
-    resetBtn.disabled = false
-    confirmBtn.disabled = false
   }
   confirmBtn.onclick = () => {
     disableBlocks(config, taskGenA)
@@ -232,17 +226,11 @@ for(let i = 0; i < bobGen.length; i++ ) {
   genBlocksEffects(config, taskGenB, bobGenClicked)
   handleGenSelection(config, taskGenB)
   let resetBtn = document.getElementById(`${taskGenB}-reset-btn-${config.trial}`)
-  let disapperBtn = document.getElementById(`${taskGenB}-disapper-btn-${config.trial}`)
   let confirmBtn = document.getElementById(`${taskGenB}-confirm-btn-${config.trial}`)
   resetBtn.onclick = () => {
     bobGen[i] = 0
     confirmBtn.disabled = true;
     resetGenBlock(config, taskGenB, bobGen)
-  }
-  disapperBtn.onclick = () => {
-    hideBlocks(config, taskGenB)
-    resetBtn.disabled = false
-    confirmBtn.disabled = false
   }
   confirmBtn.onclick = () => {
     disableBlocks(config, taskGenB)
@@ -311,17 +299,11 @@ for(let i = 0; i < genConfigs.length; i++ ) {
   genBlocksEffects(config, taskGenC, genClicked)
   handleGenSelection(config, taskGenC)
   let resetBtn = document.getElementById(`${taskGenC}-reset-btn-${config.trial}`)
-  let disapperBtn = document.getElementById(`${taskGenC}-disapper-btn-${config.trial}`)
   let confirmBtn = document.getElementById(`${taskGenC}-confirm-btn-${config.trial}`)
   resetBtn.onclick = () => {
     bobGen[i] = 0
     confirmBtn.disabled = true;
     resetGenBlock(config, taskGenC, bobGen)
-  }
-  disapperBtn.onclick = () => {
-    hideBlocks(config, taskGenC)
-    resetBtn.disabled = false
-    confirmBtn.disabled = false
   }
   confirmBtn.onclick = () => {
     disableBlocks(config, taskGenC)
@@ -360,7 +342,7 @@ descNextBtn.onclick = () => {
 // Quiz
 const checkBtn = document.getElementById('check-btn');
 const checks = [ 'check1', 'check2', 'check3', 'check4', 'check5', 'check6' ];
-const answers = [ true, false, false, true, true, true ];
+const answers = [ true, true, true, false, false, true ];
 
 const passBtn = document.getElementById('pass-btn');
 const retryBtn = document.getElementById('retry-btn');

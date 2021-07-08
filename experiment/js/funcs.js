@@ -185,19 +185,32 @@ function blockOpDecay(index, base) {
   // return (index > base + 1)? 0: 0.1 - 0.001*(index - base)
 }
 function genBlocksEffects(config, genDivPrefix, genClicked) {
+  // if (genClicked[config.trial-1] == 0) {
+
+  // }
+  let box = document.getElementById(`${genDivPrefix}-displaymain-${config.trial}`)
+  box.onclick = (event) => {
+    let blockLeft = document.getElementById(`${genDivPrefix}-${config.trial}-recipient-after-blocks-all`).getBoundingClientRect().left;
+    if (event.clientX < blockLeft) {
+      hideBlocks(config, genDivPrefix)
+      genClicked[config.trial-1] += 1
+      document.getElementById(`${genDivPrefix}-confirm-btn-${config.trial}`).disabled = false
+      document.getElementById(`${genDivPrefix}-reset-btn-${config.trial}`).disabled = false
+    }
+  }
   for(let i = 0; i < maxBlocks; i++ ) {
     let idPrefix = `${genDivPrefix}-${config.trial}-recipient-after-block-`
     let base = readLength(config.recipient)
     let blockDiv = document.getElementById(`${idPrefix}${i}`)
     blockDiv.onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i, base)
-    blockDiv.onmouseout = () => highlightBlocks(idPrefix, i, base)
+    blockDiv.onmouseout = () => highlightBlocksOnly(idPrefix, i, base)
     blockDiv.onclick = () => {
       highlightBlocks(idPrefix, i, base)
       if (genClicked[config.trial-1] % 2 == 1) {
         for(let i = 0; i < maxBlocks; i++ ) {
           let blockDiv = document.getElementById(`${idPrefix}${i}`)
           blockDiv.onmousemove = () => highlightBlocksOnMouseOver(idPrefix, i, base)
-          blockDiv.onmouseout = () => highlightBlocks(idPrefix, i, base)
+          blockDiv.onmouseout = () => highlightBlocksOnly(idPrefix, i, base)
         }
       } else {
         for(let i = 0; i < maxBlocks; i++ ) {
@@ -264,6 +277,17 @@ function highlightBlocks(idPrefix, i, base) {
   //   document.getElementById(`${idPrefix}${i+2}`).style.opacity = 0.05
   // }
   // baseBlocks.forEach(b => document.getElementById(b).style.opacity=1)
+}
+function highlightBlocksOnly(idPrefix, i) {
+  let yesBlocks = Array.from(Array(maxBlocks).keys()).map(m => `${idPrefix}${m}`)
+  let noBlocks = Array.from(Array(maxBlocks).keys()).filter(b => b > i).map(m => `${idPrefix}${m}`)
+  if (i==0) {
+    yesBlocks.forEach(b => document.getElementById(b).style.opacity=0)
+    noBlocks.forEach(b => document.getElementById(b).style.opacity=0)
+  } else {
+    yesBlocks.forEach(b => document.getElementById(b).style.opacity=1)
+    noBlocks.forEach(b => document.getElementById(b).style.opacity=0)
+  }
 }
 function hideBlocks(config, genDivPrefix) {
   for(let i = 0; i < maxBlocks; i++ ) {
@@ -760,7 +784,6 @@ function createGenTask(genDivPrefix, genConfigs, total = 0) {
 
   const buttonGroup = createCustomElement("div", "button-group-vc", `learn${trialId}`);
   buttonGroup.append(createBtn(`${genDivPrefix}-reset-btn-${trialId}`, "Reset", false));
-  buttonGroup.append(createBtn(`${genDivPrefix}-disapper-btn-${trialId}`, "Disapper", true));
   buttonGroup.append(createBtn(`${genDivPrefix}-confirm-btn-${trialId}`, "Confirm", false));
 
   taskBox.append(displayBox);

@@ -5,17 +5,15 @@
     <title>Magic Eggs</title>
   </head>
   <body>
-    <div id="instruction" class="base" >
+    <div id="instruction" class="base" style="display: none;">
       <h1>Instructions</h1>
       <div id="box-desc-1">
         <div class="frame">
           <div id="instruction-text">
-            <p>
-              Imagine you are playing in a magical field of wonders where you encounter some magic eggs and some sticks.
-              The eggs seem to differ in terms of how many stripes and dots they have on them:
-            </p>
+            <p>Imagine you are playing in a magical field of wonders, where you encounter some magic eggs and some sticks.</p>
+            <p>The eggs seem to differ in terms of how many stripes and dots they have on them:</p>
             <div id='intro-eg'></div>
-            <p>Meanwhile, the sticks are of various lengths (have different numbers of segments):</p>
+            <p>And the sticks are of various lengths (have different numbers of segments):</p>
             <div id='intro-blocks'>
               <div id="intro-blocks-1"></div><div id="intro-blocks-2"></div><div id="intro-blocks-3"></div>
             </div>
@@ -40,16 +38,16 @@
             <div id="intro-demo"></div>
             <p>
               Once you have performed three tests, you will be asked to write down your best guess of how the magic eggs work.
-              <b>If you guess correctly, you will win a bonus of £0.50!</b>
+              <b>If you guess correctly, you will win a bonus of £0.40!</b>
             </p>
             <p>
               You will then get to perform three more tests.
               Then, you will make a second, updated guess about how the eggs work.
-              <b>If you guess correctly, you will win another £0.50 bonus.</b>
+              <b>If you guess correctly, you will win another £0.40 bonus.</b>
             </p>
             <p>
-              Finally, you will make N predictions about what some new, untested magic eggs will do to some new untested sticks.
-              For each of these that you get right, you will win an <b>additional bonus of £0.20</b>.
+              Finally, you will make 16 predictions about what some new, untested magic eggs will do to some new untested sticks.
+              For each of these that you get right, you will win an <b>additional bonus of £0.10</b>.
             </p>
             <p>
               This means you can make up to £XX if you get everything correct,
@@ -73,32 +71,32 @@
       <div class="frame">
         <form id='prequiz'>
           <ol>
-            <li>Magic eggs cause the blocks to change.</li>
+            <li>Magic eggs can cause the sticks to change length</li>
             <p>
               <input type="radio" name="check1">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input type="radio" name="check1">False
             </p>
-            <li>There is no indication of what magic power a magic egg has from observing it.</li>
+            <li>Spots and stripes of a magic egg are important indicators of how its magic power work</li>
             <p>
               <input type="radio" name="check2">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input type="radio" name="check2">False
             </p>
-            <li>You need to memorize all the magic effects.</li>
+            <li>You will need to keep track of the magic effects if you want to guess correctly</li>
             <p>
               <input type="radio" name="check3">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input type="radio" name="check3">False
             </p>
-            <li>You will be bonused for writing down the correct causal relationship.</li>
+            <li>Your second guess has to be the same as your first guess</li>
             <p>
               <input type="radio" name="check4">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input type="radio" name="check4">False
             </p>
-            <li>You will be making predictions on new magic eggs.</li>
+            <li>Your goal is to make the sticks longer</li>
             <p>
               <input type="radio" name="check5">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input type="radio" name="check5">False
             </p>
-            <li>You will be bonused for making correct predictions.</li>
+            <li>You win bonuses for guessing the true causal relationship and for making correct predictions about new egg and stick combinations.</li>
             <p>
               <input type="radio" name="check6">Correct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input type="radio" name="check6">False
@@ -123,14 +121,14 @@
       </div>
     </div>
     <div id="task" class="base">
-      <div id='task-alice' style="display: none;" >
+      <div id='task-alice' > style="display: none;"
         <div id="task-cover-a" >
           <h3><b>First, checkout out these magic eggs:</b></h3>
           <button class='big-button' id='dev-skip-alice'>Skip A</button>
         </div>
         <div id="task-train-a" ></div>
         <div id="task-input-a" style="display: none;" ></div>
-        <div id="task-gen-a" style="display: none;" >
+        <div id="task-gen-a"  > style="display: none;"
           <!-- <p class="incentive" style="font-size: 25px;">Remember there is a $0.20 bonus if you make a correct prediction.</p> -->
         </div>
       </div>
