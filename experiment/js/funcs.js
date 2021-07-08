@@ -695,7 +695,7 @@ function createLearnTask(learnDivPrefix, learnConfig, total=0, isMainTask = true
   let taskBox = createCustomElement("div", "task-box", `${learnDivPrefix}-taskbox-${trialId}`);
 
   if (total > 1) {
-    let taskNum = createText('h2', `${trialId}/${total}`);
+    let taskNum = createText('h2', trialId); //`${trialId}/${total}`
     taskBox.append(taskNum);
   }
 
@@ -763,10 +763,10 @@ function createGenTask(genDivPrefix, genConfigs, total = 0) {
   let box = createCustomElement("div", "box", `${genDivPrefix}-box-${trialId}`);
   let taskBox = createCustomElement("div", "gen-task-box", `${genDivPrefix}-taskbox-${trialId}`);
 
-  // if (total > 1) {
-  //   let taskNum = createText('h2', `${trialId}/${total}`);
-  //   taskBox.append(taskNum);
-  // }
+  if (total > 1) {
+    let taskNum = createText('h2', `${trialId}/${total}`);
+    taskBox.append(taskNum);
+  }
 
   let taskNumText = (total>1)? `[${trialId}/${total}] `: '';
 

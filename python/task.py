@@ -163,6 +163,7 @@ class Task_gibbs(Gibbs_sampler):
         if len(filtered) < 1:
           self.filtering_history[i][j] = 0
           print('Nothing consistent, skipping to next...') if logging else None
+          continue
         else:
           self.filtering_history[i][j] = 1
           extracted = self.extract(filtered, top_n, sample, base)

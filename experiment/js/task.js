@@ -252,78 +252,78 @@ for(let i = 0; i < bobGen.length; i++ ) {
 }
 
 
-/** Composition */
-let compDiv = document.getElementById(taskTrainC);
-let aliceSummaryDiv = createCustomElement('div', 'summary-div', 'alice-summary-div');
-let bobSummaryDiv = createCustomElement('div', 'summary-div', 'bob-summary-div');
+// /** Composition */
+// let compDiv = document.getElementById(taskTrainC);
+// let aliceSummaryDiv = createCustomElement('div', 'summary-div', 'alice-summary-div');
+// let bobSummaryDiv = createCustomElement('div', 'summary-div', 'bob-summary-div');
 
-for(let i = 0; i < aliceLearn.length; i++ ) {
-  aliceSummaryDiv.append(createSum(aliceLearn[i], 'alice-sum'))
-}
+// for(let i = 0; i < aliceLearn.length; i++ ) {
+//   aliceSummaryDiv.append(createSum(aliceLearn[i], 'alice-sum'))
+// }
 
-for(let i = 0; i < bobLearn.length; i++ ) {
-  bobSummaryDiv.append(createSum(bobLearn[i], 'bob-sum'))
-}
+// for(let i = 0; i < bobLearn.length; i++ ) {
+//   bobSummaryDiv.append(createSum(bobLearn[i], 'bob-sum'))
+// }
 
-compDiv.append(aliceSummaryDiv);
-compDiv.append(bobSummaryDiv);
+// compDiv.append(aliceSummaryDiv);
+// compDiv.append(bobSummaryDiv);
 
-// Free response
-(mode === 'dev')? document.getElementById(taskInputC).style.display = 'flex': null;
-document.getElementById(taskInputC).append(createInputForm(taskInputC))
+// // Free response
+// (mode === 'dev')? document.getElementById(taskInputC).style.display = 'flex': null;
+// document.getElementById(taskInputC).append(createInputForm(taskInputC))
 
-let compInputForm = document.getElementById(`${taskInputC}-input-form`)
-let compOkBtn = document.getElementById(`${taskInputC}-input-submit-btn`)
-compInputForm.onchange = () => isFilled(`${taskInputC}-input-form`)? compOkBtn.disabled = false: null;
-compOkBtn.onclick = () => {
-  let inputs = compInputForm.elements;
-  Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
-  compOkBtn.disabled = true;
-  disableFormInputs(`${taskInputC}-input-form`);
-  // console.log(subjectData)
-  hide('task-input-c-button-group-vc')
-  showNext(taskGenC, 'block')
-}
+// let compInputForm = document.getElementById(`${taskInputC}-input-form`)
+// let compOkBtn = document.getElementById(`${taskInputC}-input-submit-btn`)
+// compInputForm.onchange = () => isFilled(`${taskInputC}-input-form`)? compOkBtn.disabled = false: null;
+// compOkBtn.onclick = () => {
+//   let inputs = compInputForm.elements;
+//   Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
+//   compOkBtn.disabled = true;
+//   disableFormInputs(`${taskInputC}-input-form`);
+//   // console.log(subjectData)
+//   hide('task-input-c-button-group-vc')
+//   showNext(taskGenC, 'block')
+// }
 
-// Generate gen tasks
-for(let i = 0; i < genConfigs.length; i++ ) {
-  let config = genConfigs[i]
-  // console.log(config)
-  document.getElementById(taskGenC).append(createGenTask(taskGenC, config, genConfigs.length))
-  if (mode !== 'dev' && i > 0) {
-    document.getElementById(`${taskGenC}-box-${i+1}`).style.display = 'none'
-  }
+// // Generate gen tasks
+// for(let i = 0; i < genConfigs.length; i++ ) {
+//   let config = genConfigs[i]
+//   // console.log(config)
+//   document.getElementById(taskGenC).append(createGenTask(taskGenC, config, genConfigs.length))
+//   if (mode !== 'dev' && i > 0) {
+//     document.getElementById(`${taskGenC}-box-${i+1}`).style.display = 'none'
+//   }
 
 
-  /** Effects and button functionalities */
-  genBlocksEffects(config, taskGenC, genClicked)
-  handleGenSelection(config, taskGenC)
-  let resetBtn = document.getElementById(`${taskGenC}-reset-btn-${config.trial}`)
-  let confirmBtn = document.getElementById(`${taskGenC}-confirm-btn-${config.trial}`)
-  resetBtn.onclick = () => {
-    bobGen[i] = 0
-    confirmBtn.disabled = true;
-    resetGenBlock(config, taskGenC, bobGen)
-  }
-  confirmBtn.onclick = () => {
-    disableBlocks(config, taskGenC)
-    resetBtn.disabled = true
-    confirmBtn.disabled = true;
-    let prevs = [ aliceLearn.length, aliceGen.length, bobLearn.length, bobGen.length ].reduce((a, b) => a + b, 0)
-    trialData.result[prevs+i] = '0|'+getCurrentSelection(config, taskGenC)
-    // console.log(trialData)
-    hide(`${taskGenC}-box-${i+1}`)
-    if (i < genConfigs.length-1) {
-      showNext(`${taskGenC}-box-${i+2}`, 'flex', false);
-    } else {
-      hide(taskCoverC)
-      hide(taskTrainC)
-      hide(taskInputC)
-      hide(taskGenC)
-      showNext('debrief', 'block');
-    }
-  }
-}
+//   /** Effects and button functionalities */
+//   genBlocksEffects(config, taskGenC, genClicked)
+//   handleGenSelection(config, taskGenC)
+//   let resetBtn = document.getElementById(`${taskGenC}-reset-btn-${config.trial}`)
+//   let confirmBtn = document.getElementById(`${taskGenC}-confirm-btn-${config.trial}`)
+//   resetBtn.onclick = () => {
+//     bobGen[i] = 0
+//     confirmBtn.disabled = true;
+//     resetGenBlock(config, taskGenC, bobGen)
+//   }
+//   confirmBtn.onclick = () => {
+//     disableBlocks(config, taskGenC)
+//     resetBtn.disabled = true
+//     confirmBtn.disabled = true;
+//     let prevs = [ aliceLearn.length, aliceGen.length, bobLearn.length, bobGen.length ].reduce((a, b) => a + b, 0)
+//     trialData.result[prevs+i] = '0|'+getCurrentSelection(config, taskGenC)
+//     // console.log(trialData)
+//     hide(`${taskGenC}-box-${i+1}`)
+//     if (i < genConfigs.length-1) {
+//       showNext(`${taskGenC}-box-${i+2}`, 'flex', false);
+//     } else {
+//       hide(taskCoverC)
+//       hide(taskTrainC)
+//       hide(taskInputC)
+//       hide(taskGenC)
+//       showNext('debrief', 'block');
+//     }
+//   }
+// }
 
 
 // Instruction buttons
@@ -457,12 +457,12 @@ devSkipBob.onclick = () => {
 }
 
 
-const devSkipComp = document.getElementById('dev-skip-comp')
-devSkipComp.style.display = (mode==='dev'|mode==='test')? 'block': 'none'
-devSkipComp.onclick = () => {
-  hide(taskCoverC)
-  hide(taskTrainC)
-  hide(taskInputC)
-  hide(taskGenC)
-  showNext('debrief', 'block')
-}
+// const devSkipComp = document.getElementById('dev-skip-comp')
+// devSkipComp.style.display = (mode==='dev'|mode==='test')? 'block': 'none'
+// devSkipComp.onclick = () => {
+//   hide(taskCoverC)
+//   hide(taskTrainC)
+//   hide(taskInputC)
+//   hide(taskGenC)
+//   showNext('debrief', 'block')
+// }
