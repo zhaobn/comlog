@@ -199,8 +199,8 @@ a {
 }
 
 .recipient-block {
-  background-color: #404040;
-  border: #C0C0C0 solid 2px;
+  background-color: #013220; /** #404040;*/
+  border: white solid 1px; /** #C0C0C0;*/
   height: 40px;
   width: 25px;
   margin: 0;
