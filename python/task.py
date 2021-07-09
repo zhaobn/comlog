@@ -69,7 +69,6 @@ class Task_lib(Program_lib):
 # rf2 = pl.typed_enum(t,2)
 # rf2.to_csv('data/task_frames.csv')
 
-
 # %%
 class Task_gibbs(Gibbs_sampler):
   def __init__(self, program_lib, data_list, iteration, inc=True, burnin=0, down_weight=1, iter_start=0, data_start=0):
@@ -111,11 +110,11 @@ class Task_gibbs(Gibbs_sampler):
 
   def run(self, frames, top_n=1, sample=True, frame_sample=20, base=0, logging=True, save_prefix=''):
     frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
-    frames_left = frames.copy()
     for i in range(self.iter_start, self.iter):
       iter_log = f'Iter {i+1}/{self.iter}'
       data_start = 0 if i > self.iter_start else self.data_start
       for j in range(data_start, len(self.data)):
+        frames_left = frames.copy()
         data_log = f'Data {j+1}/{len(self.data)}'
         data = self.data[:(j+1)] if i < 1 else self.data
         # Remove previously-extracted counts
@@ -163,7 +162,6 @@ class Task_gibbs(Gibbs_sampler):
         if len(filtered) < 1:
           self.filtering_history[i][j] = 0
           print('Nothing consistent, skipping to next...') if logging else None
-          continue
         else:
           self.filtering_history[i][j] = 1
           extracted = self.extract(filtered, top_n, sample, base)
