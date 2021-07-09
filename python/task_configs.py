@@ -124,6 +124,9 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 #   {'terms': '[KB,I,I]', 'arg_types': 'obj_obj', 'return_type': 'obj', 'type': 'program'},
 #   getStripe, getDot, getLength, setLength, #setStripe, setDot
 #   addnn, subnn, mulnn, I,
+#   {'terms': '[KB,getStripe,I]', 'arg_types': 'obj_obj', 'return_type': 'num', 'type': 'program'},
+#   {'terms': '[KB,getDot,I]', 'arg_types': 'obj_obj', 'return_type': 'num', 'type': 'program'},
+#   {'terms': '[KB,getLength,I]', 'arg_types': 'obj_obj', 'return_type': 'num', 'type': 'program'},
 # ]
 
 # for pt in pm_terms:
@@ -155,7 +158,3 @@ I = Primitive('I', 'obj', 'obj', return_myself)
 #   .sort_values(by=['type','return_type','arg_types','terms'])
 #   .reset_index(drop=1))
 # pm_task.to_csv('data/task_pm.csv')
-
-# %%
-
-# %%

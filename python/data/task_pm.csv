@@ -33,5 +33,8 @@
 31,getStripe,obj,num,primitive,1,-2.0794415416798357
 32,I,obj,obj,primitive,1,-2.0794415416798357
 33,setLength,obj_num,obj,primitive,1,-2.0794415416798357
-34,"[B,I,I]",obj,obj,program,1,-0.6931471805599453
-35,"[KB,I,I]",obj_obj,obj,program,1,-0.6931471805599453
+34,"[KB,getDot,I]",obj_obj,num,program,1,-1.6094379124341003
+35,"[KB,getLength,I]",obj_obj,num,program,1,-1.6094379124341003
+36,"[KB,getStripe,I]",obj_obj,num,program,1,-1.6094379124341003
+37,"[B,I,I]",obj,obj,program,1,-1.6094379124341003
+38,"[KB,I,I]",obj_obj,obj,program,1,-1.6094379124341003
