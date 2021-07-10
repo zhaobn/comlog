@@ -88,7 +88,7 @@ def set_dot (arg_list):
 
 def set_length (arg_list):
   obj, val = arg_list
-  len_val = 1 if val < 1 else val
+  len_val = 0 if val < 0 else val
   obj.length = Length(f'L{len_val}')
   return obj
 
