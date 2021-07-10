@@ -611,15 +611,15 @@ function getConfigs(config, type) {
     setups.genC = config.filter(c => readDots(c.agent)<1 && [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
   } else if (type=='comp_mult') {
     setups.learnA = [3,16,33]
-    setups.genA = [17]
+    setups.genA = [50,18,2,6,29,54]
     setups.learnB = [12,24,36]
-    setups.genB = [21]
+    setups.genB = [50,18,2,6,29,54]
     setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
   } else if (type=='comp_mult_reverse') {
     setups.learnA = [12,24,36]
-    setups.genA = [21]
+    setups.genA = [50,18,2,6,29,54]
     setups.learnB = [3,16,33]
-    setups.genB = [17]
+    setups.genB = [50,18,2,6,29,54]
     setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
   } else if (type=='comp_subs') {
     setups.learnA = config.filter(c => readDots(c.agent)<4 && readStripes(c.agent)==1 && readLength(c.recipient)==3).map(c => c.trial_id)
@@ -757,16 +757,65 @@ function createInputForm(formPrefix) {
           </div>`
   return box
 }
-function createGenTask(genDivPrefix, genConfigs, total = 0) {
+function createMindChangeForm(formPrefix) {
+  let div = createCustomElement("div", "box", `${formPrefix}-wrapper`);
+  let boolBox = createCustomElement("div", "display-box-min", `${formPrefix}-bool-box`);
+  boolBox.innerHTML = `
+    <form class="input-form" id="${formPrefix}-bool-form">
+      <p>Did you change your mind?
+        <input type="radio" name="alice-change" value=1>Yes
+        <input type="radio" name="alice-change" value=0>No
+      </p>
+    </form>`
+  let box = createCustomElement("div", "display-box", `${formPrefix}-box`);
+  box.innerHTML = `
+            <form class="input-form" id="${formPrefix}-input-form">
+              <p>
+                <b>What is your guess about these magic eggs now?</b>
+                (Please be specific about <i>what properties you think matter or do not matter for the effects,
+                and how they do so</i>.)
+                <br />
+              </p>
+              <textarea name="${formPrefix}_input" id="${formPrefix}_input" placeholder="Type here"></textarea>
+              <!-- <p class="incentive">Remember there is a $0.50 bonus if you guess correctly, and nonsense answers will result in a zero bonus or hit rejection.</p> -->
+              <p>How certain are you?
+                <select name="${formPrefix}_certainty" id="${formPrefix}_certainty" class="input-rule">
+                  <option value="--" SELECTED>
+                    <option value="10">10 - Very certain</option>
+                    <option value="9">9</option>
+                    <option value="8">8</option>
+                    <option value="7">7</option>
+                    <option value="6">6</option>
+                    <option value="5">5 - Moderately</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                    <option value="0">0 - Not sure at all</option>
+                </select>
+              </p>
+            </form>
+            </div>
+          `
+  box.style.display = 'none'
+
+  let btns = createCustomElement("div", "button-group-vc", `${formPrefix}-button-group-vc`);
+  btns.innerHTML = `<button id="${formPrefix}-input-submit-btn" disabled=true>OK</button>`
+  div.append(boolBox)
+  div.append(box)
+  div.append(btns)
+  return div
+}
+function createGenTask(genDivPrefix, genConfigs, total=0) {
   let trialId = genConfigs.trial
 
   let box = createCustomElement("div", "box", `${genDivPrefix}-box-${trialId}`);
   let taskBox = createCustomElement("div", "gen-task-box", `${genDivPrefix}-taskbox-${trialId}`);
 
-  if (total > 1) {
-    let taskNum = createText('h2', `${trialId}/${total}`);
-    taskBox.append(taskNum);
-  }
+  // if (total > 1) {
+  //   let taskNum = createText('h2', `${trialId}/${total}`);
+  //   taskBox.append(taskNum);
+  // }
 
   let taskNumText = (total>1)? `[${trialId}/${total}] `: '';
 

@@ -1,8 +1,8 @@
 
-const mode = 'dev' // '', 'dev', 'test', 'flask'
+const mode = '' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
-const cond = 'simple_easy' // 'simple_easy', 'simple_hard', 'comp_mult', 'comp_mult_reverse', 'comp_subs', 'comp_subs_reverse', 'comp_mult
+const cond = 'comp_mult' // 'simple_easy', 'simple_hard', 'comp_mult', 'comp_mult_reverse', 'comp_subs', 'comp_subs_reverse', 'comp_mult
 console.log(`${mode} mode; condition ${cond}.`);
 
 const start_time = Date.now();
@@ -39,16 +39,17 @@ document.getElementById('intro-demo-test-btn-1').onclick = () => {
 const taskIds = getConfigs(config, cond)
 
 let aliceLearn = fmtConfig(config.filter(c => taskIds['learnA'].indexOf(c.trial_id) > -1), 'alice', 'learn')
-let aliceGen = fmtConfig(config.filter(c => taskIds['genA'].indexOf(c.trial_id) > -1), 'alice', 'gen')
+let aliceGen = fmtConfig(shuffleArray(config.filter(c => taskIds['genA'].indexOf(c.trial_id) > -1)), 'alice', 'gen')
 
 let bobLearn = fmtConfig(config.filter(c => taskIds['learnB'].indexOf(c.trial_id) > -1), 'bob', 'learn')
-let bobGen = fmtConfig(config.filter(c => taskIds['genB'].indexOf(c.trial_id) > -1), 'bob', 'gen')
+bobLearn.map(bl => bl.trial = bl.trial + aliceLearn.length)
+let bobGen = fmtConfig(shuffleArray(config.filter(c => taskIds['genB'].indexOf(c.trial_id) > -1)), 'bob', 'gen')
+bobGen.map(bg => bg.trial = bg.trial + aliceGen.length)
 
 // let usedIndices = [ aliceLearn, aliceGen, bobLearn, bobGen].flat().map(c => parseInt(c['id'].substring(1)))
 // let genConfigs =  config.filter(c => usedIndices.indexOf(c.trial) < 0).slice(0,15)
 let genConfigs =  config.filter(c => taskIds['genC'].indexOf(c.trial_id) > -1)
 genConfigs = fmtConfig(shuffleArray(genConfigs), 'gen', 'gen')
-
 
 // For page animation
 let aliceLearnClicked = Array(aliceLearn.length).fill(0);
@@ -66,6 +67,7 @@ const taskCoverA = 'task-cover-a'
 const taskTrainA = 'task-train-a'
 const taskInputA = 'task-input-a'
 const taskGenA = 'task-gen-a'
+const taskReputA = 'task-change-a'
 
 const taskCoverB = 'task-cover-b'
 const taskTrainB = 'task-train-b'
@@ -133,6 +135,7 @@ for(let i = 0; i < aliceGen.length; i++ ) {
   let config = aliceGen[i]
   // console.log(config)
   document.getElementById(taskGenA).append(createGenTask(taskGenA, config, aliceGen.length))
+  document.getElementById(`${taskGenA}-box-${i+1}`).style.display = (i==0)? 'flex': 'none';
 
   /** Effects and button functionalities */
   genBlocksEffects(config, taskGenA, aliceGenClicked)
@@ -155,21 +158,56 @@ for(let i = 0; i < aliceGen.length; i++ ) {
       showNext(`${taskGenA}-box-${i+2}`);
     } else {
       hide(taskCoverA)
-      hide(taskTrainA)
+      // hide(taskTrainA)
       hide(taskInputA)
-      hide(taskGenA)
-      showNext('task-bob', 'block');
+      // hide(taskGenA)
+      showNext(taskReputA, 'block');
     }
   }
 }
 
+// Mind-change
+(mode === 'dev')? document.getElementById(taskInputA).style.display = 'flex': null;
+document.getElementById(taskReputA).append(createMindChangeForm(taskReputA))
+
+let aliceBoolForm = document.getElementById(`${taskReputA}-bool-form`)
+let aliceChangeForm = document.getElementById(`${taskReputA}-input-form`)
+let aliceBoolOkBtn = document.getElementById(`${taskReputA}-input-submit-btn`)
+aliceBoolForm.onclick = () => {
+  if (document.getElementsByName('alice-change')[0].checked == 1) {
+    aliceMindChange = 1
+    showNext(`${taskReputA}-box`, 'block')
+    let aliceReputForm = document.getElementById(`${taskReputA}-input-form`)
+    aliceReputForm.onchange = () => isFilled(`${taskReputA}-input-form`)? aliceBoolOkBtn.disabled = false: null;
+  } else {
+    aliceMindChange = 0
+    aliceBoolOkBtn.disabled = false;
+    }
+  }
+
+aliceBoolOkBtn.onclick = () => {
+  let inputs = aliceChangeForm.elements;
+  Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
+  disableFormInputs(`${taskReputA}-input-form`);
+  subjectData['task-change-a'] = aliceMindChange
+  hide(taskCoverA)
+  hide(taskGenA)
+  hide(taskInputA)
+  hide(taskReputA)
+  for (let i=0; i<aliceLearn.length; i++) {
+    showNext(`${taskGenA}-box-${i+1}`, 'flex', false);
+  }
+  showNext('task-bob', 'block');
+}
 
 /** Bob */
 // learning
 for(let i = 0; i < bobLearn.length; i++ ) {
   let config = bobLearn[i]
-  document.getElementById(taskTrainB).append(createLearnTask(taskTrainB, config, bobLearn.length))
   let trialId = config.trial
+
+  document.getElementById(taskTrainB).append(createLearnTask(taskTrainB, config, aliceLearn.length))
+  document.getElementById(`${taskTrainB}-box-${i+1+aliceLearn.length}`).style.display = (i===0)? 'flex': 'none'
 
   // Button functionalities
   let playBtn = document.getElementById(`${taskTrainB}-test-btn-${trialId}`);
@@ -192,7 +230,7 @@ for(let i = 0; i < bobLearn.length; i++ ) {
   nextBtn.onclick = () => {
     nextBtn.disabled = true;
     playBtn.disabled = true;
-    let nextDiv = (i === bobLearn.length-1)? taskInputB: `${taskTrainB}-box-${i+2}`;
+    let nextDiv = (i === bobLearn.length-1)? taskInputB: `${taskTrainB}-box-${i+2+aliceLearn.length}`;
     showNext(nextDiv);
   }
 }
@@ -219,8 +257,9 @@ bobOkBtn.onclick = () => {
 // Generate gen tasks
 for(let i = 0; i < bobGen.length; i++ ) {
   let config = bobGen[i]
-  // console.log(config)
-  document.getElementById(taskGenB).append(createGenTask(taskGenB, config, bobGen.length))
+
+  document.getElementById(taskGenB).append(createGenTask(taskGenB, config, bobGen.length + aliceGen.length))
+  document.getElementById(`${taskGenB}-box-${i+1+aliceGen.length}`).style.display = (i==0)? 'flex': 'none';
 
   /** Effects and button functionalities */
   genBlocksEffects(config, taskGenB, bobGenClicked)
@@ -237,16 +276,20 @@ for(let i = 0; i < bobGen.length; i++ ) {
     resetBtn.disabled = true
     confirmBtn.disabled = true;
     let prevs = [ aliceLearn.length, aliceGen.length, bobLearn.length ].reduce((a, b) => a + b, 0)
-    trialData.result[prevs+i] = '(0,0,'+getCurrentSelection(config, taskGenC)+')'
-    if (i < aliceGen.length-1) {
-      hide(`${taskGenB}-box-${i+1}`);
-      showNext(`${taskGenB}-box-${i+2}`);
+    trialData.result[prevs+i] = '(0,0,'+getCurrentSelection(config, taskGenB)+')'
+    if (i < bobGen.length-1) {
+      hide(`${taskGenB}-box-${i+1+aliceGen.length}`);
+      showNext(`${taskGenB}-box-${i+2+aliceGen.length}`);
     } else {
+      hide(taskCoverA)
+      hide(taskTrainA)
+      hide(taskInputA)
+      hide(taskReputA)
       hide(taskCoverB)
       hide(taskTrainB)
       hide(taskInputB)
       hide(taskGenB)
-      showNext('task-comp', 'block');
+      showNext('debrief', 'block')
     }
   }
 }
@@ -439,21 +482,24 @@ devSkipIntro.onclick = () => {
 const devSkipAlice = document.getElementById('dev-skip-alice')
 devSkipAlice.style.display = (mode==='dev'|mode==='test')? 'block': 'none'
 devSkipAlice.onclick = () => {
-  hide(taskCoverA)
-  hide(taskTrainA)
-  hide(taskInputA)
-  hide(taskGenA)
-  showNext('task-bob', 'block')
+  showNext(taskCoverA, 'block', false)
+  showNext(taskTrainA, 'block', false)
+  showNext(taskInputA, 'block', false)
+  showNext(taskGenA, 'block', false)
+  showNext(taskReputA, 'block', false)
 }
 
 const devSkipBob = document.getElementById('dev-skip-bob')
 devSkipBob.style.display = (mode==='dev'|mode==='test')? 'block': 'none'
 devSkipBob.onclick = () => {
+  hide(taskTrainA)
+  hide(taskInputA)
   hide(taskCoverB)
   hide(taskTrainB)
   hide(taskInputB)
   hide(taskGenB)
-  showNext('task-comp', 'block')
+  showNext('debrief', 'block')
+  // showNext('task-comp', 'block')
 }
 
 
