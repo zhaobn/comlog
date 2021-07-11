@@ -558,9 +558,11 @@ function showCompletion(code, nCorrect) {
   hide("debrief")
   showNext("completed")
   let t = document.createTextNode(code);
-  // let co = createText('p', `Bonus will be paid after manual checks.`)
+  let co = createText('p', `You got ${nCorrect} predictions correct!
+  You will get £${nCorrect * 0.1} bonus on top of your base pay.
+  Bonus on writing the correct causal power will be paid after manual checks.`)
   document.getElementById('completion-code').append(t);
-  // document.getElementById('completed').append(co);
+  document.getElementById('completed').append(co);
 }
 function generateToken (length) {
   let tokens = '';
@@ -672,6 +674,8 @@ function prepTrialData (configsArr) {
     "agent-color": [],
     "recipient": [],
     "result": [],
+    "selection": [],
+    "correct": [],
   }
   configsArr.forEach(conf => {
     trialData['batch'].push(conf['batch']);
@@ -682,6 +686,8 @@ function prepTrialData (configsArr) {
     trialData['agent-color'].push(conf['color']);
     trialData['recipient'].push(conf['recipient']);
     trialData['result'].push(conf['result']);
+    trialData['selection'].push('--');
+    trialData['correct'].push(0);
   })
   return trialData
 }

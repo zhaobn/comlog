@@ -326,3 +326,11 @@ a {
 #intro-demo-taskbox-1 {
   height: 120px;
 }
+#completed {
+  display: flex;
+  flex-direction: column;
+}
+#completed p {
+  font-weight: bold;
+  font-size: 25px;
+}

@@ -60,7 +60,8 @@ let genClicked = Array(genConfigs.length).fill(0);
 
 // Data to save
 let subjectData = {}
-let trialData = prepTrialData([aliceLearn, aliceGen, bobLearn, bobGen, genConfigs].flat())
+let trialData = prepTrialData([aliceLearn, aliceGen, bobLearn, bobGen].flat())
+console.log(trialData)
 
 // Key frame names
 const taskCoverA = 'task-cover-a'
@@ -130,7 +131,6 @@ aliceOkBtn.onclick = () => {
 }
 
 // Generate gen tasks
-// (mode === 'dev')? document.getElementById(taskGenA).style.display = 'block': null;
 for(let i = 0; i < aliceGen.length; i++ ) {
   let config = aliceGen[i]
   // console.log(config)
@@ -151,7 +151,8 @@ for(let i = 0; i < aliceGen.length; i++ ) {
     disableBlocks(config, taskGenA)
     resetBtn.disabled = true
     confirmBtn.disabled = true;
-    trialData.result[aliceLearn.length+i] = '0|'+getCurrentSelection(config, taskGenA)
+    trialData.selection[aliceLearn.length+i] = `(0,0,${getCurrentSelection(config, taskGenA)})`
+    trialData.correct[aliceLearn.length+i] = (trialData.result[aliceLearn.length+i] === trialData.selection[aliceLearn.length+i])? 1 : 0
     // console.log(trialData)
     if (i < aliceGen.length-1) {
       hide(`${taskGenA}-box-${i+1}`)
@@ -276,7 +277,8 @@ for(let i = 0; i < bobGen.length; i++ ) {
     resetBtn.disabled = true
     confirmBtn.disabled = true;
     let prevs = [ aliceLearn.length, aliceGen.length, bobLearn.length ].reduce((a, b) => a + b, 0)
-    trialData.result[prevs+i] = '(0,0,'+getCurrentSelection(config, taskGenB)+')'
+    trialData.selection[prevs+i] = `(0,0,${getCurrentSelection(config, taskGenB)})`
+    trialData.correct[prevs+i] = (trialData.result[prevs+i] === trialData.selection[prevs+i])? 1 : 0
     if (i < bobGen.length-1) {
       hide(`${taskGenB}-box-${i+1+aliceGen.length}`);
       showNext(`${taskGenB}-box-${i+2+aliceGen.length}`);
@@ -434,6 +436,7 @@ doneBtn.onclick = () => {
 
   const end_time = new Date();
   let token = generateToken(8);
+  let nCorrect = trialData['correct'].reduce((a, b) => a + b, 0)
 
   let clientData = {};
   clientData.subject = subjectData;
@@ -443,6 +446,7 @@ doneBtn.onclick = () => {
   clientData.subject.instructions_duration = start_task_time - start_time,
   clientData.subject.task_duration = end_time - start_task_time,
   clientData.subject.token = token;
+  clientData.subject.correct = nCorrect;
   clientData.trials = trialData;
 
   // /** Give feedback */
@@ -457,10 +461,10 @@ doneBtn.onclick = () => {
         method: 'POST',
         body: JSON.stringify(clientData),
     })
-    .then(() => showCompletion(token))
+    .then(() => showCompletion(token, nCorrect))
     .catch((error) => console.log(error));
   } else {
-    showCompletion(token);
+    showCompletion(token, nCorrect);
     // console.log(clientData);
     download(JSON.stringify(clientData), 'data.txt', '"text/csv"');
   }
