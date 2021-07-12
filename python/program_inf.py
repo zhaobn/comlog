@@ -141,6 +141,10 @@ class Gibbs_sampler:
     else:
       to_add = df.sort_values(['log_prob'], ascending=False).head(top_n)
     for i in range(len(to_add)):
+      if 'n_exceptions' in to_add.columns:
+        likelihood = math.exp(-2 * to_add.iloc[i].n_exceptions)
+      else:
+        likelihood = 1
       terms = to_add.iloc[i].terms
       extracted = self.extract_programs(terms)
       ret_df = pd.concat([ret_df, extracted])
@@ -151,7 +155,9 @@ class Gibbs_sampler:
           refactored = self.refactor_router_K(programs.iloc[j].to_dict())
           if refactored is not None:
             ret_df = pd.concat([ret_df, pd.DataFrame([refactored])])
-    return ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
+    ret_df = ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
+    ret_df['count'] = ret_df['count'] * likelihood
+    return ret_df
 
   def run(self, type_sig=[['obj', 'obj'], 'obj'], top_n=1, sample=True, base=0, logging=True, save_prefix=''):
     for i in range(self.iter_start, self.iter):

@@ -77,12 +77,13 @@ class Task_gibbs(Gibbs_sampler):
 
   def merge_lib(self, extracted_df):
     merged_df = pd.merge(self.cur_programs.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
-    merged_df['count'] = merged_df['count_x'] +  merged_df['count_y']
+    merged_df['count'] = merged_df['count_x'] + merged_df['count_y']
     set_df = merged_df.query('log_prob!=0|type=="primitive"')[['terms','arg_types','return_type','type','count','log_prob']]
-    # Now take care of programs
+    # Now take care of newly-created programs
     to_set_df = merged_df.query('log_prob==0&type!="primitive"')[['terms','arg_types','return_type','type','count','log_prob']]
     to_set_df = to_set_df.reset_index(drop=True)
     for i in range(len(to_set_df)):
+      # Compute prior prob
       log_prob = 0
       terms = to_set_df.iloc[i].terms
       for r in (('Stone',''), ('(',''),(')',''),('[',''),(']','')):
@@ -135,7 +136,7 @@ class Task_gibbs(Gibbs_sampler):
         pl.update_log_prob() if not (i==0&j==0) else None
         # Sample frames
         ns = 0
-        filtered = pd.DataFrame({'terms': [], 'log_prob': []})
+        filtered = pd.DataFrame({'terms': [], 'log_prob': [], 'n_exceptions': []})
         while (len(filtered)) < 1 and ns < 10000: # NOT TRUE: Safe to use a large ns, bc ground truth is covered - it will stop
           ns += 1
           if len(frames_left.index) <= frame_sample:
@@ -153,7 +154,7 @@ class Task_gibbs(Gibbs_sampler):
               passed_pm = all_programs.query(f'n_exceptions<={exceptions_allowed}')
               passed_pm['log_prob'] = passed_pm['log_prob'] - 2*passed_pm['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
               print(f"[{iter_log}|{data_log}|{k}/{len(sampled_frames)}, -{ns}th] {sampled_frames.iloc[k].at['terms']}: {len(passed_pm)} passed") if logging else None
-              filtered = filtered.append(passed_pm[['terms', 'log_prob']], ignore_index=True)
+              filtered = filtered.append(passed_pm[['terms', 'log_prob', 'n_exceptions']], ignore_index=True)
         # Extract resusable bits
         if len(filtered) < 1:
           self.filtering_history[i][j] = 0
