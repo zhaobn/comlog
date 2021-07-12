@@ -2,8 +2,10 @@
 # %%
 import math
 import random
+import numpy as np
 import pandas as pd
 pd.set_option('mode.chained_assignment', None)
+
 from task_configs import *
 from helpers import secure_list, names_to_string, print_name, normalize, softmax
 from program_lib import Program_lib_light, Program_lib
@@ -21,7 +23,7 @@ class Gibbs_sampler:
     self.iter_start = iter_start
     self.data_start = data_start
     self.extraction_history = [[None] * len(data_list)] * iteration if self.inc == 1 else [[None] * iteration]
-    self.filtering_history = [[0] * len(data_list)] * iteration if self.inc == 1 else [[0] * iteration]
+    self.filtering_history = np.zeros((iteration, len(data_list)))
 
   @staticmethod
   def find_ret_type(terms):
@@ -214,7 +216,7 @@ class Gibbs_sampler:
         if len(save_prefix) > 0:
           padding = len(str(self.iter))
           filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}.csv')
-          pd.DataFrame.from_records(self.filtering_history).to_csv(f'{save_prefix}filter_hist.csv')
+          pd.DataFrame(self.filtering_history).to_csv(f'{save_prefix}filter_hist.csv')
           self.cur_programs.to_csv(f'{save_prefix}_{str(i+1).zfill(padding)}.csv')
 
 
