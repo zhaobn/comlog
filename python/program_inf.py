@@ -13,6 +13,7 @@ from program_lib import Program_lib_light, Program_lib
 # %%
 class Gibbs_sampler:
   def __init__(self, program_lib, data_list, iteration, inc=False, burnin=0, down_weight=1, iter_start=0, data_start=0):
+    self.init_programs = program_lib.content
     self.cur_programs = program_lib.content
     self.dir_alpha = program_lib.DIR_ALPHA
     self.data = data_list

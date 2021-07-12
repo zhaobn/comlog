@@ -119,21 +119,22 @@ class Task_gibbs(Gibbs_sampler):
         frames_left = frames.copy()
         data_log = f'Data {j+1}/{len(self.data)}'
         data = self.data[:(j+1)] if i < 1 else self.data
-        # Remove previously-extracted counts
-        pms = self.cur_programs
-        if i > 0:
-          previous = self.extraction_history[i-1][j]
-          if previous is not None:
-            lhs = self.cur_programs
-            rhs = previous[['terms', 'arg_types', 'return_type', 'type', 'count']]
-            pms = pd.merge(lhs, rhs, on=['terms', 'arg_types', 'return_type', 'type'], how='outer')
-            pms = pms.fillna(0)
-            pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw by default is 1
-            pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count', 'log_prob']]
+        # Remove previously-extracted counts - start from scratch for each iteration
+        pms = self.init_programs
+        # if i > 0:
+        #   previous = self.extraction_history[i-1][j]
+        #   if previous is not None:
+        #     lhs = self.cur_programs
+        #     rhs = previous[['terms', 'arg_types', 'return_type', 'type', 'count']]
+        #     pms = pd.merge(lhs, rhs, on=['terms', 'arg_types', 'return_type', 'type'], how='outer')
+        #     pms = pms.fillna(0)
+        #     pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw by default is 1
+        #     pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count', 'log_prob']]
 
         # Unfold frames and filter with data
         pl = Task_lib(pms, self.dir_alpha)
-        pl.update_log_prob() if not (i==0&j==0) else None
+        # pl.update_log_prob() if not (i==0&j==0) else None
+
         # Sample frames
         ns = 0
         filtered = pd.DataFrame({'terms': [], 'log_prob': [], 'n_exceptions': []})
@@ -228,23 +229,23 @@ def df_to_data(df):
     task_data.append(task)
   return task_data
 
-# %%
-all_frames = pd.read_csv('data/task_frames.csv', index_col=0)
-pl = Task_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
-all_programs = pl.unfold_programs_with_lp(all_frames.iloc[520].at['terms'], all_frames.iloc[520].at['log_prob'], [{
-  'agent': Stone(S1,O1,L1), 'recipient': Stone(S0,O0,L2), 'result':Stone(S0,O0,L1)
-}])
+# # %%
+# all_frames = pd.read_csv('data/task_frames.csv', index_col=0)
+# pl = Task_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
+# all_programs = pl.unfold_programs_with_lp(all_frames.iloc[520].at['terms'], all_frames.iloc[520].at['log_prob'], [{
+#   'agent': Stone(S1,O1,L1), 'recipient': Stone(S0,O0,L2), 'result':Stone(S0,O0,L1)
+# }])
 
 
-task_data_df = pd.read_csv('data/task_data.csv', na_filter=False)
-phase_indexes = [2, 15, 32, 11, 23, 35]
-task_phase = task_data_df[task_data_df.index.isin(phase_indexes)].reindex(phase_indexes)
-data = df_to_data(task_phase)
+# task_data_df = pd.read_csv('data/task_data.csv', na_filter=False)
+# phase_indexes = [2, 15, 32, 11, 23, 35]
+# task_phase = task_data_df[task_data_df.index.isin(phase_indexes)].reindex(phase_indexes)
+# data = df_to_data(task_phase)
 
-for d in range(len(data)):
-  all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
+# for d in range(len(data)):
+#   all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
 
-all_programs['total_consistency'] = all_programs[all_programs.columns[pd.Series(all_programs.columns).str.startswith('consistent')]].sum(axis=1)
+# all_programs['total_consistency'] = all_programs[all_programs.columns[pd.Series(all_programs.columns).str.startswith('consistent')]].sum(axis=1)
 
-g1 = Task_gibbs(Task_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)), data, iteration=2)
-g1.run(all_frames, save_prefix='test/inc/ti', sample=True, top_n=1)
+# g1 = Task_gibbs(Task_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)), data, iteration=2)
+# g1.run(all_frames, save_prefix='test/inc/ti', sample=True, top_n=1)
