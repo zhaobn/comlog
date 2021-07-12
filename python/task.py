@@ -1,5 +1,6 @@
 # %%
 import math
+import numpy as np
 import pandas as pd
 
 from base_classes import Program
@@ -108,7 +109,7 @@ class Task_gibbs(Gibbs_sampler):
       to_set_df.at[i,'log_prob']=log_prob
     return pd.concat([set_df, to_set_df],ignore_index=True).reset_index(drop=True)
 
-  def run(self, frames, top_n=1, sample=True, frame_sample=20, base=0, logging=True, save_prefix=''):
+  def run(self, frames, top_n=1, sample=True, frame_sample=20, base=0, logging=True, save_prefix='', exceptions_allowed=0):
     frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
     for i in range(self.iter_start, self.iter):
       iter_log = f'Iter {i+1}/{self.iter}'
@@ -132,19 +133,11 @@ class Task_gibbs(Gibbs_sampler):
         # Unfold frames and filter with data
         pl = Task_lib(pms, self.dir_alpha)
         pl.update_log_prob() if not (i==0&j==0) else None
-        query_string = '&'.join([f'consistent_{i}==1' for i in range(len(data))])
         # Sample frames
         ns = 0
         filtered = pd.DataFrame({'terms': [], 'log_prob': []})
         while (len(filtered)) < 1 and ns < 10000: # NOT TRUE: Safe to use a large ns, bc ground truth is covered - it will stop
           ns += 1
-          # if ns == 1:
-          #   sampled_frames = pd.concat([
-          #     frames[frames.index==0], # 'PM("obj_obj_obj")'
-          #     frames[frames.index>0].sample(n=frame_sample, weights='prob')
-          #   ])
-          # else:
-          #   sampled_frames = frames_left.sample(n=frame_sample, weights='prob')
           if len(frames_left.index) <= frame_sample:
             sampled_frames = frames_left.copy()
           else:
@@ -155,7 +148,10 @@ class Task_gibbs(Gibbs_sampler):
             if len(all_programs) > 0:
               for d in range(len(data)):
                 all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
-              passed_pm = all_programs.query(query_string)
+              all_programs['total_consistency'] = all_programs[all_programs.columns[pd.Series(all_programs.columns).str.startswith('consistent')]].sum(axis=1)
+              all_programs['n_exceptions'] = len(data) - all_programs['total_consistency']
+              passed_pm = all_programs.query(f'n_exceptions<={exceptions_allowed}')
+              passed_pm['log_prob'] = passed_pm['log_prob'] - 2*passed_pm['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
               print(f"[{iter_log}|{data_log}|{k}/{len(sampled_frames)}, -{ns}th] {sampled_frames.iloc[k].at['terms']}: {len(passed_pm)} passed") if logging else None
               filtered = filtered.append(passed_pm[['terms', 'log_prob']], ignore_index=True)
         # Extract resusable bits
@@ -230,3 +226,24 @@ def df_to_data(df):
     }
     task_data.append(task)
   return task_data
+
+# %%
+all_frames = pd.read_csv('data/task_frames.csv', index_col=0)
+pl = Task_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
+all_programs = pl.unfold_programs_with_lp(all_frames.iloc[520].at['terms'], all_frames.iloc[520].at['log_prob'], [{
+  'agent': Stone(S1,O1,L1), 'recipient': Stone(S0,O0,L2), 'result':Stone(S0,O0,L1)
+}])
+
+
+task_data_df = pd.read_csv('data/task_data.csv', na_filter=False)
+phase_indexes = [2, 15, 32, 11, 23, 35]
+task_phase = task_data_df[task_data_df.index.isin(phase_indexes)].reindex(phase_indexes)
+data = df_to_data(task_phase)
+
+for d in range(len(data)):
+  all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
+
+all_programs['total_consistency'] = all_programs[all_programs.columns[pd.Series(all_programs.columns).str.startswith('consistent')]].sum(axis=1)
+
+g1 = Task_gibbs(Task_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)), data, iteration=2)
+g1.run(all_frames, save_prefix='test/inc/ti', sample=True, top_n=1)
