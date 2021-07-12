@@ -1,6 +1,6 @@
 
 from task import *
-iter = 1000
+iter = 500
 
 # Prep data
 task_data_df = pd.read_csv('data/task_data.csv', na_filter=False)
@@ -12,4 +12,4 @@ all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
 # Task phase 1
 pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 g1 = Task_gibbs(Task_lib(pm_init), df_to_data(task_phase), iteration=iter)
-g1.run(all_frames, save_prefix='test/inc/ti', sample=True, top_n=1)
+g1.run(all_frames, save_prefix='test/inc_1/ti', sample=True, top_n=1, exceptions_allowed=1)
