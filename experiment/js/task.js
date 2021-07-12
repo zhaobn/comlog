@@ -1,5 +1,5 @@
 
-const mode = 'dev' // '', 'dev', 'test', 'flask'
+const mode = '' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const cond = 'comp_mult' // 'simple_easy', 'simple_hard', 'comp_mult', 'comp_mult_reverse', 'comp_subs', 'comp_subs_reverse', 'comp_mult
@@ -162,7 +162,8 @@ for(let i = 0; i < aliceGen.length; i++ ) {
       // hide(taskTrainA)
       hide(taskInputA)
       // hide(taskGenA)
-      showNext(taskReputA, 'block');
+      // showNext(taskReputA, 'block');
+      showNext('task-bob', 'block');
     }
   }
 }
@@ -283,14 +284,15 @@ for(let i = 0; i < bobGen.length; i++ ) {
       hide(`${taskGenB}-box-${i+1+aliceGen.length}`);
       showNext(`${taskGenB}-box-${i+2+aliceGen.length}`);
     } else {
-      hide(taskCoverA)
-      hide(taskTrainA)
-      hide(taskInputA)
-      hide(taskReputA)
-      hide(taskCoverB)
-      hide(taskTrainB)
-      hide(taskInputB)
-      hide(taskGenB)
+      // hide(taskCoverA)
+      // hide(taskTrainA)
+      // hide(taskInputA)
+      // hide(taskReputA)
+      // hide(taskCoverB)
+      // hide(taskTrainB)
+      // hide(taskInputB)
+      // hide(taskGenB)
+      hide('task')
       showNext('debrief', 'block')
     }
   }
