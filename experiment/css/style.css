@@ -334,3 +334,7 @@ a {
   font-weight: bold;
   font-size: 25px;
 }
+#samples {
+  display: flex;
+  flex-direction: row;
+}
