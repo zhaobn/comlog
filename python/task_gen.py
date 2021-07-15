@@ -47,7 +47,6 @@ all_pairs_df = pd.DataFrame.from_dict(all_pairs)
 all_pairs_df = all_pairs_df.assign(ground_truth=0,model_alt=0,model_heur=0,random_choice=1)
 # all_pairs_df.to_csv('data/gen_pairs.csv')
 
-# %%
 all_pairs_df = pd.read_csv('data/gen_pairs.csv', index_col=0)
 
 ground_truth = Program([SS,[KK,setLength,Stone(S0,O0,L3)],[SC,[BB,subnn,[CB,[B,mulnn,getStripe],getLength]],getDot]])
@@ -250,46 +249,70 @@ all_pairs_igg_grouped = pd.merge(
 all_pairs_igg_grouped.to_csv('data/gen_info.csv')
 
 # %% Test by simulation
+all_pairs_igg_grouped = pd.read_csv('data/gen_info.csv', index_col=0)
+
 combos = list(itertools.combinations_with_replacement(all_pairs_igg_grouped['ig_class'], 9))
 combo_df = pd.DataFrame({'combo': [','.join([str(i) for i in list(x)]) for x in combos]})
 
-def sim_gt(hypo, pair_id, n, noise=1):
-  data = all_obs_df[all_obs_df['pair_index']==pair_id][['agent', 'recipient', 'result', hypo]]
-  data['prob'] = softmax(data[hypo], noise)
-  data['count'] = 0
-  i = 0
-  while i < n:
-    data.at[data.sample(1, weights='prob').index[0], 'count'] += 1
-    i += 1
-  return data[['agent', 'recipient', 'result', 'count']]
-sim_gt('ground_truth', 3, n=20, noise=4)
+def safe_log_div(x, y):
+  return 0 if x==0 else math.log(x/y)
 
-def get_eig(combo_list):
+def sim_gt(hypo, pair_ids, n, noise=1):
+  ret_data = pd.DataFrame(columns=['pair_index', 'agent', 'recipient', 'result', 'count'])
+  for pi in pair_ids:
+    data = all_obs_df[all_obs_df['pair_index']==pi][['pair_index', 'agent', 'recipient', 'result', hypo]]
+    data['prob'] = softmax(data[hypo], noise)
+    data['count'] = 0
+    i = 0
+    while i < n:
+      data.at[data.sample(1, weights='prob').index[0], 'count'] += 1
+      i += 1
+    ret_data = ret_data.append(data[['pair_index', 'agent', 'recipient', 'result', 'count']])
+  return ret_data
+# sim_gt('ground_truth', [3], n=20, noise=4)
+
+def get_igs(combo_list):
   total_df = all_obs_df[['pair_index', 'agent', 'recipient', 'result', 'ground_truth', 'model_alt', 'model_heur', 'random_choice']]
-  combo_df = pd.DataFrame(columns=['pair_index', 'agent', 'recipient', 'result', 'ground_truth', 'model_alt', 'model_heur', 'random_choice'])
-  combo_eig = pd.DataFrame(columns=['pair_index', 'class_id', 'agent', 'recipient', 'ground_truth', 'model_alt', 'model_heur', 'random_choice'])
 
   # Prep data
   class_ids = [ int(i) for i in combo_list.split(',') ]
   pair_ids = []
   for i in class_ids:
     can_pairs = all_pairs_igg_grouped[all_pairs_igg_grouped['ig_class']==i]['pair_indices']
-    can_pairs = [ int(i) for i in can_pairs[0].split(',') ]
-
-    this_pair_id = random.choice(can_pairs)
+    can_pair_ids = [ int(i) for i in list(can_pairs)[0].split(',') ]
+    this_pair_id = random.choice(can_pair_ids)
     pair_ids.append(this_pair_id)
 
-    this_df = total_df[total_df['pair_index']==this_pair_id]
-    combo_df = combo_df.append(this_df, ignore_index=True)
-
-    pair_df = all_pairs_df[all_pairs_df.index==this_pair_id][['agent', 'recipient']].assign(
-      ground_truth=0., model_alt=0., model_heur=0., random_choice=0., pair_index=this_pair_id, class_id=i)
-    combo_eig = combo_eig.append(pair_df[['pair_index', 'class_id', 'agent', 'recipient', 'ground_truth', 'model_alt', 'model_heur', 'random_choice']])
-
   # Run sim
-  sim_df = combo_df[['pair_index', 'agent', 'recipient', 'result']]
-  for hypo in ['ground_truth', 'model_alt', 'model_heur', 'random_choice']
+  eig_info = {'combo': [combo_list]}
+  for hypo in ['ground_truth', 'model_alt', 'model_heur', 'random_choice']: #, , 'random_choice'
+    sim_counts = sim_gt(hypo, pair_ids, 20, 4)
+    post_df = pd.merge(sim_counts, total_df, how='left', on=['pair_index', 'agent', 'recipient', 'result'])
+    post_pp = []
+    for s_hypo in ['ground_truth', 'model_alt', 'model_heur', 'random_choice']:
+      hc = post_df[['count', s_hypo]]
+      hc = hc[hc['count']>0]
+      hc['pp'] = hc.apply(lambda row: row[s_hypo] ** row['count'], axis=1)
+      post_pp.append(sum(hc['pp'] ))
+    post_pp_normalized = normalize(post_pp)
+    eig_info[hypo] = [-sum([ a * safe_log_div(b, a) for (a, b) in list(zip([1/4]*4, post_pp_normalized))])]
+  return pd.DataFrame.from_dict(eig_info)
 
+
+combo_igs = pd.DataFrame(columns=['combo', 'ground_truth', 'model_alt', 'model_heur', 'random_choice'])
+for ci in combo_df.index:
+  sub_igs = get_igs(combo_df.at[ci, 'combo'])
+  combo_igs = combo_igs.append(sub_igs)
+  combo_igs.to_csv('data/gen_combo_igs.csv')
+
+
+  #   post_ll = []
+  #   for hypo in ['ground_truth', 'model_alt', 'model_heur', 'random_choice']:
+  #     hc = post_df[['count', hypo]]
+  #     hc = hc[hc[hypo]>0]
+  #     hc['ll'] = hc.apply(lambda row: row['count'] * math.log(row[hypo]), axis=1)
+  #     post_ll.append(sum(hc['ll'] ))
+  #  post_pp = normalize([math.exp(x) for x in post_ll])
 
   # Calc EIG
 
