@@ -305,13 +305,37 @@ def get_igs(combo_list):
   return pd.DataFrame.from_dict(eig_info)
 
 
-combo_igs = pd.DataFrame(columns=['combo', 'ground_truth', 'model_alt', 'model_heur', 'random_choice'])
-for ci in combo_df.index:
-  sub_igs = get_igs(combo_df.at[ci, 'combo'])
-  combo_igs = combo_igs.append(sub_igs)
-  combo_igs.to_csv('data/gen_combo_igs_2.csv')
+# combo_igs = pd.DataFrame(columns=['combo', 'ground_truth', 'model_alt', 'model_heur', 'random_choice'])
+# for ci in combo_df.index:
+#   sub_igs = get_igs(combo_df.at[ci, 'combo'])
+#   combo_igs = combo_igs.append(sub_igs)
+#   combo_igs.to_csv('data/gen_combo_igs.csv')
 
-# %% Check combo igs
-combo_igs = pd.read_csv('data/gen_combo_igs_2.csv', index_col=0)
-combo_igs['total'] = combo_igs['ground_truth'] +  combo_igs['model_alt'] + combo_igs['model_heur'] +  combo_igs['random_choice']
-combo_igs['total'] = round(combo_igs['total']/4, 4)
+# # %% Check combo igs
+# combo_igs = pd.read_csv('data/gen_combo_igs.csv', index_col=0)
+# combo_igs['total'] = combo_igs['ground_truth'] +  combo_igs['model_alt'] + combo_igs['model_heur'] +  combo_igs['random_choice']
+# combo_igs['total'] = round(combo_igs['total']/4, 4)
+
+# %% Loop through first 10 for 10 times
+combo_igs = pd.read_csv('data/gen_combo_igs.csv', index_col=0)
+
+# plt.figure()
+# combo_igs.sort_values('total', ascending=False)['total'].plot(kind="bar")
+# combo_igs.total.quantile(0.98)
+
+combo_igs_to_check = combo_igs.sort_values('total', ascending=False).head(35)[['combo']].reset_index(drop=True)
+
+def get_sim_ig(df, x):
+  ret_df =  pd.DataFrame(columns=['combo', 'ground_truth', 'model_alt', 'model_heur', 'random_choice'])
+  for i in df.index:
+    sub_igs = get_igs(df.at[i, 'combo'])
+    ret_df = ret_df.append(sub_igs, ignore_index=True)
+  total_col = f'total_{str(x)}'
+  ret_df[total_col] = ret_df['ground_truth'] +  ret_df['model_alt'] + ret_df['model_heur'] +  ret_df['random_choice']
+  ret_df[total_col] = round(ret_df[total_col]/4, 4)
+  return ret_df[['combo', total_col]]
+
+
+for x in range(10):
+  combo_igs_looped = combo_igs_to_check.merge(get_sim_ig(combo_igs_to_check, x), how='left', on='combo')
+  combo_igs_looped.to_csv('data/gen_combo_further.csv')
