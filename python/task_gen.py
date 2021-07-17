@@ -339,3 +339,7 @@ def get_sim_ig(df, x):
 for x in range(10):
   combo_igs_looped = combo_igs_to_check.merge(get_sim_ig(combo_igs_to_check, x), how='left', on='combo')
   combo_igs_looped.to_csv('data/gen_combo_further.csv')
+
+# %%
+combo_igs_looped = pd.read_csv('data/gen_combo_further.csv', index_col=0)
+combo_igs_looped['total'] = combo_igs_looped[list(combo_igs_looped)[1:]].sum(axis=1)
