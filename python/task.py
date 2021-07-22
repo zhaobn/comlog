@@ -13,6 +13,12 @@ from task_configs import *
 class Task_lib(Program_lib):
   def __init__(self, df, dir_alpha=0.1):
     Program_lib.__init__(self, df, dir_alpha)
+
+  @staticmethod
+  def check_program(terms, data):
+    result = Program(eval(terms)).run([data['agent'], data['recipient']])
+    return result == data['result'].length.value
+
   def sample_base(self, type, add):
     if type == 'obj':
       stripe = self.sample_base('stripe', add)
@@ -183,7 +189,7 @@ class Task_gibbs(Gibbs_sampler):
       # Unfold frames and filter with data
       pl = Task_lib(self.init_programs, self.dir_alpha)
       unfolded = pd.DataFrame(columns=['terms', 'log_prob', 'total_consistency', 'n_exceptions'])
-      for k in len(frames):
+      for k in range(len(frames)):
         programs = pl.unfold_programs_with_lp(frames.iloc[k].at['terms'], frames.iloc[k].at['log_prob'], data)
         for d in range(len(data)):
           programs[f'consistent_{d}'] = programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
@@ -194,8 +200,8 @@ class Task_gibbs(Gibbs_sampler):
         print(f"[{data_log}|{k}/{len(frames)}] {frames.iloc[k].at['terms']}: {len(pc_programs)} passed") if logging else None
         unfolded = unfolded.append(pc_programs[['terms', 'log_prob', 'total_consistency', 'n_exceptions']], ignore_index=True)
       # Extract resusable bits
-      max_consistency = max(pc_programs['total_consistency'])
-      filtered = pc_programs[pc_programs['total_consistency']>=max_consistency]
+      max_consistency = max(unfolded['total_consistency'])
+      filtered = unfolded[unfolded['total_consistency']>=max_consistency]
       filtered = filtered.drop_duplicates(subset=['terms'])
       extracted = self.extract(filtered, len(filtered), sample=False, base=0)
       extracted = extracted.drop_duplicates(subset=['terms'])
