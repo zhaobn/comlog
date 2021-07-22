@@ -64,11 +64,11 @@ class Task_lib(Program_lib):
 
 # pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 # pl = Task_lib(pm_init)
-# t = [['obj', 'obj'], 'obj']
+# t = [['obj', 'obj'], 'num']
 
-# # rf = pl.typed_enum(t,1)
-# rf2 = pl.typed_enum(t,2)
-# rf2.to_csv('data/task_frames.csv')
+# rf = pl.typed_enum(t,1)
+# # rf2 = pl.typed_enum(t,2)
+# rf.to_csv('data/task_frames.csv')
 
 # %%
 class Task_gibbs(Gibbs_sampler):
@@ -117,6 +117,7 @@ class Task_gibbs(Gibbs_sampler):
       data_start = 0 if i > self.iter_start else self.data_start
       for j in range(data_start, len(self.data)):
         frames_left = frames.copy()
+        n_exceptions_allowed = 0 if exceptions_allowed >= j+1 else exceptions_allowed
         data_log = f'Data {j+1}/{len(self.data)}'
         data = self.data[:(j+1)] if i < 1 else self.data
         # Remove previously-extracted counts - start from scratch for each iteration
@@ -138,7 +139,7 @@ class Task_gibbs(Gibbs_sampler):
         # Sample frames
         ns = 0
         filtered = pd.DataFrame({'terms': [], 'log_prob': [], 'n_exceptions': []})
-        while (len(filtered)) < 1 and ns < 10000: # NOT TRUE: Safe to use a large ns, bc ground truth is covered - it will stop
+        while (len(filtered)) < 1 and ns < 10000: # NOT TRUE ANYMORE: Safe to use a large ns, bc ground truth is covered - it will stop
           ns += 1
           if len(frames_left.index) <= frame_sample:
             sampled_frames = frames_left.copy()
@@ -152,7 +153,7 @@ class Task_gibbs(Gibbs_sampler):
                 all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
               all_programs['total_consistency'] = all_programs[all_programs.columns[pd.Series(all_programs.columns).str.startswith('consistent')]].sum(axis=1)
               all_programs['n_exceptions'] = len(data) - all_programs['total_consistency']
-              passed_pm = all_programs.query(f'n_exceptions<={exceptions_allowed}')
+              passed_pm = all_programs.query(f'n_exceptions<={n_exceptions_allowed}')
               passed_pm['log_prob'] = passed_pm['log_prob'] - 2*passed_pm['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
               print(f"[{iter_log}|{data_log}|{k}/{len(sampled_frames)}, -{ns}th] {sampled_frames.iloc[k].at['terms']}: {len(passed_pm)} passed") if logging else None
               filtered = filtered.append(passed_pm[['terms', 'log_prob', 'n_exceptions']], ignore_index=True)
@@ -162,7 +163,8 @@ class Task_gibbs(Gibbs_sampler):
           print('Nothing consistent, skipping to next...') if logging else None
         else:
           self.filtering_history[i][j] = 1
-          extracted = self.extract(filtered, top_n, sample, base)
+          n_extract = len(filtered) if len(filtered) < top_n else top_n
+          extracted = self.extract(filtered, n_extract, sample, base)
           print(extracted) if logging else None
           self.extraction_history[i][j] = extracted
           self.cur_programs = self.merge_lib(extracted)
@@ -172,49 +174,37 @@ class Task_gibbs(Gibbs_sampler):
             filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
             self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
 
-# # %%
-# task_data_df = pd.read_csv('data/task_data.csv',na_filter=False)
-# sorted_indexes = [2,4,6] # ldg: [0,4,8]  # col: [1,4,7] # row: [3,4,5]
-
-# task_data_df = task_data_df[task_data_df.index.isin(sorted_indexes)].reindex(sorted_indexes)
-# task_data = []
-
-# task_data = []
-# for i in range(len(task_data_df)):
-#   tdata = task_data_df.iloc[i].to_dict()
-#   task = {
-#     'agent': eval(tdata['agent']),
-#     'recipient': eval(tdata['recipient']),
-#     'result': eval(tdata['result'])
-#   }
-#   task_data.append(task)
-
-# pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
-# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-# g = Task_gibbs(Task_lib(pm_init), task_data, iteration=1)
-# g.run(all_frames, sample=True, top_n=1, save_prefix='test/tmp')
-
-# pl = Task_lib(pm_init)
-# filtered = pd.read_csv('test/tmp_filtered_1_3.csv',index_col=0,na_filter=False)
-# extracted = g.extract(filtered, top_n=1)
-
-# # %% Data
-# exp_trials = pd.read_csv('exp/trials.csv')
-# task_trials = pd.DataFrame(columns=['trial', 'agent', 'recipient', 'result'])
-# def format_stone (config_str):
-#   vals = config_str.replace(' ','')[1:-1].split(',')
-#   return f'Stone(S{vals[0]},O{vals[1]},L{vals[2]})'
-
-
-# for i in exp_trials.index:
-#   task_trials = task_trials.append(pd.DataFrame({
-#     'trial': [ exp_trials.iloc[i].trial_id],
-#     'agent': [ format_stone(exp_trials.iloc[i].agent)],
-#     'recipient': [ format_stone(exp_trials.iloc[i].recipient)],
-#     'result': [ format_stone(exp_trials.iloc[i].result)],
-#   }))
-
-# task_trials.set_index('trial').to_csv('data/task_data.csv')
+  def enum_hypos(self, frames, logging=True, save_prefix=''):
+    frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
+    for j in range(len(self.data)):
+      # Preps
+      data_log = f'Data {j+1}/{len(self.data)}'
+      data = self.data[:(j+1)]
+      # Unfold frames and filter with data
+      pl = Task_lib(self.init_programs, self.dir_alpha)
+      unfolded = pd.DataFrame(columns=['terms', 'log_prob', 'total_consistency', 'n_exceptions'])
+      for k in len(frames):
+        programs = pl.unfold_programs_with_lp(frames.iloc[k].at['terms'], frames.iloc[k].at['log_prob'], data)
+        for d in range(len(data)):
+          programs[f'consistent_{d}'] = programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
+        programs['total_consistency'] = programs[programs.columns[pd.Series(programs.columns).str.startswith('consistent')]].sum(axis=1)
+        programs['n_exceptions'] = len(data) - programs['total_consistency']
+        pc_programs = programs.query(f'total_consistency>0')
+        pc_programs['log_prob'] = pc_programs['log_prob'] - 2*pc_programs['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
+        print(f"[{data_log}|{k}/{len(frames)}] {frames.iloc[k].at['terms']}: {len(pc_programs)} passed") if logging else None
+        unfolded = unfolded.append(pc_programs[['terms', 'log_prob', 'total_consistency', 'n_exceptions']], ignore_index=True)
+      # Extract resusable bits
+      max_consistency = max(pc_programs['total_consistency'])
+      filtered = pc_programs[pc_programs['total_consistency']>=max_consistency]
+      filtered = filtered.drop_duplicates(subset=['terms'])
+      extracted = self.extract(filtered, len(filtered), sample=False, base=0)
+      extracted = extracted.drop_duplicates(subset=['terms'])
+      print(f'{len(filtered)} filtered, {len(extracted)} extracted')
+      self.cur_programs = self.merge_lib(extracted)
+      if len(save_prefix) > 0:
+        padding = len(str(self.iter))
+        filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+        self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
 
 # %%
 def df_to_data(df):
@@ -228,24 +218,3 @@ def df_to_data(df):
     }
     task_data.append(task)
   return task_data
-
-# # %%
-# all_frames = pd.read_csv('data/task_frames.csv', index_col=0)
-# pl = Task_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
-# all_programs = pl.unfold_programs_with_lp(all_frames.iloc[520].at['terms'], all_frames.iloc[520].at['log_prob'], [{
-#   'agent': Stone(S1,O1,L1), 'recipient': Stone(S0,O0,L2), 'result':Stone(S0,O0,L1)
-# }])
-
-
-# task_data_df = pd.read_csv('data/task_data.csv', na_filter=False)
-# phase_indexes = [2, 15, 32, 11, 23, 35]
-# task_phase = task_data_df[task_data_df.index.isin(phase_indexes)].reindex(phase_indexes)
-# data = df_to_data(task_phase)
-
-# for d in range(len(data)):
-#   all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
-
-# all_programs['total_consistency'] = all_programs[all_programs.columns[pd.Series(all_programs.columns).str.startswith('consistent')]].sum(axis=1)
-
-# g1 = Task_gibbs(Task_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)), data, iteration=2)
-# g1.run(all_frames, save_prefix='test/inc/ti', sample=True, top_n=1)
