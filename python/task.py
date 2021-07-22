@@ -180,7 +180,7 @@ class Task_gibbs(Gibbs_sampler):
             filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
             self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
 
-  def enum_hypos(self, frames, logging=True, save_prefix=''):
+  def enum_hypos(self, frames, threshold='strict', logging=True, save_prefix=''):
     frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
     for j in range(len(self.data)):
       # Preps
@@ -201,7 +201,13 @@ class Task_gibbs(Gibbs_sampler):
         unfolded = unfolded.append(pc_programs[['terms', 'log_prob', 'total_consistency', 'n_exceptions']], ignore_index=True)
       # Extract resusable bits
       max_consistency = max(unfolded['total_consistency'])
-      filtered = unfolded[unfolded['total_consistency']>=max_consistency]
+      if threshold=='strict':
+        con_thred = max_consistency
+      elif threshold=='half':
+        con_thred = max_consistency/2
+      elif threshold=='min':
+        con_thred = 1
+      filtered = unfolded[unfolded['total_consistency']>=con_thred]
       filtered = filtered.drop_duplicates(subset=['terms'])
       extracted = self.extract(filtered, len(filtered), sample=False, base=0)
       extracted = extracted.drop_duplicates(subset=['terms'])
@@ -209,8 +215,8 @@ class Task_gibbs(Gibbs_sampler):
       self.cur_programs = self.merge_lib(extracted)
       if len(save_prefix) > 0:
         padding = len(str(self.iter))
-        filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-        self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+        filtered.to_csv(f'{save_prefix}_filtered_{str(j+1).zfill(padding)}.csv')
+        self.cur_programs.to_csv(f'{save_prefix}_lib_{str(j+1).zfill(padding)}.csv')
 
 # %%
 def df_to_data(df):

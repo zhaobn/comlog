@@ -10,4 +10,4 @@ all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
 # %%
 pl = Task_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
 g1 = Task_gibbs(pl, df_to_data(task_phase), iteration=1)
-g1.enum_hypos(all_frames, save_prefix='test/inc/eh')
+g1.enum_hypos(all_frames, threshold='half', save_prefix='test/inc/hh')
