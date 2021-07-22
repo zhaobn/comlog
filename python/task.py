@@ -187,7 +187,7 @@ class Task_gibbs(Gibbs_sampler):
       data_log = f'Data {j+1}/{len(self.data)}'
       data = self.data[:(j+1)]
       # Unfold frames and filter with data
-      pl = Task_lib(self.init_programs, self.dir_alpha)
+      pl = Task_lib(self.cur_programs, self.dir_alpha)
       unfolded = pd.DataFrame(columns=['terms', 'log_prob', 'total_consistency', 'n_exceptions'])
       for k in range(len(frames)):
         programs = pl.unfold_programs_with_lp(frames.iloc[k].at['terms'], frames.iloc[k].at['log_prob'], data)
@@ -204,7 +204,7 @@ class Task_gibbs(Gibbs_sampler):
       if threshold=='strict':
         con_thred = max_consistency
       elif threshold=='half':
-        con_thred = max_consistency/2
+        con_thred = min([len(data)/2, max_consistency])
       elif threshold=='min':
         con_thred = 1
       filtered = unfolded[unfolded['total_consistency']>=con_thred]
