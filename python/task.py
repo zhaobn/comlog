@@ -195,7 +195,14 @@ class Task_gibbs(Gibbs_sampler):
           programs[f'consistent_{d}'] = programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
         programs['total_consistency'] = programs[programs.columns[pd.Series(programs.columns).str.startswith('consistent')]].sum(axis=1)
         programs['n_exceptions'] = len(data) - programs['total_consistency']
-        pc_programs = programs.query(f'total_consistency>0')
+        max_consistency = max(programs['total_consistency'])
+        if threshold=='strict':
+          con_thred = max_consistency
+        elif threshold=='half':
+          con_thred = min([len(data)/2, max_consistency])
+        elif threshold=='min':
+          con_thred = 1
+        pc_programs = programs.query(f'total_consistency>={con_thred}')
         pc_programs['log_prob'] = pc_programs['log_prob'] - 2*pc_programs['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
         print(f"[{data_log}|{k}/{len(frames)}] {frames.iloc[k].at['terms']}: {len(pc_programs)} passed") if logging else None
         unfolded = unfolded.append(pc_programs[['terms', 'log_prob', 'total_consistency', 'n_exceptions']], ignore_index=True)
