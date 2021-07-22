@@ -111,14 +111,14 @@ class Gibbs_sampler:
     if self.is_all_K(terms_str):
       return df
     else:
-      df = df.append(self.get_base_primitives(terms_eval))
-      # # # Add first primitive
-      # # all_primitives = list(self.cur_programs[self.cur_programs['type']=='primitive'].terms)
-      # # striped_terms = str(terms)
-      # # for r in (('Stone',''), ('(',''),(')',''),('[',''),(']','')):
-      # #   striped_terms = striped_terms.replace(*r)
-      # # first_primitive = next(x for x in striped_terms.split(',') if x in all_primitives)
-      # # fp_info = self.cur_programs.query(f'terms=="{first_primitive}"&type=="primitive"').iloc[0].to_dict()
+      # df = df.append(self.get_base_primitives(terms_eval))
+      # # Add first primitive
+      # all_primitives = list(self.cur_programs[self.cur_programs['type']=='primitive'].terms)
+      # striped_terms = str(terms)
+      # for r in (('Stone',''), ('(',''),(')',''),('[',''),(']','')):
+      #   striped_terms = striped_terms.replace(*r)
+      # first_primitive = next(x for x in striped_terms.split(',') if x in all_primitives)
+      # fp_info = self.cur_programs.query(f'terms=="{first_primitive}"&type=="primitive"').iloc[0].to_dict()
       # df = df.append(pd.DataFrame({
       #   'terms': [ first_primitive ],
       #   'arg_types': [ fp_info['arg_types'] ],
@@ -150,6 +150,7 @@ class Gibbs_sampler:
       extracted = self.extract_programs(terms)
       ret_df = pd.concat([ret_df, extracted])
       ret_df['terms'] = ret_df.apply(lambda row: self.strip_terms_spaces(row['terms']), axis=1)
+      ret_df['count'] = ret_df['count'] * likelihood
       programs = extracted.query('type=="program"')
       if len(programs) > 0:
         for j in range(len(programs)):
@@ -157,7 +158,6 @@ class Gibbs_sampler:
           if refactored is not None:
             ret_df = pd.concat([ret_df, pd.DataFrame([refactored])])
     ret_df = ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
-    ret_df['count'] = ret_df['count'] * likelihood
     return ret_df
 
   def run(self, type_sig=[['obj', 'obj'], 'obj'], top_n=1, sample=True, base=0, logging=True, save_prefix=''):
