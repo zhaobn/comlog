@@ -81,8 +81,11 @@ class Task_gibbs(Gibbs_sampler):
   def __init__(self, program_lib, data_list, iteration, inc=True, burnin=0, down_weight=1, iter_start=0, data_start=0):
     Gibbs_sampler.__init__(self, program_lib, data_list, iteration, inc, burnin, down_weight, iter_start, data_start)
 
-  def merge_lib(self, extracted_df):
-    merged_df = pd.merge(self.cur_programs.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
+  def merge_lib(self, extracted_df, target_df = None):
+    if target_df is not None:
+      merged_df = pd.merge(target_df.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
+    else:
+      merged_df = pd.merge(self.cur_programs.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
     merged_df['count'] = merged_df['count_x'] + merged_df['count_y']
     set_df = merged_df.query('log_prob!=0|type=="primitive"')[['terms','arg_types','return_type','type','count','log_prob']]
     # Now take care of newly-created programs
@@ -195,14 +198,14 @@ class Task_gibbs(Gibbs_sampler):
           programs[f'consistent_{d}'] = programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
         programs['total_consistency'] = programs[programs.columns[pd.Series(programs.columns).str.startswith('consistent')]].sum(axis=1)
         programs['n_exceptions'] = len(data) - programs['total_consistency']
-        max_consistency = max(programs['total_consistency'])
+        pm_max_consistency = max(programs['total_consistency'])
         if threshold=='strict':
-          con_thred = max_consistency
+          pm_con_thred = pm_max_consistency
         elif threshold=='half':
-          con_thred = min([len(data)/2, max_consistency])
+          pm_con_thred = min([len(data)/2, pm_max_consistency])
         elif threshold=='min':
-          con_thred = 1
-        pc_programs = programs.query(f'total_consistency>={con_thred}')
+          pm_con_thred = 1
+        pc_programs = programs.query(f'total_consistency>={pm_con_thred}')
         pc_programs['log_prob'] = pc_programs['log_prob'] - 2*pc_programs['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
         print(f"[{data_log}|{k}/{len(frames)}] {frames.iloc[k].at['terms']}: {len(pc_programs)} passed") if logging else None
         unfolded = unfolded.append(pc_programs[['terms', 'log_prob', 'total_consistency', 'n_exceptions']], ignore_index=True)
@@ -218,8 +221,8 @@ class Task_gibbs(Gibbs_sampler):
       filtered = filtered.drop_duplicates(subset=['terms'])
       extracted = self.extract(filtered, len(filtered), sample=False, base=0)
       extracted = extracted.drop_duplicates(subset=['terms'])
-      print(f'{len(filtered)} filtered, {len(extracted)} extracted')
-      self.cur_programs = self.merge_lib(extracted)
+      print(f'max_consistency: {max_consistency}(out of {len(data)} data), {len(filtered)} filtered, {len(extracted)} extracted')
+      self.cur_programs = self.merge_lib(extracted, self.init_programs)
       if len(save_prefix) > 0:
         padding = len(str(self.iter))
         filtered.to_csv(f'{save_prefix}_filtered_{str(j+1).zfill(padding)}.csv')
@@ -237,3 +240,12 @@ def df_to_data(df):
     }
     task_data.append(task)
   return task_data
+
+# %%
+Program(eval('[SC,[BB,mulnn,[CS,[BB,subnn,[KB,getLength,I]],getStripe]],getStripe]')).run([
+  Stone(S2,O0,L1), Stone(S0,O0,L2)
+])
+
+#  Stone(S1,O0,L1), Stone(S0,O0,L3)
+#  Stone(S2,O0,L1), Stone(S0,O0,L2)
+# %%
