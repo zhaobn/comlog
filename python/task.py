@@ -289,12 +289,3 @@ def df_to_data(df):
     }
     task_data.append(task)
   return task_data
-
-# %%
-Program(eval('[SC,[BB,mulnn,[CS,[BB,subnn,[KB,getLength,I]],getStripe]],getStripe]')).run([
-  Stone(S2,O0,L1), Stone(S0,O0,L2)
-])
-
-#  Stone(S1,O0,L1), Stone(S0,O0,L3)
-#  Stone(S2,O0,L1), Stone(S0,O0,L2)
-# %%

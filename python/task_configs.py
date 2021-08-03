@@ -107,7 +107,7 @@ mulnn = Primitive('mulnn', ['num', 'num'], 'num', lambda x: math.prod(x))
 
 I = Primitive('I', 'obj', 'obj', return_myself)
 
-# # %%
+# # %% Debug
 # x = Stone(S1,O0,L1)
 # y = Stone(S0,O0,L2)
 # z = Program([BC,[B,setLength,I],[C,[B,mulnn,[B,getStripe,I]],3]]).run([x,y])

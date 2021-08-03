@@ -1,17 +1,21 @@
 
-#%%
+# %%
 import pandas as pd
+
+import sys
+sys.path.append('../')
 from task_configs import *
 from task import *
+from helpers import normalize, softmax
 
-# %%
+# %% Get all intermediate samples
 programs_df = pd.read_csv('test/si_inc/t4_filtered_01_02.csv', index_col=0).reset_index(drop=True)
 for a in range(10):
   for b in range(6):
     iter = f'0{a+1}' if a < 9 else str(a+1)
     programs_df = programs_df.append(pd.read_csv(f'test/si_inc/t4_filtered_{iter}_0{b+1}.csv', index_col=0).reset_index(drop=True), ignore_index=True)
 
-# %%
+# %% Collapse into equivalent classes
 all_pairs_df = pd.read_csv('data/gen_pairs.csv', index_col=0)
 eq_class_df = pd.DataFrame(columns=['pred_list', 'terms', 'count'])
 
@@ -40,5 +44,3 @@ for i in range(len(programs_df)):
     eq_class_df.at[found_idx, 'count'] += 1
 
 eq_class_df.to_csv('test/inc_eqc.csv')
-
-# %%
