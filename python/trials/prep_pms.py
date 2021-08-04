@@ -11,14 +11,16 @@ from task import *
 from helpers import normalize, softmax
 
 # %% Get all intermediate samples
-programs_df = pd.read_csv('test/si_inc/t4_filtered_01_02.csv', index_col=0).reset_index(drop=True)
-for a in range(10):
+programs_df = pd.read_csv('../test/si_inc/t5_filtered_001_002.csv', index_col=0).reset_index(drop=True)
+programs_df = programs_df.append(pd.read_csv(f'../test/si_inv/t5_filtered_001_002.csv', index_col=0).reset_index(drop=True), ignore_index=True)
+for a in range(100):
   for b in range(6):
-    iter = f'0{a+1}' if a < 9 else str(a+1)
-    programs_df = programs_df.append(pd.read_csv(f'test/si_inc/t4_filtered_{iter}_0{b+1}.csv', index_col=0).reset_index(drop=True), ignore_index=True)
+    iter = str(a+1).zfill(3)
+    programs_df = programs_df.append(pd.read_csv(f'../test/si_inc/t5_filtered_{iter}_00{b+1}.csv', index_col=0).reset_index(drop=True), ignore_index=True)
+    programs_df = programs_df.append(pd.read_csv(f'../test/si_inv/t5_filtered_{iter}_00{b+1}.csv', index_col=0).reset_index(drop=True), ignore_index=True)
 
 # %% Collapse into equivalent classes
-all_pairs_df = pd.read_csv('data/gen_pairs.csv', index_col=0)
+all_pairs_df = pd.read_csv('../data/gen_pairs.csv', index_col=0)
 eq_class_df = pd.DataFrame(columns=['pred_list', 'terms', 'count'])
 
 for i in range(len(programs_df)):
@@ -45,19 +47,19 @@ for i in range(len(programs_df)):
       eq_class_df.at[found_idx, 'terms'] = terms
     eq_class_df.at[found_idx, 'count'] += 1
 
-eq_class_df.to_csv('test/inc_eqc.csv')
+eq_class_df.to_csv('test/all_eqc.csv')
 
-# %%
-incs = pd.read_csv('../for_exp/full_inc_eqc.csv', index_col=0)
-invs = pd.read_csv('../for_exp/full_inv_eqc.csv', index_col=0)
-total = pd.merge(incs, invs, how='outer', on='pred_list').fillna(value={"terms_x": '', "count_x": 0, "terms_y": '', "count_y": 0})
-total['count'] = total['count_x'] + total['count_y']
-total['merged_terms'] = total['terms_x'].where(total['terms_x']!='', total['terms_y'])
-total['compare_terms'] = total.apply(lambda row: len(row['terms_y'])-len(row['merged_terms']), axis=1)
+# # %%
+# incs = pd.read_csv('../for_exp/full_inc_eqc.csv', index_col=0)
+# invs = pd.read_csv('../for_exp/full_inv_eqc.csv', index_col=0)
+# total = pd.merge(incs, invs, how='outer', on='pred_list').fillna(value={"terms_x": '', "count_x": 0, "terms_y": '', "count_y": 0})
+# total['count'] = total['count_x'] + total['count_y']
+# total['merged_terms'] = total['terms_x'].where(total['terms_x']!='', total['terms_y'])
+# total['compare_terms'] = total.apply(lambda row: len(row['terms_y'])-len(row['merged_terms']), axis=1)
 
-total_a = total[(total['merged_terms']!='')&(total['terms_y']!='')&(total['compare_terms']<0)]
-total_a['merged_terms'] = total['terms_y']
-total_b = total[~total.index.isin(total_a.index)]
-final = pd.concat([total_a, total_b], ignore_index=True)[['pred_list', 'merged_terms', 'count']].rename(columns={'merge_terms': 'terms'})
+# total_a = total[(total['merged_terms']!='')&(total['terms_y']!='')&(total['compare_terms']<0)]
+# total_a['merged_terms'] = total['terms_y']
+# total_b = total[~total.index.isin(total_a.index)]
+# final = pd.concat([total_a, total_b], ignore_index=True)[['pred_list', 'merged_terms', 'count']].rename(columns={'merge_terms': 'terms'})
 
-final.to_csv('../for_exp/full_eqc.csv')
+# final.to_csv('../for_exp/full_eqc.csv')
