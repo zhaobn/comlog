@@ -1,4 +1,4 @@
-[
+const config = [
    {
       "trial_id":1,
       "agent":"(0, 0, 1)",

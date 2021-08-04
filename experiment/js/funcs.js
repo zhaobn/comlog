@@ -614,16 +614,16 @@ function getConfigs(config, type) {
     setups.genB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==1 && readLength(c.recipient)==4).map(c => c.trial_id)
     setups.genC = config.filter(c => readDots(c.agent)<1 && [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
   } else if (type=='comp_mult') {
-    setups.learnA = [3,16,33]
-    setups.genA = [50,18,2,6,29,54]
-    setups.learnB = [12,24,36]
-    setups.genB = [50,18,2,6,29,54]
+    setups.learnA = [7, 20, 37]
+    setups.genA = [58, 67, 10, 62, 18, 8, 6, 68]
+    setups.learnB = [16, 28, 41]
+    setups.genB = [58, 67, 10, 62, 18, 8, 6, 68]
     setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
   } else if (type=='comp_mult_reverse') {
-    setups.learnA = [12,24,36]
-    setups.genA = [50,18,2,6,29,54]
-    setups.learnB = [3,16,33]
-    setups.genB = [50,18,2,6,29,54]
+    setups.learnA = [16, 28, 41]
+    setups.genA = [58, 67, 10, 62, 18, 8, 6, 68]
+    setups.learnB = [7, 20, 37]
+    setups.genB = [58, 67, 10, 62, 18, 8, 6, 68]
     setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
   } else if (type=='comp_subs') {
     setups.learnA = config.filter(c => readDots(c.agent)<4 && readStripes(c.agent)==1 && readLength(c.recipient)==3).map(c => c.trial_id)

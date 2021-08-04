@@ -35,7 +35,6 @@ for a in all_agents:
 trials_df = pd.DataFrame.from_dict(trials)
 trials_df['trial_id'] = trials_df.index + 1
 trials_df = trials_df.set_index('trial_id')
-trials_df.to_csv('trials.csv')
 trials_df.reset_index().to_json('../for_exp/config.json', orient='records')
 
 # %%
@@ -50,7 +49,7 @@ def translate_name(name):
 # translate_name('Stone(S4,O3,L1)')
 
 # %%
-trials_df = pd.read_csv('trials.csv')
+trials_df = pd.read_json('config.json')
 
 learn_a = pd.DataFrame({
   'agent': ["(1, 0, 1)", "(2, 0, 1)", "(3, 0, 1)"],
