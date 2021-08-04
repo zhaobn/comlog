@@ -557,9 +557,11 @@ function showPostCheckPage (isPass) {
 function showCompletion(code, nCorrect) {
   hide("debrief")
   showNext("completed")
+  let bonusVal = nCorrect * 0.1
+  bonusVal = Math.round(bonusVal*100)/100
   let t = document.createTextNode(code);
   let co = createText('p', `You got ${nCorrect} predictions correct!
-  You will get £${nCorrect * 0.1} bonus on top of your base pay.
+  You will get £${bonusVal} bonus on top of your base pay.
   Bonus on writing the correct causal power will be paid after manual checks.`)
   document.getElementById('completion-code').append(t);
   document.getElementById('completed').append(co);

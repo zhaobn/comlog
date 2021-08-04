@@ -5,15 +5,22 @@ import math
 import random
 import itertools
 
+# import multiprocessing as mp
+# print("Number of processors: ", mp.cpu_count())
+
 import sys
 sys.path.append('../')
 from task_configs import *
 from task import *
 from helpers import normalize, softmax
 
+
+
 # %% Global vars
-CAND_PROGRAMS = pd.read_csv('../for_exp/full_inc_eqc.csv', index_col=0)
+RAND_SEED = 1009
+CAND_PROGRAMS = pd.read_csv('../for_exp/full_eqc.csv', index_col=0)
 N_PROGRAMS = len(CAND_PROGRAMS)
+print(N_PROGRAMS)
 ALL_PAIRS = pd.read_csv('../data/gen_pairs.csv', index_col=0)
 ALL_OBS = pd.read_csv('../data/gen_obs.csv', index_col=0)[['pair_index', 'agent', 'recipient', 'result']]
 
@@ -34,7 +41,7 @@ def get_sim(program_id, pair_ids, n=20, noise=5):
     data['count'] = 0
     i = 0
     while i < n:
-      data.at[data.sample(1, weights='prob').index[0], 'count'] += 1
+      data.at[data.sample(1, weights='prob', random_state=RAND_SEED).index[0], 'count'] += 1
       i += 1
     ret_data = ret_data.append(data[['pair_index', 'agent', 'recipient', 'result', 'count']])
   return ret_data
@@ -83,6 +90,8 @@ for pi in range(len(candidate_pairs)):
 best_pair = candidate_pairs[candidate_pairs.index==pair_eigs.index(max(pair_eigs))]
 best_pair['EIG'] = max(pair_eigs)
 trials_df = trials_df.append(best_pair, ignore_index=True)
+print(best_pair)
+trials_df.to_csv('../test/eig_trials.csv')
 
 # Build greedily
 while (len(trials_df) < 20):
@@ -101,5 +110,7 @@ while (len(trials_df) < 20):
   best_pair = candidate_pairs[candidate_pairs.index==pair_eigs.index(max(pair_eigs))]
   best_pair['EIG'] = max(pair_eigs)
   trials_df = trials_df.append(best_pair, ignore_index=True)
+  print(best_pair)
+  trials_df.to_csv('../test/eig_trials.csv')
 
-trials_df.to_csv('../test/inc_trials.csv')
+trials_df.to_csv('../test/eig_trials.csv')

@@ -1,5 +1,7 @@
 
 # %%
+from os import rename
+from numpy import column_stack
 import pandas as pd
 
 import sys
@@ -44,3 +46,18 @@ for i in range(len(programs_df)):
     eq_class_df.at[found_idx, 'count'] += 1
 
 eq_class_df.to_csv('test/inc_eqc.csv')
+
+# %%
+incs = pd.read_csv('../for_exp/full_inc_eqc.csv', index_col=0)
+invs = pd.read_csv('../for_exp/full_inv_eqc.csv', index_col=0)
+total = pd.merge(incs, invs, how='outer', on='pred_list').fillna(value={"terms_x": '', "count_x": 0, "terms_y": '', "count_y": 0})
+total['count'] = total['count_x'] + total['count_y']
+total['merged_terms'] = total['terms_x'].where(total['terms_x']!='', total['terms_y'])
+total['compare_terms'] = total.apply(lambda row: len(row['terms_y'])-len(row['merged_terms']), axis=1)
+
+total_a = total[(total['merged_terms']!='')&(total['terms_y']!='')&(total['compare_terms']<0)]
+total_a['merged_terms'] = total['terms_y']
+total_b = total[~total.index.isin(total_a.index)]
+final = pd.concat([total_a, total_b], ignore_index=True)[['pred_list', 'merged_terms', 'count']].rename(columns={'merge_terms': 'terms'})
+
+final.to_csv('../for_exp/full_eqc.csv')
