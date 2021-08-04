@@ -2,8 +2,6 @@
 import numpy as np
 import pandas as pd
 import math
-import random
-import itertools
 
 # import multiprocessing as mp
 # print("Number of processors: ", mp.cpu_count())
@@ -13,7 +11,6 @@ sys.path.append('../')
 from task_configs import *
 from task import *
 from helpers import normalize, softmax
-
 
 
 # %% Global vars
@@ -70,12 +67,13 @@ prior_entropy = -1 * N_PROGRAMS * (1/N_PROGRAMS) * math.log((1/N_PROGRAMS)) #TOD
 task_data_df = pd.read_csv('../data/task_data.csv', na_filter=False)
 phase_indexes = [2, 15, 32, 11, 23, 35]
 task_phase = task_data_df[task_data_df.index.isin(phase_indexes)].reindex(phase_indexes)
-task_df = pd.merge(task_phase, ALL_PAIRS, how='left', on=['agent', 'recipient'])
-learned_pairs = list(task_df['pair_index'])
+# task_df = pd.merge(task_phase, ALL_PAIRS, how='left', on=['agent', 'recipient'])
+# learned_pairs = list(task_df['pair_index'])
 
 
 # Get the first one
-candidate_pairs = ALL_PAIRS[~ALL_PAIRS['pair_index'].isin(learned_pairs)].reset_index(drop=True)
+# candidate_pairs = ALL_PAIRS[~ALL_PAIRS['pair_index'].isin(learned_pairs)].reset_index(drop=True)
+candidate_pairs = ALL_PAIRS[~ALL_PAIRS['agent'].isin(task_phase['agent'])].reset_index(drop=True)
 pair_eigs = []
 for pi in range(len(candidate_pairs)):
   info_gain = []
@@ -96,7 +94,8 @@ trials_df.to_csv('../test/eig_trials.csv')
 # Build greedily
 while (len(trials_df) < 20):
   prev_pair_ids = list(trials_df['pair_index'])
-  candidate_pairs = candidate_pairs[~candidate_pairs['pair_index'].isin(prev_pair_ids)].reset_index(drop=True)
+  #candidate_pairs = candidate_pairs[~candidate_pairs['pair_index'].isin(prev_pair_ids)].reset_index(drop=True)
+  candidate_pairs = candidate_pairs[~candidate_pairs['agent'].isin(trials_df['agent'])].reset_index(drop=True)
   pair_eigs = []
   for pi in range(len(candidate_pairs)):
     info_gain = []
