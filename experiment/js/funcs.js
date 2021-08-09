@@ -2,7 +2,7 @@
 /** Ad hoc setups */
 const defaultStone = { 'borderWidth': '8px', 'mar': 5, 'len': 60 };
 const smallStone = { 'borderWidth': '3px', 'mar': 3, 'len': 20 };
-const maxBlocks = 12
+const maxBlocks = 16
 
 /** Basic helper functions */
 const readStripes= (stone) => parseInt(stone.replace(/[()]/g, '').split(',')[0])
@@ -614,16 +614,22 @@ function getConfigs(config, type) {
     setups.genB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==1 && readLength(c.recipient)==4).map(c => c.trial_id)
     setups.genC = config.filter(c => readDots(c.agent)<1 && [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
   } else if (type=='comp_mult') {
-    setups.learnA = [7, 20, 37]
-    setups.genA = [58, 67, 10, 62, 18, 8, 6, 68]
-    setups.learnB = [16, 28, 41]
-    setups.genB = [58, 67, 10, 62, 18, 8, 6, 68]
+    setups.learnA = [23, 42, 61]
+    setups.genA = [97, 82, 94, 79, 73, 60, 55, 40, 25, 8, 10, 20]
+    setups.learnB = [35, 50, 65]
+    setups.genB = [97, 82, 94, 79, 73, 60, 55, 40, 25, 8, 10, 20]
     setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
   } else if (type=='comp_mult_reverse') {
-    setups.learnA = [16, 28, 41]
-    setups.genA = [58, 67, 10, 62, 18, 8, 6, 68]
-    setups.learnB = [7, 20, 37]
-    setups.genB = [58, 67, 10, 62, 18, 8, 6, 68]
+    setups.learnA = [35, 50, 65]
+    setups.genA = [97, 82, 94, 79, 73, 60, 55, 40, 25, 8, 10, 20]
+    setups.learnB = [23, 42, 61]
+    setups.genB = [97, 82, 94, 79, 73, 60, 55, 40, 25, 8, 10, 20]
+    setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
+  } else if (type=='comp_const') {
+    setups.learnA = [35, 50, 65]
+    setups.genA = [97, 82, 94, 79, 73, 60, 55, 40, 25, 8, 10, 20]
+    setups.learnB = [27, 32, 35] //[27, 46, 65]
+    setups.genB = [97, 82, 94, 79, 73, 60, 55, 40, 25, 8, 10, 20]
     setups.genC = config.filter(c => [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
   } else if (type=='comp_subs') {
     setups.learnA = config.filter(c => readDots(c.agent)<4 && readStripes(c.agent)==1 && readLength(c.recipient)==3).map(c => c.trial_id)

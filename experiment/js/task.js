@@ -2,7 +2,8 @@
 const mode = 'dev' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
-const cond = 'comp_mult' // 'simple_easy', 'simple_hard', 'comp_mult', 'comp_mult_reverse', 'comp_subs', 'comp_subs_reverse', 'comp_mult
+const conds_for_exp = [ 'comp_mult', 'comp_mult_reverse', 'comp_const' ]
+const cond = conds_for_exp[Math.floor(Math.random() * conds_for_exp.length)];
 console.log(`${mode} mode; condition ${cond}.`);
 
 const start_time = Date.now();
@@ -61,7 +62,7 @@ let genClicked = Array(genConfigs.length).fill(0);
 // Data to save
 let subjectData = {}
 let trialData = prepTrialData([aliceLearn, aliceGen, bobLearn, bobGen].flat())
-console.log(trialData)
+// console.log(trialData)
 
 // Key frame names
 const taskCoverA = 'task-cover-a'
