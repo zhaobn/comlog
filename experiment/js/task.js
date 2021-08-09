@@ -1,10 +1,10 @@
 
-const mode = 'dev' // '', 'dev', 'test', 'flask'
+const mode = '' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const conds_for_exp = [ 'comp_mult', 'comp_mult_reverse', 'comp_const' ]
 const cond = conds_for_exp[Math.floor(Math.random() * conds_for_exp.length)];
-console.log(`${mode} mode; condition ${cond}.`);
+(mode==='dev'|mode==='test')? console.log(`${mode} mode; condition ${cond}.`) : null
 
 const start_time = Date.now();
 let start_task_time = 0;
@@ -25,7 +25,7 @@ document.getElementById('intro-touch-2').append(createBlocks('intro-touch-2-bloc
 showQuestionMark(document.getElementById('intro-touch-2-blocks-block-3'))
 
 /** Example interface */
-const demoConfig = fmtConfig(config.filter(c => c.trial_id==26), 'demo', 'learn')
+const demoConfig = fmtConfig(config.filter(c => c.trial_id==48), 'demo', 'learn')
 document.getElementById('intro-demo').append(createLearnTask('intro-demo', demoConfig[0], 0, false))
 document.getElementById('intro-demo-test-btn-1').onclick = () => {
   playEffects(demoConfig[0], 'intro-demo', 1, true);
@@ -47,9 +47,7 @@ bobLearn.map(bl => bl.trial = bl.trial + aliceLearn.length)
 let bobGen = fmtConfig(shuffleArray(config.filter(c => taskIds['genB'].indexOf(c.trial_id) > -1)), 'bob', 'gen')
 bobGen.map(bg => bg.trial = bg.trial + aliceGen.length)
 
-// let usedIndices = [ aliceLearn, aliceGen, bobLearn, bobGen].flat().map(c => parseInt(c['id'].substring(1)))
-// let genConfigs =  config.filter(c => usedIndices.indexOf(c.trial) < 0).slice(0,15)
-let genConfigs =  config.filter(c => taskIds['genC'].indexOf(c.trial_id) > -1)
+let genConfigs =  config.filter(c => taskIds['genA'].indexOf(c.trial_id) > -1)
 genConfigs = fmtConfig(shuffleArray(genConfigs), 'gen', 'gen')
 
 // For page animation
