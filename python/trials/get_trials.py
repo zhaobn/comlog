@@ -15,7 +15,7 @@ from helpers import normalize, softmax
 
 # %% Global vars
 RAND_SEED = 1009
-CAND_PROGRAMS = pd.read_csv('../for_exp/full_eqc.csv', index_col=0)
+CAND_PROGRAMS = pd.read_csv('eqcs.csv', index_col=0)
 N_PROGRAMS = len(CAND_PROGRAMS)
 print(N_PROGRAMS)
 ALL_PAIRS = pd.read_csv('../data/gen_pairs.csv', index_col=0)
@@ -28,6 +28,8 @@ for i in CAND_PROGRAMS.index:
   for pi in range(len(ALL_PAIRS)):
     predicted_idx = PM_LL[(PM_LL['pair_index']==pi)&(PM_LL['result']==f'Stone(S0,O0,L{preds[pi]})')].index[0]
     PM_LL.at[predicted_idx, f'pm_{str(i)}'] = 1
+
+PM_WEIGHTS = normalize(CAND_PROGRAMS['count'])
 
 # %%
 def get_sim(program_id, pair_ids, n=20, noise=5):
@@ -44,7 +46,7 @@ def get_sim(program_id, pair_ids, n=20, noise=5):
   return ret_data
 # get_sim('pm_4', [3,7], n=20, noise=4)
 
-def conditional_entropy(sim_data, noise=5, weights=None, sample=False):
+def conditional_entropy(sim_data, noise=5, weights=PM_WEIGHTS, sample=False):
   post_pp = []
   for mi in range(len(CAND_PROGRAMS)): # If sample, check just a few of programs
     pm_id = f'pm_{mi}'
@@ -53,7 +55,9 @@ def conditional_entropy(sim_data, noise=5, weights=None, sample=False):
     pm_counts = pm_counts[pm_counts['count']>0]
     pm_counts['pp'] = pm_counts.apply(lambda row: row['ll'] ** row['count'], axis=1)
     post_pp.append(sum(pm_counts['pp']))
-  post_pp = normalize(post_pp) # If weighted, use weighted normalization
+  if weights is not None:
+    post_pp = [ a*b for (a,b) in list(zip(post_pp, weights))]
+  post_pp = normalize(post_pp)
   return -sum([x * math.log(x) for x in post_pp])
 
 # %%
@@ -61,7 +65,9 @@ trials_df = pd.DataFrame(columns=['pair_index', 'agent', 'recipient','EIG'])
 # # For the sake of testing
 # CAND_PROGRAMS = CAND_PROGRAMS.sample(3)
 # N_PROGRAMS = len(CAND_PROGRAMS)
-prior_entropy = -1 * N_PROGRAMS * (1/N_PROGRAMS) * math.log((1/N_PROGRAMS)) #TODO: Use weighted prior?
+
+# prior_entropy = -1 * N_PROGRAMS * (1/N_PROGRAMS) * math.log((1/N_PROGRAMS))
+prior_entropy = -sum([x * math.log(x) for x in PM_WEIGHTS])
 
 # Get learned pair indices
 task_data_df = pd.read_csv('../data/task_data.csv', na_filter=False)
@@ -83,7 +89,8 @@ for pi in range(len(candidate_pairs)):
     pm_lls = PM_LL[PM_LL['pair_index']==pi]
     post_df = pd.merge(sim_counts, pm_lls, how='left', on=['pair_index', 'agent', 'recipient', 'result'])
     info_gain.append(prior_entropy - conditional_entropy(post_df))
-  pair_eigs.append(sum(info_gain)/len(info_gain)) # Average information gain, no weighting
+  info_gain = [ a*b for (a,b) in list(zip(info_gain, PM_WEIGHTS))] # Weighted
+  pair_eigs.append(sum(info_gain)/len(info_gain)) # Weighted average
 
 best_pair = candidate_pairs[candidate_pairs.index==pair_eigs.index(max(pair_eigs))]
 best_pair['EIG'] = max(pair_eigs)
