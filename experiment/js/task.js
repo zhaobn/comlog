@@ -1,5 +1,5 @@
 
-const mode = '' // '', 'dev', 'test', 'flask'
+const mode = 'dev' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const conds_for_exp = [ 'comp_mult', 'comp_mult_reverse', 'comp_const' ]
