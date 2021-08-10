@@ -79,4 +79,4 @@ learn_b_ids = list(pd.merge(learn_b, trials_df, how='left', on=['agent', 'recipi
 learn_c_ids = list(pd.merge(learn_c, trials_df, how='left', on=['agent', 'recipient', 'result'])['trial_id'])
 # [27, 31, 35]
 gen_ids = [int(x) for x in list(gen_trials['trial_id'])]
-# [98, 82, 79, 40, 27, 8, 10, 60]
+# [82, 8, 20, 4, 98, 48, 71, 40]
