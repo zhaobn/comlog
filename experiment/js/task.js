@@ -449,7 +449,6 @@ doneBtn.onclick = () => {
   subjectData['task-input-a_input'] = removeSpecial(subjectData['task-input-a_input'])
   subjectData['task-input-b_input'] = removeSpecial(subjectData['task-input-b_input'])
   subjectData['feedback'] = removeSpecial(subjectData['feedback'])
-  console.log(subjectData)
 
   const end_time = new Date();
   let token = generateToken(8);
