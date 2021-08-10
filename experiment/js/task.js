@@ -1,5 +1,4 @@
-
-const mode = 'dev' // '', 'dev', 'test', 'flask'
+const mode = '' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const conds_for_exp = [ 'comp_mult', 'comp_mult_reverse', 'comp_const' ]
@@ -8,6 +7,18 @@ const cond = conds_for_exp[Math.floor(Math.random() * conds_for_exp.length)];
 
 const start_time = Date.now();
 let start_task_time = 0;
+
+/** Collect prolific id */
+let subjectData = {}
+
+const prolificIdBtn = document.getElementById('prolific_id-btn')
+const prolificText = document.getElementById('prolific_id_text')
+prolificIdBtn.onclick = () => {
+  subjectData['prolific_id'] = prolificText.value
+  hide('prolific_id')
+  showNext('instruction', 'block')
+}
+
 
 /** Example egg in introduction */
 let introEg = document.getElementById('intro-eg')
@@ -58,7 +69,6 @@ let bobGenClicked = Array(bobGen.length).fill(0);
 let genClicked = Array(genConfigs.length).fill(0);
 
 // Data to save
-let subjectData = {}
 let trialData = prepTrialData([aliceLearn, aliceGen, bobLearn, bobGen].flat())
 // console.log(trialData)
 
@@ -160,7 +170,7 @@ for(let i = 0; i < aliceGen.length; i++ ) {
       hide(taskCoverA)
       // hide(taskTrainA)
       hide(taskInputA)
-      // hide(taskGenA)
+      hide(taskGenA)
       // showNext(taskReputA, 'block');
       showNext('task-bob', 'block');
     }
@@ -279,8 +289,8 @@ for(let i = 0; i < bobGen.length; i++ ) {
     let prevs = [ aliceLearn.length, aliceGen.length, bobLearn.length ].reduce((a, b) => a + b, 0)
     trialData.selection[prevs+i] = `(0,0,${getCurrentSelection(config, taskGenB)})`
     trialData.correct[prevs+i] = (trialData.result[prevs+i] === trialData.selection[prevs+i])? 1 : 0
+    hide(`${taskGenB}-box-${i+1+aliceGen.length}`);
     if (i < bobGen.length-1) {
-      hide(`${taskGenB}-box-${i+1+aliceGen.length}`);
       showNext(`${taskGenB}-box-${i+2+aliceGen.length}`);
     } else {
       // hide(taskCoverA)
@@ -462,10 +472,10 @@ doneBtn.onclick = () => {
         method: 'POST',
         body: JSON.stringify(clientData),
     })
-    .then(() => showCompletion(token, nCorrect))
+    .then(() => showCompletion('8ECB0DFE', nCorrect))
     .catch((error) => console.log(error));
   } else {
-    showCompletion(token, nCorrect);
+    showCompletion('8ECB0DFE', nCorrect);
     // console.log(clientData);
     download(JSON.stringify(clientData), 'data.txt', '"text/csv"');
   }

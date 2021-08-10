@@ -565,8 +565,11 @@ function showCompletion(code, nCorrect) {
   let co = createText('p', `You got ${nCorrect} predictions correct!
   You will get £${bonusVal} bonus on top of your base pay.
   Bonus on writing the correct causal relationships will be paid after manual checks.`)
+  let returnLink = createCustomElement('p', '', '')
+  returnLink.innerHTML = `Click <a href=‘https://app.prolific.co/submissions/complete?cc=${code}>here</a> to redirect to Prolific.`
   document.getElementById('completion-code').append(t);
   document.getElementById('completed').append(co);
+  document.getElementById('completed').append(returnLink);
 }
 function generateToken (length) {
   let tokens = '';
