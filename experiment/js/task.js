@@ -445,6 +445,12 @@ doneBtn.onclick = () => {
   let inputs = debriefForm.elements;
   Object.keys(inputs).forEach(id => subjectData[inputs[id].name] = inputs[id].value);
 
+  // Clean up free responses
+  subjectData['task-input-a_input'] = removeSpecial(subjectData['task-input-a_input'])
+  subjectData['task-input-b_input'] = removeSpecial(subjectData['task-input-b_input'])
+  subjectData['feedback'] = removeSpecial(subjectData['feedback'])
+  console.log(subjectData)
+
   const end_time = new Date();
   let token = generateToken(8);
   let nCorrect = trialData['correct'].reduce((a, b) => a + b, 0)
