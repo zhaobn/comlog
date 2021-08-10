@@ -32,7 +32,7 @@ inv_fromJSON<-function(js)
 #and turn each subject into a dataframe
 sw<-sapply(sapply(td$subjectwise, inv_fromJSON, simplify=F), as.data.frame, simplify=F)
 tw<-sapply(sapply(td$trialwise, inv_fromJSON, simplify=F), as.data.frame, simplify=F)
-N<-length(tw[[1]]$trials)
+N<-length(tw)
 
 #Combine them
 df.sw.aux<-sw[[1]]
