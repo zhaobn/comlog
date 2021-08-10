@@ -134,9 +134,8 @@ dmypy.json
 # Editor
 .vscode/
 
-# Latex
+# File system
 .DS_Store
-.vscode/
 
 ## Latex
 *.adx
@@ -161,3 +160,8 @@ dmypy.json
 *.bbl
 *.blg
 *.*.gz
+
+#
+.Rproj.user
+*.Rproj
+.Rhistory
