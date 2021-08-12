@@ -33,19 +33,24 @@ inv_fromJSON<-function(js)
 sw<-sapply(sapply(td$subjectwise, inv_fromJSON, simplify=F), as.data.frame, simplify=F)
 tw<-sapply(sapply(td$trialwise, inv_fromJSON, simplify=F), as.data.frame, simplify=F)
 N<-length(tw)
+M<-22
+
+start_index = 2 # Row 1 is Bonan testing
+end_index = 21 # Pilot size = 20
+td_batch = td[start_index:end_index, ]
 
 #Combine them
-df.sw.aux<-sw[[1]]
-df.tw.aux<-tw[[1]]
-for (i in 2:length(sw))
+df.sw.aux<-sw[[start_index]]
+df.tw.aux<-tw[[start_index]]
+for (i in (start_index+1):end_index)
 {
   df.sw.aux<-rbind(df.sw.aux, sw[[i]])
   df.tw.aux<-rbind(df.tw.aux, tw[[i]])
 }
 #And append them to the id and upis
-df.sw<-data.frame(ix=td$id,
-                  id=td$participant)
+df.sw<-data.frame(ix=td_batch$id,
+                  id=td_batch$participant)
 df.sw<-cbind(df.sw, df.sw.aux)
-df.tw<-cbind(ix=rep(df.sw$ix, each=N), id=rep(df.sw$id, each=N), df.tw.aux)
+df.tw<-cbind(ix=rep(df.sw$ix, each=M), id=rep(df.sw$id, each=M), df.tw.aux)
 
-save(file='flaskdemodata.rdata', df.sw, df.tw)
+save(file='data/pilot_1.rdata', df.sw, df.tw)
