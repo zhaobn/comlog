@@ -21,15 +21,6 @@ library(googlesheets4)
 
 ```{r data, include=FALSE}
 load('data/pilot_1_cleaned.rdata')
-# Rename conditions
-df.sw = df.sw %>%
-  mutate(condition=case_when(condition=='comp_const'~'combine', 
-                   condition=='comp_mult'~'construct', 
-                   condition=='comp_mult_reverse'~'discern'))
-df.tw = df.tw %>%
-  mutate(condition=case_when(condition=='comp_const'~'combine', 
-                   condition=='comp_mult'~'construct', 
-                   condition=='comp_mult_reverse'~'discern'))
 # Label data
 labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/edit#gid=1386715201")
 labels = labels  %>%
@@ -80,7 +71,7 @@ The pairs of generalization objects in both phases are the same, but their prese
 All learning examples were remained in the screen once they had appeared.
 Generalization trials appeared sequentially, and once a prediction was made the trial was replaced by the next one.
 
-
+Try it here: <https://eco.ppls.ed.ac.uk/bn_comp/>
 
 
 # Pilot results
@@ -141,7 +132,7 @@ Below are plots of the change in the free response guesses in Learning phase A a
 
 For the `construct` condition (green line), certainty was very high in Learning phase A (when dots are set to 0), and dropped after Learning phase B. The length of texts stayed roughly the same.
 
-For the other two conditions, certainty was low in Learning phase A, and increased after watching the second batch of examples. Accordingly, text inputs were lengthy in Learning phase A, indicating more rambling and guessing, and became a lot more succinct in Learning phase B. This trend is especially clear for the `discern` condition. We can do further labeling on these texts for more fine-grained analysis.
+For the other two conditions, certainty was low in Learning phase A, and increased after watching the second batch of examples. Accordingly, text inputs were lengthy in Learning phase A, indicating more rambling and guessing, and became a lot more succinct in Learning phase B. This trend is especially clear for the `discern` condition. 
 
 
 ```{r phases, echo=FALSE}
@@ -175,6 +166,38 @@ combined = cert + len & theme(legend.position = "bottom")
 combined + plot_layout(guides = "collect")
 ```
 
+
+Looking closely into these free responses:
+
+**The `construct` condition**:
+
+- 4 out of 6 participants reported the same as our normative model (build a `multiplication` sub-part, and then add `subtraction` to it)
+- 1 participant's report is as the loosened model (allow up to 2 exceptions)
+- 1 participant got it completely wrong
+  
+
+
+**The `discern` condition**:
+
+After the initial learning phase:
+
+- 3 out of 7 participants reported a rule that is conditional on the relations between dots and stripes: "If there are more dots than stripes the length decreases. If there are more stripes than dots the length increases. If these are both the same, the length remains the same." 
+- 1 participant reported a similar conditional rule but it's conditional on the number of stripes: "I guess that 1 line means take away ... 2 lines mean equal ... 3 lines means add (with the dot representing how many segments to add)".
+- 1 person worked out the ground truth. 
+- 2 participants were just lost.
+
+
+After the second learning phase:
+
+- 5 participants reported the correct multiplication sub-parts, in addition to that 1 person who already worked out the ground truth after the first attempt. 
+- 1 participant is still in the "if-else" mindset and compared stripes and blocks in the report.
+  
+
+
+**The `combine` condition**:
+
+- In learning phase A, 4 out of 7 participants got the multiplication sub-parts, and the remaining 3 reported the loosened model's predicted rule
+- In learning phase B, 6 out of 7 participants got the subtraction sub-parts, 1 was lost. 1 participants particularly mentioned that it wasn't clear how this subtraction rule is related with the multiplication rule.
 
 
 
@@ -216,6 +239,70 @@ acc_combined = pred_acc + report_acc & theme(legend.position = "bottom")
 acc_combined + plot_layout(guides = "collect")
 
 ```
+
+
+
+## Generalization biases
+
+```{r trials, echo=FALSE, message=FALSE}
+t7 = df.tw %>% 
+  filter(trial==7) %>%
+  select(ix, condition, batch, correct) %>%
+  group_by(condition, batch) %>%
+  summarise(percent_correct=sum(correct)/n()*100) %>%
+  ggplot(aes(x=batch, y=percent_correct, group=condition)) +
+  geom_line(aes(color=condition),linetype="dashed", size=1.2) +
+  geom_point(aes(color=condition, shape=condition), size=3.5) +
+  labs(x='', y='Percent correct', title='Trial 7 (4 stripes, 0 dots)') +
+  ylim(0,100) +
+  theme_bw()
+
+
+t3 = df.tw %>% 
+  filter(dot==0) %>%
+  select(ix, condition, batch, correct) %>%
+  group_by(condition, batch) %>%
+  summarise(percent_correct=sum(correct)/n()*100) %>%
+  ggplot(aes(x=batch, y=percent_correct, group=condition)) +
+  geom_line(aes(color=condition),linetype="dashed", size=1.2) +
+  geom_point(aes(color=condition, shape=condition), size=3.5) +
+  labs(x='', y='Percent correct', title='Trial 1,2,3 (0 stripes)') +
+  ylim(0,100) +
+  theme_bw()
+
+t4 = df.tw %>%
+  filter(dot > 0 & stripe > 0) %>%
+  select(ix, condition, batch, correct) %>%
+  group_by(condition, batch) %>%
+  summarise(percent_correct=sum(correct)/n()*100) %>%
+  ggplot(aes(x=batch, y=percent_correct, group=condition)) +
+  geom_line(aes(color=condition),linetype="dashed", size=1.2) +
+  geom_point(aes(color=condition, shape=condition), size=3.5) +
+  labs(x='', y='Percent correct', title='Trial 4,5,6,8 (stripes > 0, dots > 0)') +
+  ylim(0,100) +
+  theme_bw()
+
+tt_combined = t7 + t3 + t4 & theme(legend.position = "bottom")
+tt_combined + plot_layout(guides = "collect")
+
+```
+
+```{r partial, echo=FALSE, message=FALSE}
+df.tw %>%
+  filter(batch=='A' & dot > 0 & stripe > 0 & correct==0) %>%
+  mutate(partial_correct=(prediction==stripe*block)) %>%
+  group_by(condition) %>%
+  summarise(ignore_dots=sum(partial_correct)/n()*100) %>%
+  ggplot(aes(x=condition, y=ignore_dots)) +
+  geom_bar(position='dodge', stat='identity', fill='#69b3a2') +
+  ylim(0, 100) +
+  labs(x='', y='percent explained', title='Trial 4,5,6,8, phase A mis-predictions') +
+  theme_bw()
+
+```
+
+
+
 
 
 
