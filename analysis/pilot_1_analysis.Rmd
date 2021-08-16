@@ -244,6 +244,19 @@ acc_combined + plot_layout(guides = "collect")
 
 ## Generalization biases
 
+In trial 7, agent object has 4 stripes and no dots - a near transfer to those in the learning examples. It turns out generalization accuracy for this trial is high for both the `construct` and `combine` conditions, with no significant difference between learning phase A and B. However, its accuracy improved a lot for the `discern` condition.
+
+
+For trials 1, 2, and 3, agent objects have no stripes - a striking difference to learning examples. Generalization accuracy showed similar trend as compared with trial 7, with the overall accuracy values lower for all three conditions as compared to trial 7.
+
+
+For trials 4, 5, 6, and 8, agent objects have non-zero stripes and non-zero dots. For conditions `construct` and `combine`, these objects are strikingly different after learning phase A, but less different after learning phase B. We observe a clear rising trend in generalization accuracy for all three conditions.
+
+
+Putting together, it seems that when learning sub-parts separately (conditions `construct` and `combine`), participants' prior beliefs about the unseen feature are less likely to mess up with the learned bit.
+
+
+
 ```{r trials, echo=FALSE, message=FALSE}
 t7 = df.tw %>% 
   filter(trial==7) %>%
@@ -253,7 +266,7 @@ t7 = df.tw %>%
   ggplot(aes(x=batch, y=percent_correct, group=condition)) +
   geom_line(aes(color=condition),linetype="dashed", size=1.2) +
   geom_point(aes(color=condition, shape=condition), size=3.5) +
-  labs(x='', y='Percent correct', title='Trial 7 (4 stripes, 0 dots)') +
+  labs(x='', y='Percent correct', title='4 stripes & 0 dots') +
   ylim(0,100) +
   theme_bw()
 
@@ -266,7 +279,7 @@ t3 = df.tw %>%
   ggplot(aes(x=batch, y=percent_correct, group=condition)) +
   geom_line(aes(color=condition),linetype="dashed", size=1.2) +
   geom_point(aes(color=condition, shape=condition), size=3.5) +
-  labs(x='', y='Percent correct', title='Trial 1,2,3 (0 stripes)') +
+  labs(x='', y='Percent correct', title='0 stripes') +
   ylim(0,100) +
   theme_bw()
 
@@ -278,7 +291,7 @@ t4 = df.tw %>%
   ggplot(aes(x=batch, y=percent_correct, group=condition)) +
   geom_line(aes(color=condition),linetype="dashed", size=1.2) +
   geom_point(aes(color=condition, shape=condition), size=3.5) +
-  labs(x='', y='Percent correct', title='Trial 4,5,6,8 (stripes > 0, dots > 0)') +
+  labs(x='', y='Percent correct', title='Stripes > 0, dots > 0') +
   ylim(0,100) +
   theme_bw()
 
@@ -286,6 +299,15 @@ tt_combined = t7 + t3 + t4 & theme(legend.position = "bottom")
 tt_combined + plot_layout(guides = "collect")
 
 ```
+
+
+I also checked the percentage of predictions that are explained by the multiplication sub-part only in learning phase A.
+
+Indeed, in the `construct` condition, more than half of the generalization predictions in phase A are explained by the multiplication rule only, indicating that these people might just ignore the dot features when first seeing them.
+It is strange that the `combine` condition shows a way lower value, considering that in phase A participants in these two conditions should have seen exactly the same learning examples.
+
+Unsurprisingly, non of the predictions in phase A in the `discern` condition can be explained by the multiplication rule.
+
 
 ```{r partial, echo=FALSE, message=FALSE}
 df.tw %>%
@@ -296,7 +318,7 @@ df.tw %>%
   ggplot(aes(x=condition, y=ignore_dots)) +
   geom_bar(position='dodge', stat='identity', fill='#69b3a2') +
   ylim(0, 100) +
-  labs(x='', y='percent explained', title='Trial 4,5,6,8, phase A mis-predictions') +
+  labs(x='', y='percent', title='Trial 4,5,6,8, phase A predictions explained by mult rule') +
   theme_bw()
 
 ```
