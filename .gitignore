@@ -166,3 +166,6 @@ dmypy.json
 *.Rproj
 .Rhistory
 .RData
+
+
+figs/
