@@ -69,8 +69,6 @@ trial_data = trial_data %>%
 df.tw = trial_data
 save(df.sw, df.tw, file='data/pilot_1_cleaned.rdata')
 
-# Aggregate
-
 
 
 

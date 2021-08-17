@@ -324,9 +324,15 @@ df.tw %>%
 ```
 
 
+# Raw data
+
+Below is a density plot for participants' generalization predictions (x-axis) in each trial (y-axis), aggregated per learning condition and learning phase. Black dots are ground truth predictions.
+
+From the raw data, we can see that participants in the `combine` and `construct` conditions has a strong tendency to use the multiplication rule when making generalization predictions in learning phase A, and shifted to the composite rule after learning phase B.
+Participants in the `discern` condition, however, showed little difference in generalization predictions between the two phases.
 
 
-
+![](figs/pilot_1_raws_labeled.png)
 
 
 
