@@ -168,4 +168,5 @@ dmypy.json
 .RData
 
 
-figs/
+*.key
+analysis/*.html
