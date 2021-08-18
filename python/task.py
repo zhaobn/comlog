@@ -38,7 +38,7 @@ class Task_lib(Program_lib):
           self.add(sampled)
         return sampled
   def get_all_objs(self):
-    stones_df = pd.DataFrame({'terms': []})
+    stones_df = pd.DataFrame({'terms': [], 'count':[]})
     stripe_df = self.content.query('return_type=="stripe"&type=="base_term"')
     dot_df = self.content.query('return_type=="dot"&type=="base_term"')
     length_df = self.content.query('return_type=="length"&type=="base_term"')
@@ -289,3 +289,8 @@ def df_to_data(df):
     }
     task_data.append(task)
   return task_data
+
+def transform_obj(val_str, ev = False):
+  vals = val_str.strip('()').replace(' ', '').split(',')
+  obj = f'Stone(S{vals[0]},O{vals[1]},L{vals[2]})'
+  return eval(obj) if ev else obj
