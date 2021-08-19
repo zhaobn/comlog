@@ -28,22 +28,22 @@ all_frames = pd.read_csv('../data/task_frames.csv',index_col=0)
 
 # Learning phase A
 pl = Task_lib(pd.read_csv('../data/task_pm.csv', index_col=0, na_filter=False))
-g1 = Task_gibbs(pl, task_data['learn_a'], iteration=1000)
-g1.run(all_frames, top_n=1, save_prefix='samples/construct_a')
+g1 = Task_gibbs(pl, task_data['learn_a'], iteration=500)
+g1.sample_hypos(all_frames, top_n=1, save_prefix='samples/construct_a_sam')
 
 
 # Gen predictions A
 a_ppl = Task_lib(g1.cur_programs)
-a_gen = sim_for_all(task_data['gen'], a_ppl, 1000)
-a_gen.to_csv('construct_preds_a.csv')
+a_gen = sim_for_all(task_data['gen'], a_ppl, 5)
+a_gen.to_csv('construct_sampled_preds_a.csv')
 
 
 # Learning phase B
-g2 = Task_gibbs(Task_lib(g1.cur_programs), task_data['learn_b'], iteration=1000)
-g2.run(all_frames, top_n=1, save_prefix='samples/construct_b')
+g2 = Task_gibbs(Task_lib(g1.cur_programs), task_data['learn_b'], iteration=500)
+g2.sample_hypos(all_frames, top_n=1, save_prefix='samples/construct_b_sam')
 
 
 # Gen predictions B
 b_ppl = Task_lib(g2.cur_programs)
 b_gen = sim_for_all(task_data['gen'], b_ppl, 1000)
-b_gen.to_csv('construct_preds_b.csv')
+b_gen.to_csv('construct_sampled_preds_b.csv')
