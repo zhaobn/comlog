@@ -9,30 +9,7 @@ rm(list=ls())
 
 load('data/pilot_1_cleaned.rdata')
 
-# Just play around
-data <- read.table("https://raw.githubusercontent.com/zonination/perceptions/master/probly.csv", header=TRUE, sep=",")
-data <- data %>% 
-  gather(key="text", value="value") %>%
-  mutate(text = gsub("\\.", " ",text)) %>%
-  mutate(value = round(as.numeric(value),0)) %>%
-  filter(text %in% c("Almost Certainly","Very Good Chance","We Believe","Likely","About Even", "Little Chance", "Chances Are Slight", "Almost No Chance"))
-
-data %>%
-  mutate(text = fct_reorder(text, value)) %>%
-  ggplot( aes(y=text, x=value,  fill=text)) +
-  geom_density_ridges(alpha=0.6, stat="binline", bins=20) +
-  theme_ridges() +
-  theme(
-    legend.position="none",
-    panel.spacing = unit(0.1, "lines"),
-    strip.text.x = element_text(size = 8)
-  ) +
-  xlab("") +
-  ylab("Assigned Probability (%)")
-
-
-
-# Try one plot
+# Plot raws
 answers = df.tw %>%
   group_by(trial) %>%
   summarise(stripe=max(stripe), dot=max(dot), block=max(block)) %>%
@@ -70,9 +47,27 @@ df.tw %>%
   theme(legend.position = 'none')
 
 
+# Plot model preds
+preds.combine = read.csv('preds/combine_preds_a.csv')
+preds.combine = preds.combine %>%
+  filter(substr(terms, 1, 11)=='Stone(S0,O0') %>%
+  select(terms, starts_with('prob')) %>%
+  gather(trial, value, starts_with('prob')) %>%
+  mutate(terms=as.character(terms),
+         trial=as.character(trial)) %>%
+  mutate(blocks=as.numeric(substr(terms, 14, nchar(terms)-1)),
+         trial=as.numeric(substr(trial, 6, nchar(trial)))) %>%
+  select(trial, prediction=blocks, prob=value) %>%
+  arrange(trial, prediction)
 
-
-
+preds.combine %>%
+  filter(prob>0) %>%
+  mutate(trial=as.factor(as.character(trial))) %>%
+  ggplot( aes(y=trial, x=prediction, fill=trial)) +
+  geom_density_ridges(alpha=0.6, stat="binline", bins=20) +
+  scale_x_discrete(limits=factor(c(0,seq(9)))) +
+  scale_y_discrete(limits=rev) +
+  theme_bw()
 
 
 
