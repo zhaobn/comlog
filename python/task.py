@@ -80,6 +80,7 @@ class Task_lib(Program_lib):
 class Task_gibbs(Gibbs_sampler):
   def __init__(self, program_lib, data_list, iteration, inc=True, burnin=0, down_weight=1, iter_start=0, data_start=0):
     Gibbs_sampler.__init__(self, program_lib, data_list, iteration, inc, burnin, down_weight, iter_start, data_start)
+    self.all_programs = self.init_programs.copy()
 
   def merge_lib(self, extracted_df, target_df = None):
     if target_df is not None:
@@ -276,6 +277,58 @@ class Task_gibbs(Gibbs_sampler):
           padding = len(str(self.iter))
           filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
           self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+
+  def sample_run(self, frames, threshold='strict', top_n = 50, logging=True, save_prefix=''):
+    frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
+    for i in range(self.iter):
+      iter_log = f'Iter {i+1}/{self.iter}'
+      self.cur_programs = self.init_programs.copy() # Reset lib for each iteration
+      for j in range(len(self.data)):
+        # Preps
+        data_log = f'Data {j+1}/{len(self.data)}'
+        data = self.data[:(j+1)]
+        # Unfold frames and filter with data
+        pl = Task_lib(self.cur_programs, self.dir_alpha)
+        unfolded = pd.DataFrame(columns=['terms', 'log_prob', 'total_consistency', 'n_exceptions'])
+        for k in range(len(frames)):
+          programs = pl.unfold_programs_with_lp(frames.iloc[k].at['terms'], frames.iloc[k].at['log_prob'], data)
+          for d in range(len(data)):
+            programs[f'consistent_{d}'] = programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
+          programs['total_consistency'] = programs[programs.columns[pd.Series(programs.columns).str.startswith('consistent')]].sum(axis=1)
+          programs['n_exceptions'] = len(data) - programs['total_consistency']
+          pm_max_consistency = max(programs['total_consistency'])
+          if threshold=='strict':
+            pm_con_thred = pm_max_consistency
+          elif threshold=='half':
+            pm_con_thred = min([len(data)/2, pm_max_consistency])
+          elif threshold=='min':
+            pm_con_thred = 1
+          pc_programs = programs.query(f'total_consistency>={pm_con_thred}')
+          pc_programs['log_prob'] = pc_programs['log_prob'] - 2*pc_programs['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
+          print(f"[{iter_log}|{data_log}|{k+1}/{len(frames)}] {frames.iloc[k].at['terms']}: {len(pc_programs)} passed") if logging else None
+          unfolded = unfolded.append(pc_programs[['terms', 'log_prob', 'total_consistency', 'n_exceptions']], ignore_index=True)
+        # Extract resusable bits
+        max_consistency = max([max(unfolded['total_consistency']), 1])
+        if threshold=='strict':
+          con_thred = max_consistency
+        elif threshold=='half':
+          con_thred = min([len(data)/2, max_consistency])
+        elif threshold=='min':
+          con_thred = 1
+        filtered = unfolded[unfolded['total_consistency']>=con_thred]
+        filtered = filtered.drop_duplicates(subset=['terms'])
+        n_to_extract = min([top_n, len(filtered)])
+        extracted = self.extract(filtered, n_to_extract, sample=True, base=0)
+        extracted = extracted.drop_duplicates(subset=['terms'])
+        # print(f'max_consistency: {max_consistency} (out of {len(data)} data), {len(filtered)} filtered, {len(extracted)} extracted')
+        self.cur_programs = self.merge_lib(extracted, self.init_programs)
+        if len(save_prefix) > 0:
+          padding = len(str(self.iter))
+          filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+          self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
+          if j == len(self.data)-1:
+            self.all_programs = self.merge_lib(extracted, self.all_programs)
+            self.all_programs.to_csv(f'{save_prefix}_pm_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
 
 # %%
 def df_to_data(df):
