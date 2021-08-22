@@ -324,6 +324,9 @@ df.tw %>%
 ```
 
 
+**TODO**: Code participants' self-report as programs, and check the percentage their generalization predictions actually match their self-reports.
+
+
 # Raw data
 
 Below is a density plot for participants' generalization predictions (x-axis) in each trial (y-axis), aggregated per learning condition and learning phase. Black dots are ground truth predictions.
