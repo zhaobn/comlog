@@ -745,13 +745,14 @@ function createLearnTask(learnDivPrefix, learnConfig, total=0, isMainTask = true
 
   return box
 }
-function createInputForm(formPrefix) {
+function createInputForm(formPrefix, isSecond=false) {
   let box = createCustomElement("div", "box", `${formPrefix}-box`);
+  let emphaseText = isSecond? ' (all six, including previously shown ones)': '';
   box.innerHTML = `
           <div class="display-box" id="${formPrefix}-display-box">
             <form class="input-form" id="${formPrefix}-input-form">
               <p>
-                <b>What is your best guess about these magic eggs?</b>
+                <b>What is your best guess about these magic eggs${emphaseText}?</b>
                 (Please be specific about <i>what properties you think matter or do not matter for the effects,
                 and how they do so</i>.)
                 <br />

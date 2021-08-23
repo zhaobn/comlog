@@ -248,7 +248,7 @@ for(let i = 0; i < bobLearn.length; i++ ) {
 
 // Free response
 (mode === 'dev')? document.getElementById(taskInputB).style.display = 'flex': null;
-document.getElementById(taskInputB).append(createInputForm(taskInputB))
+document.getElementById(taskInputB).append(createInputForm(taskInputB, true))
 
 let bobInputForm = document.getElementById(`${taskInputB}-input-form`)
 let bobOkBtn = document.getElementById(`${taskInputB}-input-submit-btn`)
@@ -397,8 +397,8 @@ descNextBtn.onclick = () => {
 
 // Quiz
 const checkBtn = document.getElementById('check-btn');
-const checks = [ 'check1', 'check2', 'check3', 'check4', 'check5', 'check6' ];
-const answers = [ true, true, true, false, false, true ];
+const checks = [ 'check1', 'check2', 'check3', 'check4', 'check5', 'check6', 'check7' ];
+const answers = [ true, true, true, false, true, false, true ];
 
 const passBtn = document.getElementById('pass-btn');
 const retryBtn = document.getElementById('retry-btn');
