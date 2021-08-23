@@ -17,6 +17,7 @@ library(ggplot2)
 library(patchwork)
 library(knitr)
 library(googlesheets4)
+library(ggridges)
 ```
 
 ```{r data, include=FALSE}
@@ -337,7 +338,46 @@ Participants in the `discern` condition, however, showed little difference in ge
 
 ![](figs/pilot_1_raws_labeled.png)
 
+# Model predictions
 
+Below is a very rough model prediction sketch, on the `combined` condition, with just 100 iterations.
+It seems the model can roughly catch similar prediction trend as humans, but way less noisy (in each trial the model's uncertainties are centered around two options) and shows little difference between phase A and B (the programs learned in phase A overwhelms phase B?).
+
+
+
+```{r preds, echo=FALSE, message=FALSE}
+preds.a = read.csv('preds/combine_preds_a.csv')
+preds.a = preds.a %>%
+  select(terms, starts_with('prob')) %>%
+  gather(trial, value, starts_with('prob')) %>%
+  mutate(terms=terms+1,
+         trial=as.numeric(substr(trial, 6, nchar(trial))),
+         phase='A') %>%
+  select(phase, trial, prediction=terms, value) %>%
+  arrange(trial, prediction)
+
+preds.b = read.csv('preds/combine_preds_b.csv')
+preds.b = preds.b %>%
+  select(terms, starts_with('prob')) %>%
+  gather(trial, value, starts_with('prob')) %>%
+  mutate(terms=terms+1,
+         trial=as.numeric(substr(trial, 6, nchar(trial))),
+         phase='B') %>%
+  select(phase, trial, prediction=terms, value) %>%
+  arrange(trial, prediction)
+
+preds.combine = rbind(preds.a, preds.b) %>%
+  mutate(trial=as.factor(as.character(trial)))
+
+preds.combine %>%
+  ggplot( aes(y=trial, x=prediction, height=value, fill=trial)) +
+  geom_density_ridges(stat="identity", alpha=0.6) +
+  scale_x_discrete(limits=factor(c(0,seq(9)))) +
+  scale_y_discrete(limits=rev) +
+  theme_bw() +
+  theme(legend.position = 'none') +
+  facet_wrap(~phase)
+```
 
 
 
