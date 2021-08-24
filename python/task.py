@@ -130,26 +130,23 @@ class Task_gibbs(Gibbs_sampler):
         n_exceptions_allowed = 0 if exceptions_allowed >= j+1 else exceptions_allowed
         data_log = f'Data {j+1}/{len(self.data)}'
         data = self.data[:(j+1)] if i < 1 else self.data
-        # Remove previously-extracted counts - start from scratch for each iteration
-        pms = self.init_programs
-        # if i > 0:
-        #   previous = self.extraction_history[i-1][j]
-        #   if previous is not None:
-        #     lhs = self.cur_programs
-        #     rhs = previous[['terms', 'arg_types', 'return_type', 'type', 'count']]
-        #     pms = pd.merge(lhs, rhs, on=['terms', 'arg_types', 'return_type', 'type'], how='outer')
-        #     pms = pms.fillna(0)
-        #     pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw by default is 1
-        #     pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count', 'log_prob']]
-
+        # Remove previously-extracted counts
+        pms = self.cur_programs.copy()
+        if i > 0:
+          previous = self.extraction_history[i-1][j]
+          if previous is not None:
+            lhs = pms.copy()
+            rhs = previous[['terms', 'arg_types', 'return_type', 'type', 'count']]
+            pms = pd.merge(lhs, rhs, on=['terms', 'arg_types', 'return_type', 'type'], how='outer')
+            pms = pms.fillna(0)
+            pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw by default is 1
+            pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count', 'log_prob']]
         # Unfold frames and filter with data
         pl = Task_lib(pms, self.dir_alpha)
-        # pl.update_log_prob() if not (i==0&j==0) else None
-
         # Sample frames
         ns = 0
         filtered = pd.DataFrame({'terms': [], 'log_prob': [], 'n_exceptions': []})
-        while (len(filtered)) < 1 and ns < 10000: # NOT TRUE ANYMORE: Safe to use a large ns, bc ground truth is covered - it will stop
+        while (len(filtered)) < 1 and ns < 7: # NOT TRUE ANYMORE: Safe to use a large ns, bc ground truth is covered - it will stop
           ns += 1
           if len(frames_left.index) <= frame_sample:
             sampled_frames = frames_left.copy()
