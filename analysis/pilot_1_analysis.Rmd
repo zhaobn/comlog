@@ -1,7 +1,7 @@
 ---
 title: "Pilot 1 Analysis"
 author: "Bonan"
-date: "8/12/2021"
+date: "8/29/2021"
 output: 
   html_document:
     toc: true
@@ -340,43 +340,64 @@ Participants in the `discern` condition, however, showed little difference in ge
 
 # Model predictions
 
-Below is a very rough model prediction sketch, on the `combined` condition, with just 100 iterations.
-It seems the model can roughly catch similar prediction trend as humans, but way less noisy (in each trial the model's uncertainties are centered around two options) and shows little difference between phase A and B (the programs learned in phase A overwhelms phase B?).
+
+In producing these figures, I used 150 iteration for learning, 1000 simulations for making predictions, allow no exceptions for the `combine` and `construct` conditions, and allow up to 1 exception for the `discern` condition (otherwise phase A won't get anything consistent).
+
+For the `construct` condition, we observe that in phase A while most people went for a "no change" selection, our model predicts 0, due to its strict execution of the "multiply by 0" rule; 
+in phase B, model misses some correct answers, because the multiplication sub-part was heavily sampled during simulation and thus almost override the subtraction sub-part.
+
+For the `discern` condition, since I allowed up to 1 exception, the winning program is one that set the result to a block of 2 (consistent with two of the three learning examples).
 
 
+```{r preds, echo=FALSE, message=FALSE, warning=FALSE}
 
-```{r preds, echo=FALSE, message=FALSE}
-preds.a = read.csv('preds/combine_preds_a.csv')
-preds.a = preds.a %>%
-  select(terms, starts_with('prob')) %>%
-  gather(trial, value, starts_with('prob')) %>%
-  mutate(terms=terms+1,
-         trial=as.numeric(substr(trial, 6, nchar(trial))),
-         phase='A') %>%
-  select(phase, trial, prediction=terms, value) %>%
-  arrange(trial, prediction)
-
-preds.b = read.csv('preds/combine_preds_b.csv')
-preds.b = preds.b %>%
-  select(terms, starts_with('prob')) %>%
-  gather(trial, value, starts_with('prob')) %>%
-  mutate(terms=terms+1,
-         trial=as.numeric(substr(trial, 6, nchar(trial))),
-         phase='B') %>%
-  select(phase, trial, prediction=terms, value) %>%
-  arrange(trial, prediction)
-
-preds.combine = rbind(preds.a, preds.b) %>%
+answers = df.tw %>%
+  group_by(trial) %>%
+  summarise(stripe=max(stripe), dot=max(dot), block=max(block)) %>%
+  mutate(gtruth=stripe*block-dot) %>%
+  mutate(prediction=if_else(gtruth<0, 0, gtruth)) %>%
   mutate(trial=as.factor(as.character(trial)))
 
-preds.combine %>%
-  ggplot( aes(y=trial, x=prediction, height=value, fill=trial)) +
-  geom_density_ridges(stat="identity", alpha=0.6) +
-  scale_x_discrete(limits=factor(c(0,seq(9)))) +
+answers$batch='A'
+aa = answers
+bb = aa
+bb$batch = 'B'
+answers = rbind(aa, bb)
+
+
+
+model.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
+for (cond in c('construct', 'combine', 'discern')) {
+  for (ph in c('a', 'b')) {
+    preds = read.csv(paste0('preds/', cond, '_preds_', ph, '.csv'))
+    preds_fmt = preds %>%
+      select(terms, starts_with('prob')) %>%
+      gather(trial, value, starts_with('prob')) %>%
+      mutate(
+        condition=cond,
+        terms=terms,
+        trial=as.numeric(substr(trial, 6, nchar(trial))),
+        batch=toupper(ph)) %>%
+      select(condition, batch, trial, prediction=terms, value)
+    model.preds = rbind(model.preds, preds_fmt)
+  }
+}
+model.preds = model.preds %>% mutate(trial=as.factor(as.character(trial))) 
+
+
+
+df.tw %>%
+  mutate(trial=as.factor(as.character(trial))) %>%
+  ggplot( aes(y=trial, x=prediction, fill=trial)) +
+  geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
+  geom_point(data=answers) +
+  geom_density_ridges(data=model.preds, aes(height=value), stat="identity", alpha=0.4, scale=0.95) +
+  scale_x_discrete(limits=c(0,seq(max(df.tw$prediction)))) +
   scale_y_discrete(limits=rev) +
+  facet_grid(batch~condition) +
   theme_bw() +
-  theme(legend.position = 'none') +
-  facet_wrap(~phase)
+  theme(legend.position = 'none')
+
 ```
 
 

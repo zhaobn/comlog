@@ -47,8 +47,9 @@ g1.run(all_frames, top_n=TOP_N, exceptions_allowed=EXCEPTS, save_prefix=f'{SAVE_
 
 # Gen predictions A
 a_learned = pd.read_csv(f'{SAVE_DIR}_a_lib_{str(LEARN_ITER).zfill(padding)}_{str(data_len_a).zfill(padding)}.csv', index_col=0, na_filter=False)
+a_learned['count'] = a_learned['count'] +1
 a_gen = sim_for_all(task_data['gen'],  Task_lib(a_learned), 1000)
-a_gen.to_csv('construct_preds_a.csv')
+a_gen.to_csv('discern_preds_a.csv')
 
 
 # Learning phase B
@@ -58,5 +59,6 @@ g2.run(all_frames, top_n=TOP_N, exceptions_allowed=EXCEPTS, save_prefix=f'{SAVE_
 
 # Gen predictions B
 b_learned = pd.read_csv(f'{SAVE_DIR}_b_lib_{str(LEARN_ITER).zfill(padding)}_{str(data_len_b).zfill(padding)}.csv', index_col=0, na_filter=False)
+b_learned['count'] = b_learned['count'] +1
 b_gen = sim_for_all(task_data['gen'], Task_lib(b_learned), 1000)
-b_gen.to_csv('construct_preds_b.csv')
+b_gen.to_csv('discern_preds_b.csv')
