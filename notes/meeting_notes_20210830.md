@@ -7,10 +7,22 @@
 
 ### Main experiment
 
+Edits ([1fe907a](https://github.com/zhaobn/comlog/commit/1fe907ace8462ad993d4f2da4637577f2368899e)) I did in encouraging synthesizing:
+
+- Added a sentence in Introduction: "Your updated guess should be able to explain both pairs in this second phase AND the pairs you tested previously."
+- Added a comprehension Q: "Your second guess has to explain the first three pairs of objects as well" (Correct)
+- When writing the second guess: "What is your best guess about these magic eggs (all six, including previously shown ones)?"
+
+Things we need to decide:
+
 - Three conditions, or just two (construct vs. de-construct)?
 - Planned sample size 80 for three conditions (~26 per condition)
 
 ### Model
+
+See the pilot analysis above for model prediction plots. 
+
+Problems we have now:
 
 - In the `construct` condition, `mult` part is overwhelming because the model now recursively adds sub-parts
 - Now the model can't learn anything in the `de-construct` (`discern`) condition. I'm allowing up to 1 exceptions for now, but could consider alternative ways eg.
