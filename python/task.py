@@ -17,16 +17,14 @@ class Task_lib(Program_lib):
   @staticmethod
   def check_program(terms, data):
     result = Program(eval(terms)).run([data['agent'], data['recipient']])
-    return result == data['result'].length.value
+    return result == data['result']
 
   def sample_base(self, type, add):
     if type == 'obj':
       stripe = self.sample_base('stripe', add)
       dot = self.sample_base('dot', add)
-      length = self.sample_base('length', add)
-      sampled_props = [stripe, dot, length]
-      stone = 'Stone(' + ','.join([p['terms'] for p in sampled_props]) + ')'
-      return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'type': 'base_term'}
+      egg = f'Egg({stripe},{dot})'
+      return {'terms': egg, 'arg_types': '', 'return_type': 'egg', 'type': 'base_term'}
     else:
       bases = self.content.query(f'return_type=="{type}"&type=="base_term"')
       if bases is None or bases.empty:
@@ -38,26 +36,22 @@ class Task_lib(Program_lib):
           self.add(sampled)
         return sampled
   def get_all_objs(self):
-    stones_df = pd.DataFrame({'terms': [], 'count':[]})
+    eggs_df = pd.DataFrame({'terms': [], 'count':[]})
     stripe_df = self.content.query('return_type=="stripe"&type=="base_term"')
     dot_df = self.content.query('return_type=="dot"&type=="base_term"')
-    length_df = self.content.query('return_type=="length"&type=="base_term"')
     for s in range(len(stripe_df)):
       for o in range(len(dot_df)):
-        for l in range(len(length_df)):
-          stone_feats = [
-            stripe_df.iloc[s].at['terms'],
-            dot_df.iloc[o].at['terms'],
-            length_df.iloc[l].at['terms'],
-          ]
-          counts = [
-            stripe_df.iloc[s].at['count'],
-            dot_df.iloc[o].at['count'],
-            length_df.iloc[l].at['count'],
-          ]
-          stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
-    stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
-    return stones_df[['terms', 'log_prob']]
+        egg_feats = [
+          stripe_df.iloc[s].at['terms'],
+          dot_df.iloc[o].at['terms'],
+        ]
+        counts = [
+          stripe_df.iloc[s].at['count'],
+          dot_df.iloc[o].at['count'],
+        ]
+        eggs_df = eggs_df.append(pd.DataFrame({'terms': [f'Stone({",".join(egg_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
+    eggs_df['log_prob'] = self.log_dir(list(eggs_df['count']))
+    return eggs_df[['terms', 'log_prob']]
 
 # # %%
 # pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
@@ -70,11 +64,13 @@ class Task_lib(Program_lib):
 
 # pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 # pl = Task_lib(pm_init)
-# t = [['obj', 'obj'], 'num']
+# t = [['egg', 'num'], 'num']
 
 # rf = pl.typed_enum(t,1)
-# # rf2 = pl.typed_enum(t,2)
 # rf.to_csv('data/task_frames.csv')
+
+# rf2 = pl.typed_enum(t,2)
+# rf2.to_csv('data/task_frames_2.csv')
 
 # %%
 class Task_gibbs(Gibbs_sampler):
@@ -180,152 +176,6 @@ class Task_gibbs(Gibbs_sampler):
             pd.DataFrame.from_records(self.filtering_history).to_csv(f'{save_prefix}_filter_hist.csv')
             filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
             self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-
-  def enum_hypos(self, frames, threshold='strict', logging=True, save_prefix=''):
-    frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
-    for j in range(len(self.data)):
-      # Preps
-      data_log = f'Data {j+1}/{len(self.data)}'
-      data = self.data[:(j+1)]
-      # Unfold frames and filter with data
-      pl = Task_lib(self.cur_programs, self.dir_alpha)
-      unfolded = pd.DataFrame(columns=['terms', 'log_prob', 'total_consistency', 'n_exceptions'])
-      for k in range(len(frames)):
-        programs = pl.unfold_programs_with_lp(frames.iloc[k].at['terms'], frames.iloc[k].at['log_prob'], data)
-        for d in range(len(data)):
-          programs[f'consistent_{d}'] = programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
-        programs['total_consistency'] = programs[programs.columns[pd.Series(programs.columns).str.startswith('consistent')]].sum(axis=1)
-        programs['n_exceptions'] = len(data) - programs['total_consistency']
-        pm_max_consistency = max(programs['total_consistency'])
-        if threshold=='strict':
-          pm_con_thred = pm_max_consistency
-        elif threshold=='half':
-          pm_con_thred = min([len(data)/2, pm_max_consistency])
-        elif threshold=='min':
-          pm_con_thred = 1
-        pc_programs = programs.query(f'total_consistency>={pm_con_thred}')
-        pc_programs['log_prob'] = pc_programs['log_prob'] - 2*pc_programs['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
-        print(f"[{data_log}|{k}/{len(frames)}] {frames.iloc[k].at['terms']}: {len(pc_programs)} passed") if logging else None
-        unfolded = unfolded.append(pc_programs[['terms', 'log_prob', 'total_consistency', 'n_exceptions']], ignore_index=True)
-      # Extract resusable bits
-      max_consistency = max([max(unfolded['total_consistency']), 1])
-      if threshold=='strict':
-        con_thred = max_consistency
-      elif threshold=='half':
-        con_thred = min([len(data)/2, max_consistency])
-      elif threshold=='min':
-        con_thred = 1
-      filtered = unfolded[unfolded['total_consistency']>=con_thred]
-      filtered = filtered.drop_duplicates(subset=['terms'])
-      extracted = self.extract(filtered, len(filtered), sample=False, base=0)
-      extracted = extracted.drop_duplicates(subset=['terms'])
-      print(f'max_consistency: {max_consistency}(out of {len(data)} data), {len(filtered)} filtered, {len(extracted)} extracted')
-      self.cur_programs = self.merge_lib(extracted, self.init_programs)
-      if len(save_prefix) > 0:
-        padding = len(str(self.iter))
-        filtered.to_csv(f'{save_prefix}_filtered_{str(j+1).zfill(padding)}.csv')
-        self.cur_programs.to_csv(f'{save_prefix}_lib_{str(j+1).zfill(padding)}.csv')
-
-  def sample_hypos(self, frames, threshold='strict', top_n = 50, logging=True, save_prefix=''):
-    frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
-    for i in range(self.iter):
-      iter_log = f'Iter {i+1}/{self.iter}'
-      self.cur_programs = self.init_programs.copy() # Reset lib for each iteration
-      for j in range(len(self.data)):
-        # Preps
-        data_log = f'Data {j+1}/{len(self.data)}'
-        data = self.data[:(j+1)]
-        # Unfold frames and filter with data
-        pl = Task_lib(self.cur_programs, self.dir_alpha)
-        unfolded = pd.DataFrame(columns=['terms', 'log_prob', 'total_consistency', 'n_exceptions'])
-        for k in range(len(frames)):
-          programs = pl.unfold_programs_with_lp(frames.iloc[k].at['terms'], frames.iloc[k].at['log_prob'], data)
-          for d in range(len(data)):
-            programs[f'consistent_{d}'] = programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
-          programs['total_consistency'] = programs[programs.columns[pd.Series(programs.columns).str.startswith('consistent')]].sum(axis=1)
-          programs['n_exceptions'] = len(data) - programs['total_consistency']
-          pm_max_consistency = max(programs['total_consistency'])
-          if threshold=='strict':
-            pm_con_thred = pm_max_consistency
-          elif threshold=='half':
-            pm_con_thred = min([len(data)/2, pm_max_consistency])
-          elif threshold=='min':
-            pm_con_thred = 1
-          pc_programs = programs.query(f'total_consistency>={pm_con_thred}')
-          pc_programs['log_prob'] = pc_programs['log_prob'] - 2*pc_programs['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
-          print(f"[{iter_log}|{data_log}|{k+1}/{len(frames)}] {frames.iloc[k].at['terms']}: {len(pc_programs)} passed") if logging else None
-          unfolded = unfolded.append(pc_programs[['terms', 'log_prob', 'total_consistency', 'n_exceptions']], ignore_index=True)
-        # Extract resusable bits
-        max_consistency = max([max(unfolded['total_consistency']), 1])
-        if threshold=='strict':
-          con_thred = max_consistency
-        elif threshold=='half':
-          con_thred = min([len(data)/2, max_consistency])
-        elif threshold=='min':
-          con_thred = 1
-        filtered = unfolded[unfolded['total_consistency']>=con_thred]
-        filtered = filtered.drop_duplicates(subset=['terms'])
-        n_to_extract = min([top_n, len(filtered)])
-        extracted = self.extract(filtered, n_to_extract, sample=True, base=0)
-        extracted = extracted.drop_duplicates(subset=['terms'])
-        # print(f'max_consistency: {max_consistency} (out of {len(data)} data), {len(filtered)} filtered, {len(extracted)} extracted')
-        self.cur_programs = self.merge_lib(extracted, self.init_programs)
-        if len(save_prefix) > 0:
-          padding = len(str(self.iter))
-          filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-          self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-
-  def sample_run(self, frames, threshold='strict', top_n = 50, logging=True, save_prefix=''):
-    frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
-    for i in range(self.iter):
-      iter_log = f'Iter {i+1}/{self.iter}'
-      self.cur_programs = self.init_programs.copy() # Reset lib for each iteration
-      for j in range(len(self.data)):
-        # Preps
-        data_log = f'Data {j+1}/{len(self.data)}'
-        data = self.data[:(j+1)]
-        # Unfold frames and filter with data
-        pl = Task_lib(self.cur_programs, self.dir_alpha)
-        unfolded = pd.DataFrame(columns=['terms', 'log_prob', 'total_consistency', 'n_exceptions'])
-        for k in range(len(frames)):
-          programs = pl.unfold_programs_with_lp(frames.iloc[k].at['terms'], frames.iloc[k].at['log_prob'], data)
-          for d in range(len(data)):
-            programs[f'consistent_{d}'] = programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
-          programs['total_consistency'] = programs[programs.columns[pd.Series(programs.columns).str.startswith('consistent')]].sum(axis=1)
-          programs['n_exceptions'] = len(data) - programs['total_consistency']
-          pm_max_consistency = max(programs['total_consistency'])
-          if threshold=='strict':
-            pm_con_thred = pm_max_consistency
-          elif threshold=='half':
-            pm_con_thred = min([len(data)/2, pm_max_consistency])
-          elif threshold=='min':
-            pm_con_thred = 1
-          pc_programs = programs.query(f'total_consistency>={pm_con_thred}')
-          pc_programs['log_prob'] = pc_programs['log_prob'] - 2*pc_programs['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
-          print(f"[{iter_log}|{data_log}|{k+1}/{len(frames)}] {frames.iloc[k].at['terms']}: {len(pc_programs)} passed") if logging else None
-          unfolded = unfolded.append(pc_programs[['terms', 'log_prob', 'total_consistency', 'n_exceptions']], ignore_index=True)
-        # Extract resusable bits
-        max_consistency = max([max(unfolded['total_consistency']), 1])
-        if threshold=='strict':
-          con_thred = max_consistency
-        elif threshold=='half':
-          con_thred = min([len(data)/2, max_consistency])
-        elif threshold=='min':
-          con_thred = 1
-        filtered = unfolded[unfolded['total_consistency']>=con_thred]
-        filtered = filtered.drop_duplicates(subset=['terms'])
-        n_to_extract = min([top_n, len(filtered)])
-        extracted = self.extract(filtered, n_to_extract, sample=True, base=0)
-        extracted = extracted.drop_duplicates(subset=['terms'])
-        # print(f'max_consistency: {max_consistency} (out of {len(data)} data), {len(filtered)} filtered, {len(extracted)} extracted')
-        self.cur_programs = self.merge_lib(extracted, self.init_programs)
-        if len(save_prefix) > 0:
-          padding = len(str(self.iter))
-          filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-          self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-          if j == len(self.data)-1:
-            self.all_programs = self.merge_lib(extracted, self.all_programs)
-            self.all_programs.to_csv(f'{save_prefix}_pm_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
 
 # %%
 def df_to_data(df):

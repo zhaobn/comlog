@@ -9,7 +9,8 @@ from base_classes import Placeholder, Primitive, Program
 from base_methods import if_else, send_right, send_left, send_both, constant, return_myself
 from base_terms import B,C,S,K,BB,BC,BS,BK,CB,CC,CS,CK,SB,SC,SS,SK,KB,KC,KS,KK
 
-# %% Define class
+# %%
+# Classes
 class Stripe:
   def __init__(self, name):
     self.ctype = 'stripe'
@@ -26,23 +27,14 @@ class Dot:
   def __str__(self):
     return self.name
 
-class Length:
-  def __init__(self, name):
-    self.ctype = 'length'
-    self.name = name
-    self.value = int(name[1:])
-  def __str__(self):
-    return self.name
-
-class Stone:
-  def __init__(self, stripe, dot, length):
-    self.ctype = 'obj'
+class Egg:
+  def __init__(self, stripe, dot):
+    self.ctype = 'egg'
     self.stripe = stripe
     self.dot = dot
-    self.length = length
   @property
   def name(self):
-    return f'Stone({self.stripe.name},{self.dot.name},{self.length.name})'
+    return f'Egg({self.stripe.name},{self.dot.name})'
   def __str__(self):
     return self.name
 
@@ -56,77 +48,44 @@ class PM(Placeholder): # Programholder for typed enumeration
     return f'{self.name} {self.arg_types} -> {self.return_type}'
 
 # Base terms
-for i in range(5+1):
+for i in range(5):
   exec(f"S{i} = Stripe('S{i}')")
 
-for i in range(4+1):
+for i in range(5):
   exec(f"O{i} = Dot('O{i}')")
-
-for i in range(12+1):
-  exec(f"L{i} = Length('L{i}')")
 
 # Placeholders for typed program enumeration
 stripe = Placeholder('stripe')
 dot = Placeholder('dot')
-length = Placeholder('length')
 num = Placeholder('num')
-obj = Placeholder('obj')
+egg = Placeholder('egg')
 
-# %%
-# Functional
-def set_stripe (arg_list):
-  obj, val = arg_list
-  stripe_val = 0 if val < 0 else val
-  obj.stripe = Stripe(f'S{stripe_val}')
-  return obj
-
-def set_dot (arg_list):
-  obj, val = arg_list
-  dot_val = 0 if val < 0 else val
-  obj.dot = Stripe(f'O{dot_val}')
-  return obj
-
-def set_length (arg_list):
-  obj, val = arg_list
-  len_val = 0 if val < 0 else val
-  obj.length = Length(f'L{len_val}')
-  return obj
-
-getStripe = Primitive('getStripe', ['obj'], 'num', lambda x: copy(x[0].stripe.value))
-setStripe = Primitive('setStripe', ['obj', 'num'], 'obj', set_stripe)
-
-getDot= Primitive('getDot', ['obj'], 'num', lambda x: copy(x[0].dot.value))
-setDot= Primitive('setDot', ['obj', 'num'], 'obj', set_dot)
-
-getLength = Primitive('getLength', ['obj'], 'num', lambda x: copy(x[0].length.value))
-setLength = Primitive('setLength', ['obj', 'num'], 'obj', set_length)
+# Primitives
+getStripe = Primitive('getStripe', ['egg'], 'num', lambda x: copy(x[0].stripe.value))
+getDot= Primitive('getDot', ['egg'], 'num', lambda x: copy(x[0].dot.value))
 
 addnn = Primitive('addnn', ['num', 'num'], 'num', lambda x: sum(x))
 subnn = Primitive('subnn', ['num', 'num'], 'num', lambda x: x[0]-x[1])
 mulnn = Primitive('mulnn', ['num', 'num'], 'num', lambda x: math.prod(x))
 
-I = Primitive('I', 'obj', 'obj', return_myself)
+I = Primitive('I', 'egg', 'egg', return_myself)
 
 # # %% Debug
-# x = Stone(S1,O0,L1)
-# y = Stone(S0,O0,L2)
-# z = Program([BC,[B,setLength,I],[C,[B,mulnn,[B,getStripe,I]],3]]).run([x,y])
-# z.name
+# x = Egg(S2,O0)
+# y = 4
+# Program([CB,[B,mulnn,getStripe],I]).run([x,y])
 
 # # %% Task set up
-# pm_setup = []
-# pm_terms = [
+# pm_terms = list(range(5)) + [
 #   S0, S1, S2, S3, S4,
 #   O0, O1, O2, O3, O4,
-#   L0, L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12,
-#   0,1,2,3,4,
-#   {'terms': '[B,I,I]', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
-#   {'terms': '[KB,I,I]', 'arg_types': 'obj_obj', 'return_type': 'obj', 'type': 'program'},
-#   getStripe, getDot, getLength, # setLength, setStripe, setDot
-#   addnn, subnn, mulnn, I,
-#   {'terms': '[KB,getLength,I]', 'arg_types': 'obj_obj', 'return_type': 'num', 'type': 'program'},
+#   getStripe, getDot, addnn, subnn, mulnn, I,
+#   {'terms': '[B,I,I]', 'arg_types': 'num', 'return_type': 'num', 'type': 'program'},
+#   {'terms': '[KB,I,I]', 'arg_types': 'egg_num', 'return_type': 'num', 'type': 'program'},
+#   {'terms': '[BK,I,I]', 'arg_types': 'egg_num', 'return_type': 'egg', 'type': 'program'},
 # ]
 
+# pm_setup = []
 # for pt in pm_terms:
 #   if isinstance(pt, dict):
 #     terms = pt['terms']
