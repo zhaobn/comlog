@@ -7,7 +7,7 @@ from base_classes import Program
 from base_terms import B,C,S,K,BB,BC,BS,BK,CB,CC,CS,CK,SB,SC,SS,SK,KB,KC,KS,KK
 from program_lib import Program_lib
 from program_inf import Gibbs_sampler
-from helpers import args_to_string
+from helpers import args_to_string,normalize,softmax
 from task_configs import *
 
 # %%
@@ -209,11 +209,28 @@ class Task_gibbs(Gibbs_sampler):
         print('Nothing consistent, skipping to next...') if logging else None
       else:
         self.filtering_history[i] = 1
-        n_extract = len(filtered) if len(filtered) < top_n else top_n
-        extracted = self.extract(filtered, n_extract, sample, base)
+        # Sample or add all
+        if len(filtered) <= top_n or sample == 0:
+          to_add = filtered.copy()
+        else:
+          filtered['prob'] = filtered.apply(lambda row: math.exp(row['log_prob']), axis=1)
+          filtered['prob'] = normalize(filtered['prob']) if base == 0 else softmax(filtered['prob'], base)
+          to_add = filtered.sample(n=top_n, weights='prob')
+        # Add chunk to lib (see program_inf for recursive version)
+        to_add['arg_types'] = 'egg_num'
+        to_add['return_type'] = 'num'
+        to_add['type'] = 'program'
+        to_add['count'] = '1'
+        if len(to_add) > 1:
+          extracted = (to_add
+            .groupby(by=['terms','arg_types','return_type','type'], as_index=False)
+            .agg({'count': pd.Series.count, 'log_prob': pd.Series.max})
+            .reset_index(drop=1))
+        else:
+          extracted = to_add[['terms','arg_types','return_type','type','count','log_prob']]
         print(extracted) if logging else None
         self.extraction_history[i] = extracted
-        self.cur_programs = self.merge_lib(extracted)
+        self.cur_programs = self.merge_lib(to_add)
         if len(save_prefix) > 0:
           padding = len(str(self.iter))
           filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}.csv')
