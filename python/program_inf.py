@@ -23,8 +23,8 @@ class Gibbs_sampler:
     self.burnin = burnin
     self.iter_start = iter_start
     self.data_start = data_start
-    self.extraction_history = [[None] * len(data_list)] * iteration if self.inc == 1 else [[None] * iteration]
-    self.filtering_history = np.zeros((iteration, len(data_list)))
+    self.extraction_history = [None] * iteration
+    self.filtering_history = [None] * iteration
 
   @staticmethod
   def find_ret_type(terms):
