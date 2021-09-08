@@ -39,8 +39,9 @@ var(c(1.29, 1.33, 0.714)) / var(self_report_acc$acc) # Effect size 0.14
 
 # G*power total sample size suggestion: 719
 
+sd(c(1.29, 1.33, 0.714))
 
-
+(self_report_acc$acc)
 
 
 
