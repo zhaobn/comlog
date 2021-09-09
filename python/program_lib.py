@@ -6,8 +6,7 @@ from numpy import random as np_random
 from math import log, exp
 from itertools import product as itertools_product
 
-from task_configs import *
-from base_terms import Program
+from base_terms import *
 from helpers import args_to_string, names_to_string, term_to_dict, secure_list, print_name
 
 # %%
@@ -157,7 +156,7 @@ class Program_lib(Program_lib_light):
       return ''.join([np_random.choice(['C', 'B', 'S', 'K']) for _ in arg_list])
 
   # Tail-recursion; righthand-side tree
-  def generate_program(self, type_signature, cur_step = 0, max_step = 5, alpha = 1, d = 0.2, add=True):
+  def generate_program(self, type_signature, cur_step=0, max_step=5, alpha=1, d=0.2, add=True):
     if cur_step > max_step:
       print('Max step exceeded!')
       return self.ERROR_TERM
@@ -203,6 +202,18 @@ class Program_lib(Program_lib_light):
         cached['weight'] = (cached['count']-d)/(Ct-Nt*d)
         sampled = self.sample_program(cached, add, weight_col='weight')
         return sampled
+
+  # Adaptor grammar prior in log, see Percy Liang et al. 2010
+  def calc_adaptor_lp_for(self, terms, type_sig, alpha=1, d=0.2):
+    Ct = self.get_cached_program(type_sig)
+    Nt = len(Ct)
+    Mz = Ct[Ct['terms']==terms]['count'].values[0]
+    # Break things down for readability
+    numerator_1 = Nt*alpha + d*(Nt*(Nt+1)/2 - Nt)
+    numerator_2 = 0
+    numerator_3 = (Mz-1)*Mz/2 - d*(Mz-1)
+    denominator = Nt*alpha + (Nt-1)*Nt/2
+    return numerator_1 + numerator_2 + numerator_3 - denominator
 
   # Lefthand-side tree
   def expand_program(self, candidate, arg_list, free_index, cur_step, max_step, alpha, d, add):
@@ -555,13 +566,10 @@ class Program_lib(Program_lib_light):
 # pm_init_test.to_csv('data/pm_init_test.csv')
 
 # # %%
-# pm_init = pd.read_csv('data/task_pm_2.csv', index_col=0, na_filter=False)
+# pm_init = pd.read_csv('data/pm_init_test.csv', index_col=0, na_filter=False)
 # pl = Program_lib(pm_init, 0.1)
 # pl.update_log_prob(init=1)
 # pl.update_log_prob()
-
-# pl.get_init_prior()
-# pl.content.to_csv('data/pm_init_cut.csv')
 
 # t = [['obj', 'obj'], 'obj']
 # pl.generate_program(t)
@@ -586,6 +594,3 @@ class Program_lib(Program_lib_light):
 # pl.generate_program(t)
 # rf = pl.bfs(t,1)
 # x = pl.filter_program(rf,data)
-
-
-# %%
