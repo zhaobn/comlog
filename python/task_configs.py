@@ -115,3 +115,5 @@ I = Primitive('I', 'egg', 'egg', return_myself)
 #   .sort_values(by=['type','return_type','arg_types','terms'])
 #   .reset_index(drop=1))
 # pm_task.to_csv('data/task_pm.csv')
+
+# %%

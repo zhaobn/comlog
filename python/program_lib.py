@@ -233,7 +233,7 @@ class Program_lib(Program_lib_light):
     elif len(priors) == 0:
       dir_prob = [ i+self.DIR_ALPHA-1 for i in count_vec ]
     else:
-      dir_prob = [ i+j-1+self.DIR_ALPHA for i,j in zip(count_vec, priors) ]
+      dir_prob = [ i+j+self.DIR_ALPHA-1 for i,j in zip(count_vec, priors) ]
     return [ log(i/sum(dir_prob)) for i in dir_prob ]
 
   @staticmethod
