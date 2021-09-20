@@ -1,12 +1,11 @@
 
 # %%
 import math
-import random
 import numpy as np
 import pandas as pd
 pd.set_option('mode.chained_assignment', None)
 
-from task_configs import *
+from task_terms import *
 from helpers import secure_list, names_to_string, print_name, normalize, softmax
 from program_lib import Program_lib_light, Program_lib
 
@@ -160,125 +159,123 @@ class Gibbs_sampler:
     ret_df = ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
     return ret_df
 
-  def run(self, type_sig=[['obj', 'obj'], 'obj'], top_n=1, sample=True, base=0, logging=True, save_prefix=''):
+  def merge_lib(self, extracted_df, target_df = None):
+    if target_df is not None:
+      merged_df = pd.merge(target_df.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
+    else:
+      merged_df = pd.merge(self.cur_programs.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
+    # Increase counter
+    merged_df['count'] = merged_df['count_x'] + merged_df['count_y']
+    set_df = (merged_df
+      .query('count_y==0')[['terms','arg_types','return_type','type','count','log_prob_x','prior']]
+      .rename(columns={'log_prob_x': 'log_prob'}))
+    # Take care of newly-created programs
+    to_set_df = (merged_df
+      .query('count_x==0')[['terms','arg_types','return_type','type','count','log_prob_y']]
+      .rename(columns={'log_prob_y': 'log_prob'}))
+    to_set_df['prior'] = to_set_df.apply(lambda row: math.exp(row['log_prob']), axis=1)
+    return pd.concat([set_df, to_set_df],ignore_index=True).reset_index(drop=True)
+
+  def run(self, frames, top_n=1, sample=True, frame_sample=20, base=0, logging=True, save_prefix='', exceptions_allowed=0):
+    frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
     for i in range(self.iter_start, self.iter):
-      print(f'Running {i+1}/{self.iter} ({round(100*(i+1)/self.iter, 2)}%):') if logging else None
-      data_start = 0 if i > self.iter_start else self.data_start
-      if self.inc == 1:
-        for j in range(data_start, len(self.data)):
-          print(f'---- {j+1}-th out of {len(self.data)} ----') if logging else None
-          if i < 1:
-            # incrementally
-            data = self.data[:(j+1)]
-            pms = self.cur_programs
-          else:
-            # Use full batch
-            data = self.data
-            # Remove previously-extracted counts
-            previous = self.extraction_history[i-1][j]
-            if previous is not None:
-              pms = pd.merge(self.cur_programs, previous, on=['terms', 'arg_types', 'return_type', 'type'], how='outer')
-              pms = pms.fillna(0)
-              pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw ranges 0 to 1
-              pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count']]
-            else:
-              pms = self.cur_programs
-          pl = Program_lib(pms, self.dir_alpha)
-          enumed = pl.bfs(type_sig, 1)
-          filtered = pl.filter_program(enumed, data)
-          if len(filtered) < 1:
-            print('No programs found, filtering again with single input...') if logging else None
-            self.filtering_history[i][j] = 0
-            filtered = pl.filter_program(enumed, self.data[j])
-          else:
-            self.filtering_history[i][j] = 1
-            padding = len(str(self.iter))
-            filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-          extracted = self.extract(filtered, top_n, sample, base)
-          print(extracted) if logging else None
-          self.extraction_history[i][j] = extracted
-          self.cur_programs = pd.concat([ self.cur_programs, extracted ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
-          if len(save_prefix) > 0:
-            padding = len(str(self.iter))
-            filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-            pd.DataFrame.from_records(self.filtering_history).to_csv(f'{save_prefix}filter_hist.csv')
-            self.cur_programs.to_csv(f'{save_prefix}_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-      else: # use full batch
-        pms = self.cur_programs
-        data = self.data
-        pl = Program_lib(pms, self.dir_alpha)
-        enumed = pl.bfs(type_sig, 1)
-        filtered = pl.filter_program(enumed, data)
-        if len(filtered) < 1:
-          self.filtering_history[0][i] = 0
-          print('No programs found, filtering again with random input...') if logging else None
-          rd_idx = random.choice(range(len(data)))
-          filtered = pl.filter_program(enumed, self.data[rd_idx])
+      iter_log = f'Iter {i+1}/{self.iter}'
+      data = self.data
+
+      # Remove previously-extracted counts
+      pms = self.cur_programs.copy()
+      if i > 0:
+        previous = self.extraction_history[i-1]
+        if previous is not None:
+          lhs = pms.copy()
+          rhs = previous[['terms', 'arg_types', 'return_type', 'type', 'count']]
+          pms = pd.merge(lhs, rhs, on=['terms', 'arg_types', 'return_type', 'type'], how='outer').fillna(0)
+          pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw by default is 1
+          pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count', 'log_prob', 'prior']]
+          pms['log_prob'] = pl.log_dir(pms['count'], pms['prior'])
+      pl = Program_lib(pms, self.dir_alpha)
+
+      # Sample frames
+      frames_left = frames.copy()
+      filtered = pd.DataFrame({'terms': [], 'log_prob': [], 'n_exceptions': []})
+      ns = 0
+      while (len(filtered)) < 1 and ns < 100:
+        ns += 1
+        if len(frames_left) <= frame_sample:
+          sampled_frames = frames_left.copy()
         else:
-          self.filtering_history[0][i] = 1
-        extracted = self.extract(filtered, top_n, sample, base)
+          sampled_frames = frames_left.sample(n=frame_sample, weights='prob').reset_index(drop=True)
+        frames_left = frames_left[~frames_left['terms'].isin(sampled_frames['terms'])]
+        for k in range(len(sampled_frames)):
+          all_programs = pl.unfold_programs_with_lp(sampled_frames.iloc[k].at['terms'], sampled_frames.iloc[k].at['log_prob'], data[0])
+          if len(all_programs) > 0:
+            for d in range(len(data)):
+              all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
+            all_programs['total_consistency'] = all_programs[all_programs.columns[pd.Series(all_programs.columns).str.startswith('consistent')]].sum(axis=1)
+            all_programs['n_exceptions'] = len(data) - all_programs['total_consistency']
+            passed_pm = all_programs.query(f'n_exceptions<={exceptions_allowed}')
+            passed_pm['log_prob'] = passed_pm['log_prob'] - 2*passed_pm['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
+            print(f"[{iter_log}|{k}/{len(sampled_frames)}, -{ns}th] {sampled_frames.iloc[k].at['terms']}: {len(passed_pm)} passed") if logging else None
+            filtered = filtered.append(passed_pm[['terms', 'log_prob', 'n_exceptions']], ignore_index=True)
+      # Extract resusable bits
+      if len(filtered) < 1:
+        print('Nothing consistent, skipping to next...') if logging else None
+      else:
+        # Sample or add all
+        if len(filtered) <= top_n or sample == 0:
+          to_add = filtered.copy()
+        else:
+          filtered['prob'] = filtered.apply(lambda row: math.exp(row['log_prob']), axis=1)
+          filtered['prob'] = normalize(filtered['prob']) if base == 0 else softmax(filtered['prob'], base)
+          to_add = filtered.sample(n=top_n, weights='prob')
+        # Add chunk to lib (see program_inf for recursive version)
+        to_add['arg_types'] = 'egg_num'
+        to_add['return_type'] = 'num'
+        to_add['type'] = 'program'
+        to_add['count'] = 1
+        if len(to_add) > 1:
+          extracted = (to_add
+            .groupby(by=['terms','arg_types','return_type','type'], as_index=False)
+            .agg({'count': pd.Series.count, 'log_prob': pd.Series.max})
+            .reset_index(drop=1))
+        else:
+          extracted = to_add[['terms','arg_types','return_type','type','count','log_prob']]
         print(extracted) if logging else None
-        self.extraction_history[0][i] = extracted
-        self.cur_programs = pd.concat([ self.cur_programs, extracted ]).groupby(['terms','arg_types','return_type','type'], as_index=False)['count'].sum()
+        self.extraction_history[i] = extracted
+        self.cur_programs = self.merge_lib(to_add)
         if len(save_prefix) > 0:
           padding = len(str(self.iter))
           filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}.csv')
-          pd.DataFrame(self.filtering_history).to_csv(f'{save_prefix}filter_hist.csv')
-          self.cur_programs.to_csv(f'{save_prefix}_{str(i+1).zfill(padding)}.csv')
+          extracted.to_csv(f'{save_prefix}_extracted_{str(i+1).zfill(padding)}.csv')
+          self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}.csv')
 
+# # %% Debug
+# all_data = pd.read_json('for_exp/config.json')
+# task_ids = {
+#   'learn_a': [23, 42, 61],
+#   'learn_b': [35, 50, 65],
+#   'gen': [82, 8, 20, 4, 98, 48, 71, 40],
+# }
+# task_ids['gen'].sort()
 
-# # %%
-# from base_terms import *
+# task_data = {}
+# for item in task_ids:
+#   task_data[item] = []
+#   for ti in task_ids[item]:
+#     transformed = {}
+#     data = all_data[all_data.trial_id==ti]
+#     _, agent, recipient, result = list(data.iloc[0])
+#     transformed['agent'] = eval(f'Egg(S{agent[1]},O{agent[4]})')
+#     transformed['recipient'] = int(recipient[-2])
+#     transformed['result'] = int(result[-2])
+#     task_data[item].append(transformed)
 
-# data_list = [
-#   {
-#     'agent': Stone(Red,S1,Triangle,S1,Dotted,S1),
-#     'recipient': Stone(Yellow,S1,Square,S2,Dotted,S2),
-#     'result': Stone(Red,S1,Square,S1,Dotted,S2)
-#   },
-#   {
-#     'agent': Stone(Yellow,S2,Square,S2,Dotted,S1),
-#     'recipient': Stone(Red,S1,Triangle,S1,Plain,S2),
-#     'result': Stone(Yellow,S1,Triangle,S2,Plain,S2)
-#   },
-#   {
-#     'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-#     'recipient': Stone(Yellow,S2,Square,S1,Dotted,S1),
-#     'result': Stone(Yellow,S2,Square,S2,Dotted,S1)
-#   },
-#   {
-#     'agent': Stone(Yellow,S2,Triangle,S1,Plain,S1),
-#     'recipient': Stone(Red,S1,Triangle,S1,Plain,S1),
-#     'result': Stone(Yellow,S1,Triangle,S2,Plain,S1)
-#   },
-# ]
-
-# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
-# g = Gibbs_sampler(Program_lib(pm_init), data_list, iteration=1, burnin=0, inc=1)
-# # g.run(save_prefix='test', sample=False, top_n=2)
-
-# filtered = pd.read_csv('data/pm_filtered_1_2.csv', index_col=0, na_filter=False)
-# extracted = g.extract(filtered, 1, sample=1)
-# print(extracted)
-
-# # %%
-# filtered = pd.read_csv('sf.csv', index_col=0, na_filter=False)
-# to_add = filtered.sample(n=1, weights='prob')
-# terms = to_add.iloc[0].terms
-
-# task_data_df = pd.read_csv('data/task_data.csv')
-# task_data = []
-# for i in range(len(task_data_df)):
-#   tdata = task_data_df.iloc[i].to_dict()
-#   task = {
-#     'agent': eval(tdata['agent']),
-#     'recipient': eval(tdata['recipient']),
-#     'result': eval(tdata['result'])
-#   }
-#   task_data.append(task)
-
-# pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 # all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-# g = Gibbs_sampler(Program_lib(pm_init), task_data, iteration=1000)
+# data_len_a = len(task_data['learn_a'])
+# data_len_b = len(task_data['learn_b'])
 
-# %%
+
+# # %%
+# pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
+# g1 = Program_gibbs(pl, task_data['learn_a'], iteration=2)
+# g1.run(all_frames, top_n=1, save_prefix='./sims/samples/test')
