@@ -6,7 +6,7 @@ from numpy import random as np_random
 from math import log, exp
 from itertools import product as itertools_product
 
-from base_terms import *
+from task_terms import *
 from helpers import args_to_string, names_to_string, term_to_dict, secure_list, print_name
 
 # %%
@@ -38,7 +38,43 @@ class Program_lib(Program_lib_light):
     self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'type': 'ERROR'}
     self.SET_MARKERS = set(list(self.content[self.content['type']=='base_term'].return_type))
 
-  # Get log probs
+  # List all the possile objects (task specific)
+  def get_all_objs(self):
+    eggs_df = pd.DataFrame({'terms': [], 'count':[]})
+    stripe_df = self.content.query('return_type=="stripe"&type=="base_term"')
+    dot_df = self.content.query('return_type=="dot"&type=="base_term"')
+    for s in range(len(stripe_df)):
+      for o in range(len(dot_df)):
+        egg_feats = [
+          stripe_df.iloc[s].at['terms'],
+          dot_df.iloc[o].at['terms'],
+        ]
+        counts = [
+          stripe_df.iloc[s].at['count'],
+          dot_df.iloc[o].at['count'],
+        ]
+        eggs_df = eggs_df.append(pd.DataFrame({'terms': [f'Egg({",".join(egg_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
+    eggs_df['log_prob'] = self.log_dir(list(eggs_df['count']))
+    return eggs_df[['terms', 'log_prob']]
+
+  # Sample base terms (task specific)
+  def sample_base(self, type, add):
+    if type == 'obj':
+      stripe = self.sample_base('stripe', add)
+      dot = self.sample_base('dot', add)
+      egg = f'Egg({stripe},{dot})'
+      return {'terms': egg, 'arg_types': '', 'return_type': 'egg', 'type': 'base_term'}
+    else:
+      bases = self.content.query(f'return_type=="{type}"&type=="base_term"')
+      if bases is None or bases.empty:
+        print('No base terms found!')
+        return self.ERROR_TERM
+      else:
+        sampled = bases.sample(n=1, weights='count').iloc[0].to_dict()
+        if add:
+          self.add(sampled)
+        return sampled
+  # For priors
   def update_log_prob(self, init=False):
     df = self.content.query(f'type=="primitive"')
     df['log_prob'] = self.log_dir(df['count'])
@@ -53,41 +89,31 @@ class Program_lib(Program_lib_light):
       # complexity penalty, adjustable
       programs['prior'] = programs.apply(lambda row: exp(row['log_prob']), axis=1)
       programs['log_prob'] = self.log_dir(programs['count'], programs['prior'])
-      self.content = df.append(programs[['terms','arg_types','return_type','type','count','log_prob']])
+      self.content = df.append(programs[['terms','arg_types','return_type','type','count','log_prob', 'prior']])
 
-  # List all the possile stones (w flat prior)
-  def get_all_objs(self):
-    stones_df = pd.DataFrame({'terms': []})
-    colors_df = self.content.query('return_type=="col"&type=="base_term"')
-    shapes_df = self.content.query('return_type=="shp"&type=="base_term"')
-    # patterns_df = self.content.query('return_type=="pat"&type=="base_term"')
-    ints_df = self.content.query('return_type=="int"&type=="base_term"')
-    for c in range(len(colors_df)):
-      for ci in range(len(ints_df)):
-        for s in range(len(shapes_df)):
-          for si in range(len(ints_df)):
-            # for p in range(len(patterns_df)):
-            #   for pi in range(len(ints_df)):
-            stone_feats = [
-              colors_df.iloc[c].at['terms'],
-              ints_df.iloc[ci].at['terms'],
-              shapes_df.iloc[s].at['terms'],
-              ints_df.iloc[si].at['terms'],
-              # patterns_df.iloc[p].at['terms'],
-              # ints_df.iloc[pi].at['terms']
-            ]
-            counts = [
-              colors_df.iloc[c].at['count'],
-              ints_df.iloc[ci].at['count'],
-              shapes_df.iloc[s].at['count'],
-              ints_df.iloc[si].at['count'],
-              # patterns_df.iloc[p].at['count'],
-              # ints_df.iloc[pi].at['count'],
-            ]
-            stones_df = stones_df.append(pd.DataFrame({'terms': [f'Stone({",".join(stone_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
-    stones_df['log_prob'] = self.log_dir(list(stones_df['count']))
-    return stones_df[['terms', 'log_prob']]
+  # Adaptor grammar prior in log, see Percy Liang et al. 2010
+  def calc_adaptor_lp_for(self, terms, type_sig, alpha=1, d=0.2):
+    Ct = self.get_cached_program(type_sig)
+    Nt = len(Ct)
+    Mz = Ct[Ct['terms']==terms]['count'].values[0]
+    # Break things down for readability
+    numerator_1 = Nt*alpha + d*(Nt*(Nt+1)/2 - Nt)
+    numerator_2 = 0
+    numerator_3 = (Mz-1)*Mz/2 - d*(Mz-1)
+    denominator = Nt*alpha + (Nt-1)*Nt/2
+    return numerator_1 + numerator_2 + numerator_3 - denominator
 
+  # To be replaced by calc_adaptor_lp_for?
+  def log_dir(self, count_vec, priors = []):
+    if len(count_vec) == 1:
+      dir_prob = [1]
+    elif len(priors) == 0:
+      dir_prob = [ i+self.DIR_ALPHA-1 for i in count_vec ]
+    else:
+      dir_prob = [ i+j+self.DIR_ALPHA-1 for i,j in zip(count_vec, priors) ]
+    return [ log(i/sum(dir_prob)) for i in dir_prob ]
+
+  # Program generation helpers
   def get_cached_program(self, type_signature):
     arg_t, ret_t = type_signature
     matched_pms = self.content.query(f'arg_types=="{args_to_string(arg_t)}"&return_type=="{ret_t}"&type!="base_term"')
@@ -125,28 +151,6 @@ class Program_lib(Program_lib_light):
       sampled = self.sample_program(matched, add)
       return sampled
 
-  def sample_base(self, type, add=False):
-    if type == 'obj':
-      color = self.sample_base('col', add)
-      color_scale = self.sample_base('int', add)
-      shape = self.sample_base('shp', add)
-      shape_scale = self.sample_base('int', add)
-      # pattern = self.sample_base('pat', add)
-      # pattern_scale = self.sample_base('int', add)
-      sampled_props = [ color, color_scale, shape, shape_scale ] #, pattern, pattern_scale ]
-      stone = 'Stone(' + ','.join([p['terms'] for p in sampled_props]) + ')'
-      return {'terms': stone, 'arg_types': '', 'return_type': 'obj', 'type': 'base_term'}
-    else:
-      bases = self.content.query(f'return_type=="{type}"&type=="base_term"')
-      if bases is None or bases.empty:
-        print('No base terms found!')
-        return self.ERROR_TERM
-      else:
-        sampled = bases.sample(n=1, weights='count').iloc[0].to_dict()
-        if add:
-          self.add(sampled)
-        return sampled
-
   @staticmethod
   def sample_router(arg_list, free_index):
     assert len(arg_list) > 0, 'No arguments for router!'
@@ -154,6 +158,20 @@ class Program_lib(Program_lib_light):
       return 'B' * len(arg_list)
     else:
       return ''.join([np_random.choice(['C', 'B', 'S', 'K']) for _ in arg_list])
+
+  @staticmethod
+  def get_all_routers(arg_list, left_arg_list, free_index):
+    assert len(arg_list) > 0, 'No arguments for router!'
+    candidates = ['B']
+    if free_index >= 0:
+      candidates.append('K')
+    if free_index > 0: #and len(arg_list) <= len(left_arg_list):
+      candidates.append('C')
+      candidates.append('S')
+    routers = []
+    for r in list(itertools_product(candidates, repeat=len(arg_list))):
+      routers.append(''.join(r))
+    return routers
 
   # Tail-recursion; righthand-side tree
   def generate_program(self, type_signature, cur_step=0, max_step=5, alpha=1, d=0.2, add=True):
@@ -203,18 +221,6 @@ class Program_lib(Program_lib_light):
         sampled = self.sample_program(cached, add, weight_col='weight')
         return sampled
 
-  # Adaptor grammar prior in log, see Percy Liang et al. 2010
-  def calc_adaptor_lp_for(self, terms, type_sig, alpha=1, d=0.2):
-    Ct = self.get_cached_program(type_sig)
-    Nt = len(Ct)
-    Mz = Ct[Ct['terms']==terms]['count'].values[0]
-    # Break things down for readability
-    numerator_1 = Nt*alpha + d*(Nt*(Nt+1)/2 - Nt)
-    numerator_2 = 0
-    numerator_3 = (Mz-1)*Mz/2 - d*(Mz-1)
-    denominator = Nt*alpha + (Nt-1)*Nt/2
-    return numerator_1 + numerator_2 + numerator_3 - denominator
-
   # Lefthand-side tree
   def expand_program(self, candidate, arg_list, free_index, cur_step, max_step, alpha, d, add):
     if free_index < 0:
@@ -238,92 +244,7 @@ class Program_lib(Program_lib_light):
         'type': 'program',
       }
 
-  def log_dir(self, count_vec, priors = []):
-    if len(count_vec) == 1:
-      dir_prob = [1]
-    elif len(priors) == 0:
-      dir_prob = [ i+self.DIR_ALPHA-1 for i in count_vec ]
-    else:
-      dir_prob = [ i+j+self.DIR_ALPHA-1 for i,j in zip(count_vec, priors) ]
-    return [ log(i/sum(dir_prob)) for i in dir_prob ]
-
-  @staticmethod
-  def get_all_routers(arg_list, left_arg_list, free_index):
-    assert len(arg_list) > 0, 'No arguments for router!'
-    candidates = ['B']
-    if free_index >= 0:
-      candidates.append('K')
-    if free_index > 0: #and len(arg_list) <= len(left_arg_list):
-      candidates.append('C')
-      candidates.append('S')
-    routers = []
-    for r in list(itertools_product(candidates, repeat=len(arg_list))):
-      routers.append(''.join(r))
-    return routers
-
-  # enumeration
-  def bfs(self, type_signature, depth = 0):
-    programs_df = pd.DataFrame({'terms': [], 'log_prob': []})
-    arg_types, ret_type = type_signature
-    # when no arg is provided, return all the base terms
-    if len(arg_types) < 1:
-      programs_df = programs_df.append(pd.DataFrame({'terms': [ret_type], 'log_prob': [0]}), ignore_index=True)
-      return programs_df
-    else:
-      # find direct matches
-      ret_terms = self.get_cached_program(type_signature)
-      if ret_terms is not None:
-        prims = ret_terms.query('type=="primitive"')
-        prims_append = pd.DataFrame({'terms': [], 'log_prob': []})
-        if len(prims) > 0:
-          prims_append = prims[['terms','count']]
-          prims_append['log_prob'] = self.log_dir(list(prims_append['count']))
-          programs_df = pd.concat([programs_df, prims_append[['terms', 'log_prob']]])
-        if len(ret_terms) > len(prims_append):
-          pm_typesig = args_to_string(arg_types) + '_' + ret_type
-          programs_df = programs_df.append(pd.DataFrame({'terms': [f'PM("{pm_typesig}")'], 'log_prob': [1]}), ignore_index=True)
-      # return direct matches
-      if depth < 1:
-        return programs_df
-      # enumerate recursively
-      else:
-        left_trees = self.get_matched_program(ret_type, True)
-        for i in left_trees.index:
-          left_terms = left_trees.at[i, 'terms']
-          left_arg_types = left_trees.at[i, 'arg_types'].split('_')
-          free_index = len(left_arg_types)-1
-          # get routers
-          routers = self.get_all_routers(arg_types, left_arg_types, free_index)
-          for rt in routers:
-            routed_args = eval(rt).run({'left': [], 'right': []}, arg_types)
-            left = self.expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
-            # depth = depth if (left_terms == 'ifElse' and free_index == 0) else depth-1
-            right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
-            if len(left) > 0 and len(right) > 0:
-              programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))), ignore_index=True)
-        return programs_df
-
-  def expand(self, left_term, left_arg_types, free_index, args, depth):
-    if free_index < 0:
-      return pd.DataFrame({'terms': [ left_term ], 'log_prob': [0]})
-    else:
-      if len(args) < 1:
-        left = self.expand(left_term, left_arg_types, free_index-1, [], depth)
-        right = self.bfs([[],left_arg_types[free_index]], depth-1)
-        return self.combine_terms(left, right)
-      else:
-        routers = self.get_all_routers(args, left_arg_types, free_index-1)
-        terms_df = pd.DataFrame({'terms': [], 'log_prob': []})
-        for rt in routers:
-          routed_args = eval(rt).run({'left': [], 'right': []}, args)
-          left = self.expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
-          # depth = depth if (left_term == 'ifElse' and free_index == 0) else depth-1
-          right = self.bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
-          if len(left) > 0 and len(right) > 0:
-            terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
-      return terms_df
-
-  def typed_enum(self, type_signature, depth = 1):
+  def typed_bfs(self, type_signature, depth = 1):
     programs_df = pd.DataFrame({'terms': [], 'log_prob': []})
     arg_types, ret_type = type_signature
     if len(arg_types) < 1:
@@ -348,7 +269,7 @@ class Program_lib(Program_lib_light):
           for rt in routers:
             routed_args = eval(rt).run({'left': [], 'right': []}, arg_types)
             left = self.typed_expand(left_terms, left_arg_types, free_index-1, routed_args['left'], depth)
-            right = self.typed_enum([routed_args['right'],left_arg_types[free_index]], depth-1)
+            right = self.typed_bfs([routed_args['right'],left_arg_types[free_index]], depth-1)
             if len(left) > 0 and len(right) > 0:
               programs_df = programs_df.append(self.combine_terms(left, right, rt, log(1/len(routers))), ignore_index=True)
         return programs_df
@@ -359,7 +280,7 @@ class Program_lib(Program_lib_light):
     else:
       if len(args) < 1:
         left = self.typed_expand(left_term, left_arg_types, free_index-1, [], depth)
-        right = self.typed_enum([[],left_arg_types[free_index]], depth-1)
+        right = self.typed_bfs([[],left_arg_types[free_index]], depth-1)
         return self.combine_terms(left, right)
       else:
         routers = self.get_all_routers(args, left_arg_types, free_index)
@@ -367,17 +288,10 @@ class Program_lib(Program_lib_light):
         for rt in routers:
           routed_args = eval(rt).run({'left': [], 'right': []}, args)
           left = self.typed_expand(left_term, left_arg_types, free_index-1, routed_args['left'], depth)
-          right = self.typed_enum([routed_args['right'], left_arg_types[free_index]], depth-1)
+          right = self.typed_bfs([routed_args['right'], left_arg_types[free_index]], depth-1)
           if len(left) > 0 and len(right) > 0:
             terms_df = terms_df.append(self.combine_terms(left, right, rt, log(1/len(routers))))
       return terms_df
-
-  @staticmethod
-  def exclude_identity(df):
-    id_df = df.query('terms=="I"')
-    if len(id_df) > 0:
-      df = df.drop(id_df.index.values[0])
-    return df
 
   @staticmethod
   def combine_terms(left_df, right_df, router = '', router_lp = 0):
@@ -398,25 +312,18 @@ class Program_lib(Program_lib_light):
   def query_obj_lp(obj, df):
     return df.query(f'terms=="{obj}"').log_prob.values[0]
 
-  @staticmethod
-  def trim_frames(frames):
-    to_ignore = [
-      'eqObject],obj],obj]',
-      'eqColor,col],col]',
-      'eqSaturation,int],int]',
-      'eqShape,shp],shp]',
-      'eqSize,int],int]',
-      'eqPattern,pat],pat]',
-      'eqDensity,int],int]',
-      'ifElse,bool',
-    ]
-    trimed = frames[~frames.terms.isin(to_ignore)]
-    return trimed
-
   def unfold_programs_with_lp(self, terms, log_prob, data):
     programs = self.unfold_program(terms, data)
     programs['log_prob'] = programs['log_prob'] + log_prob
     return programs
+
+  @staticmethod
+  def iter_compose_programs(terms_list, lp_list):
+    programs_list = list(itertools_product(*terms_list))
+    programs_list_agg = [','.join(p) for p in programs_list]
+    log_probs_list = list(itertools_product(*lp_list))
+    log_probs_list_agg = [sum(x) for x in log_probs_list]
+    return pd.DataFrame({'terms': programs_list_agg, 'log_prob': log_probs_list_agg})
 
   def unfold_program(self, terms, data):
     if terms[:2]=='PM':
@@ -461,136 +368,25 @@ class Program_lib(Program_lib_light):
       return self.iter_compose_programs(programs_list, log_probs_list)
 
   @staticmethod
-  def iter_compose_programs(terms_list, lp_list):
-    programs_list = list(itertools_product(*terms_list))
-    programs_list_agg = [','.join(p) for p in programs_list]
-    log_probs_list = list(itertools_product(*lp_list))
-    log_probs_list_agg = [sum(x) for x in log_probs_list]
-    return pd.DataFrame({'terms': programs_list_agg, 'log_prob': log_probs_list_agg})
-
-  @staticmethod
   def check_program(terms, data):
     result = Program(eval(terms)).run([data['agent'], data['recipient']])
     return result.name == data['result'].name
 
-  def filter_program(self, df, data):
-    data = secure_list(data)
-    query_string = '&'.join([f'consistent_{i}==1' for i in range(len(data))])
-    filtered = pd.DataFrame({'terms': [], 'log_prob': []})
-    for i in range(len(df)):
-      to_unfold = df.iloc[i].at['terms']
-      print(f'Unfolding {to_unfold}')
-      to_check = self.unfold_programs_with_lp(df.iloc[i].at['terms'], df.iloc[i].at['log_prob'], data)
-      if len(to_check) > 0:
-        for j in range(len(data)):
-          to_check[f'consistent_{j}'] = to_check.apply(lambda row: self.check_program(row['terms'], data[j]), axis=1)
-        passed_pm = to_check.query(query_string)
-        print(f"{i+1}/{len(df)} | Unfolding {df.iloc[i].at['terms']} - {len(passed_pm)} passed")
-        filtered = filtered.append(passed_pm[['terms', 'log_prob']], ignore_index=True)
-    return filtered
-
 # # %%
-# pm_init = pd.read_csv('data/pm_init_cut.csv', index_col=0, na_filter=False)
-# pl = Program_lib(pm_init, 0.1)
+# pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
+# pl = Program_lib(pm_task)
 # pl.update_log_prob(init=True)
 # pl.update_log_prob(init=False)
+# pl.content.to_csv('data/task_pm.csv')
 
-# frames = pd.read_csv('data/pm_frames.csv',index_col=0)
-# data = [{
-#   'agent': Stone(Yellow,S2,Triangle,S1), # Plain,S1
-#   'recipient': Stone(Red,S1,Triangle,S1),
-#   'result': Stone(Yellow,S1,Triangle,S2)
-# }]
-# pl.unfold_program(frames.at[73,'terms'], data)
+# pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
+# pl = Program_lib(pm_init)
+# t = [['egg', 'num'], 'num']
 
-# # %%
-# def clist_to_df(clist):
-#   df = pd.DataFrame({
-#     'terms': [],
-#     'arg_types': [],
-#     'return_type': [],
-#     'type': [],
-#     'count': [],
-#   })
-#   for et in secure_list(clist):
-#     if isinstance(et, dict) == 0:
-#       et = term_to_dict(et)
-#     df = df.append(pd.DataFrame({
-#       'terms': [et['terms']],
-#       'arg_types': [et['arg_types']],
-#       'return_type': [et['return_type']],
-#       'type': [et['type']],
-#       'count': [0]
-#     }), ignore_index=True)
-#   return df.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
+# rf = pl.typed_bfs(t,1)
+# rf.to_csv('data/task_frames.csv')
 
-# pm_init = clist_to_df([
-#   isRed, isBlue, isYellow,
-#   isCircle, isSquare, isTriangle,
-#   isStripy, isDotted, isPlain, isCheckered,
-#   isS1Sat, isS2Sat, isS3Sat, isS4Sat,
-#   isS1Size, isS2Size, isS3Size, isS4Size,
-#   isS1Den, isS2Den, isS3Den, isS4Den,
-#   getColor, setColor, eqColor,
-#   getSaturation, setSaturation,
-#   getShape, setShape, eqShape,
-#   getSize, setSize,
-#   getPattern, setPattern, eqPattern,
-#   getDensity, setDensity,
-#   eqInt, eqObject, ifElse,
-#   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
-#   True, False,
-#   Red, Yellow, Blue,
-#   Square, Triangle, Circle,
-#   Dotted, Plain, Stripy, Checkered,
-#   S1, S2, S3, S4,
-# ])
-# pm_init.to_csv('data/pm_init.csv')
-
-# pm_init_test = clist_to_df([
-#   True, False,
-#   Red, Yellow, Blue,
-#   Square, Triangle, Circle,
-#   S1, S2, S3,
-#   isRed, isBlue, isYellow,
-#   isCircle, isSquare, isTriangle,
-#   isS1Sat, isS2Sat, isS3Sat,
-#   isS1Size, isS2Size, isS3Size,
-#   getColor, setColor, eqColor,
-#   getSaturation, setSaturation,
-#   getShape, setShape, eqShape,
-#   getSize, setSize,
-#   eqInt, eqObject, ifElse,
-#   {'terms': 'I', 'arg_types': 'obj', 'return_type': 'obj', 'type': 'program'},
-# ])
-# pm_init_test.to_csv('data/pm_init_test.csv')
-
-# # %%
-# pm_init = pd.read_csv('data/pm_init_test.csv', index_col=0, na_filter=False)
-# pl = Program_lib(pm_init, 0.1)
-# pl.update_log_prob(init=1)
-# pl.update_log_prob()
-
-# t = [['obj', 'obj'], 'obj']
-# pl.generate_program(t)
-# rf = pl.typed_enum(t,1)
-# rf2 = pl.typed_enum(t,2)
+# rf2 = pl.typed_bfs(t,2)
 # rf2.to_csv('data/task_frames_2.csv')
 
-# rf.to_csv('data/pm_frames.csv')
-# rf = pd.read_csv('data/new_frames.csv', index_col=0, na_filter=False)
-
-# rf = pd.read_csv('data/pm_frames.csv', index_col=0, na_filter=False)
-# terms = rf.at[118,'terms']
-
-# # %%
-# data = {
-#   'agent': Stone(Yellow,S2,Triangle,S1), # Plain,S1
-#   'recipient': Stone(Red,S1,Triangle,S1),
-#   'result': Stone(Yellow,S1,Triangle,S2)
-# }
-# pl = Program_lib(pm_init_test, 0.1)
-# t = [['obj', 'obj'], 'obj']
-# pl.generate_program(t)
-# rf = pl.bfs(t,1)
-# x = pl.filter_program(rf,data)
+# %%
