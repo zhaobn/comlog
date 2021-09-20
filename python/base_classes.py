@@ -1,71 +1,9 @@
 # %%
-####################### General imports ###############################
 from pandas.core.common import flatten
-
-####################### Custom imports ###############################
 from helpers import secure_list, copy_list
 
-####################### Main body #####################################
-class Base:
-  def __init__(self, ctype):
-    self.ctype = ctype
-  def __str__(self): return self.ctype
 
-class Color(Base):
-  def __init__(self, name):
-    Base.__init__(self,'col')
-    self.name = name
-  def __str__(self): return self.name
-
-class Shape(Base):
-  def __init__(self, name):
-    Base.__init__(self,'shp')
-    self.name = name
-  def __str__(self): return self.name
-
-class Pattern:
-  def __init__(self, name):
-    Base.__init__(self,'pat')
-    self.name = name
-  def __str__(self): return self.name
-
-class Scale:
-  def __init__(self, name):
-    Base.__init__(self,'int')
-    self.name = name
-  def __str__(self): return str(self.name)
-
-class Stone:
-  def __init__(self, color, c_scale, shape, s_scale, pattern, p_scale):
-    Base.__init__(self,'obj')
-    self.color = color
-    self.saturation = c_scale
-    self.shape = shape
-    self.size = s_scale
-    self.pattern = pattern
-    self.density = p_scale
-  @property
-  def name(self): # Human-readable
-    return f'Stone({self.color.name},{self.saturation.name},{self.shape.name},{self.size.name},{self.pattern.name},{self.density.name})'
-    # return f'Stone({self.color.name},{self.saturation.name},{self.shape.name},{self.size.name})'
-  def __str__(self):
-    return self.name
-
-class Placeholder:
-  ctype = 'placeholder'
-  def __init__(self, name):
-    self.name = name
-  def __str__(self): return f'{self.name}'
-
-class PM(Placeholder): # Programholder
-  def __init__(self, type_sig, name='pgm'):
-    Placeholder.__init__(self, name)
-    types = type_sig.split('_')
-    self.arg_types = '' if len(types) == 1 else types[:-1]
-    self.return_type = types[-1]
-  def __str__(self):
-    return f'{self.name} {self.arg_types} -> {self.return_type}'
-
+# %%
 class Primitive:
   ctype = 'primitive'
   def __init__(self, name = None, arg_type = None, return_type = None, func = None):
@@ -76,6 +14,21 @@ class Primitive:
     self.run = func
   def __str__(self):
     return f'{self.name} {self.arg_type} -> {self.return_type}'
+
+class Placeholder:
+  ctype = 'placeholder'
+  def __init__(self, name):
+    self.name = name
+  def __str__(self): return f'{self.name}'
+
+class PM(Placeholder): # Program placeholder for typed enumeration
+  def __init__(self, type_sig, name='pgm'):
+    Placeholder.__init__(self, name)
+    types = type_sig.split('_')
+    self.arg_types = '' if len(types) == 1 else types[:-1]
+    self.return_type = types[-1]
+  def __str__(self):
+    return f'{self.name} {self.arg_types} -> {self.return_type}'
 
 class Router:
   ctype = 'router'
@@ -137,5 +90,3 @@ class Program:
         return [ func_term ] + args_term
     else:
       return self.terms # Base types
-
-# %%

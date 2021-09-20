@@ -1,16 +1,15 @@
 # %%
 import math
-from copy import copy
 import pandas as pd
 from pandas.core.common import flatten
+from copy import copy
 
 from helpers import secure_list, copy_list
-from base_classes import Placeholder, Primitive, Program
-from base_methods import if_else, send_right, send_left, send_both, constant, return_myself
-from base_terms import B,C,S,K,BB,BC,BS,BK,CB,CC,CS,CK,SB,SC,SS,SK,KB,KC,KS,KK
+from base_classes import *
+from base_methods import *
 
 # %%
-# Classes
+# Define task classes
 class Stripe:
   def __init__(self, name):
     self.ctype = 'stripe'
@@ -38,16 +37,8 @@ class Egg:
   def __str__(self):
     return self.name
 
-class PM(Placeholder): # Programholder for typed enumeration
-  def __init__(self, type_sig, name='pgm'):
-    Placeholder.__init__(self, name)
-    types = type_sig.split('_')
-    self.arg_types = '' if len(types) == 1 else types[:-1]
-    self.return_type = types[-1]
-  def __str__(self):
-    return f'{self.name} {self.arg_types} -> {self.return_type}'
-
-# Base terms
+# %%
+# Base task base terms
 for i in range(5):
   exec(f"S{i} = Stripe('S{i}')")
 
@@ -69,6 +60,29 @@ subnn = Primitive('subnn', ['num', 'num'], 'num', lambda x: x[0]-x[1])
 mulnn = Primitive('mulnn', ['num', 'num'], 'num', lambda x: math.prod(x))
 
 I = Primitive('I', 'egg', 'egg', return_myself)
+
+# Routers
+B = Router('B', send_right)
+C = Router('C', send_left)
+S = Router('S', send_both)
+K = Router('K', constant)
+
+BB = ComRouter([B, B])
+BC = ComRouter([B, C])
+BS = ComRouter([B, S])
+BK = ComRouter([B, K])
+CB = ComRouter([C, B])
+CC = ComRouter([C, C])
+CS = ComRouter([C, S])
+CK = ComRouter([C, K])
+SB = ComRouter([S, B])
+SC = ComRouter([S, C])
+SS = ComRouter([S, S])
+SK = ComRouter([S, K])
+KB = ComRouter([K, B])
+KC = ComRouter([K, C])
+KS = ComRouter([K, S])
+KK = ComRouter([K, K])
 
 # # %% Debug
 # x = Egg(S2,O0)
