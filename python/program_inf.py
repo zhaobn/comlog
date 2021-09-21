@@ -167,13 +167,14 @@ class Gibbs_sampler:
     # Increase counter
     merged_df['count'] = merged_df['count_x'] + merged_df['count_y']
     set_df = (merged_df
-      .query('count_y==0')[['terms','arg_types','return_type','type','count','log_prob_x','prior']]
-      .rename(columns={'log_prob_x': 'log_prob'}))
+      .query('count_y==0')[['terms','arg_types','return_type','type','count','log_prob_x','prior_x']]
+      .rename(columns={'log_prob_x': 'log_prob', 'prior_x': 'prior'}))
     # Take care of newly-created programs
     to_set_df = (merged_df
-      .query('count_x==0')[['terms','arg_types','return_type','type','count','log_prob_y']]
-      .rename(columns={'log_prob_y': 'log_prob'}))
-    to_set_df['prior'] = to_set_df.apply(lambda row: math.exp(row['log_prob']), axis=1)
+      .query('count_x==0')[['terms','arg_types','return_type','type','count','log_prob_y', 'prior_y']]
+      .rename(columns={'log_prob_y': 'log_prob', 'prior_y': 'prior'}))
+    # Complexity penalty
+
     return pd.concat([set_df, to_set_df],ignore_index=True).reset_index(drop=True)
 
   def run(self, frames, top_n=1, sample=True, frame_sample=20, base=0, logging=True, save_prefix='', exceptions_allowed=0):
@@ -207,7 +208,7 @@ class Gibbs_sampler:
           sampled_frames = frames_left.sample(n=frame_sample, weights='prob').reset_index(drop=True)
         frames_left = frames_left[~frames_left['terms'].isin(sampled_frames['terms'])]
         for k in range(len(sampled_frames)):
-          all_programs = pl.unfold_programs_with_lp(sampled_frames.iloc[k].at['terms'], sampled_frames.iloc[k].at['log_prob'], data[0])
+          all_programs = pl.unfold_programs_with_lp(sampled_frames.iloc[k].at['terms'], sampled_frames.iloc[k].at['log_prob'], data)
           if len(all_programs) > 0:
             for d in range(len(data)):
               all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
@@ -240,42 +241,58 @@ class Gibbs_sampler:
             .reset_index(drop=1))
         else:
           extracted = to_add[['terms','arg_types','return_type','type','count','log_prob']]
+        extracted['prior'] = extracted.apply(lambda row: math.exp(row['log_prob']), axis=1)
         print(extracted) if logging else None
         self.extraction_history[i] = extracted
-        self.cur_programs = self.merge_lib(to_add)
+        self.cur_programs = self.merge_lib(extracted)
         if len(save_prefix) > 0:
           padding = len(str(self.iter))
           filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}.csv')
           extracted.to_csv(f'{save_prefix}_extracted_{str(i+1).zfill(padding)}.csv')
           self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}.csv')
 
-# # %% Debug
-# all_data = pd.read_json('for_exp/config.json')
-# task_ids = {
-#   'learn_a': [23, 42, 61],
-#   'learn_b': [35, 50, 65],
-#   'gen': [82, 8, 20, 4, 98, 48, 71, 40],
-# }
-# task_ids['gen'].sort()
+# %% Debug
+all_data = pd.read_json('for_exp/config.json')
+task_ids = {
+  'learn_a': [23, 42, 61],
+  'learn_b': [35, 50, 65],
+  'gen': [82, 8, 20, 4, 98, 48, 71, 40],
+}
+task_ids['gen'].sort()
 
-# task_data = {}
-# for item in task_ids:
-#   task_data[item] = []
-#   for ti in task_ids[item]:
-#     transformed = {}
-#     data = all_data[all_data.trial_id==ti]
-#     _, agent, recipient, result = list(data.iloc[0])
-#     transformed['agent'] = eval(f'Egg(S{agent[1]},O{agent[4]})')
-#     transformed['recipient'] = int(recipient[-2])
-#     transformed['result'] = int(result[-2])
-#     task_data[item].append(transformed)
+task_data = {}
+for item in task_ids:
+  task_data[item] = []
+  for ti in task_ids[item]:
+    transformed = {}
+    data = all_data[all_data.trial_id==ti]
+    _, agent, recipient, result = list(data.iloc[0])
+    transformed['agent'] = eval(f'Egg(S{agent[1]},O{agent[4]})')
+    transformed['recipient'] = int(recipient[-2])
+    transformed['result'] = int(result[-2])
+    task_data[item].append(transformed)
 
-# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-# data_len_a = len(task_data['learn_a'])
-# data_len_b = len(task_data['learn_b'])
+all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
+data_len_a = len(task_data['learn_a'])
+data_len_b = len(task_data['learn_b'])
 
 
-# # %%
-# pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
-# g1 = Program_gibbs(pl, task_data['learn_a'], iteration=2)
+# %%
+pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
+g1 = Gibbs_sampler(pl, task_data['learn_a'], iteration=2)
 # g1.run(all_frames, top_n=1, save_prefix='./sims/samples/test')
+
+frames = all_frames
+data = task_data['learn_a']
+top_n=1
+sample=True
+frame_sample=20
+base=0
+logging=True
+save_prefix=''
+exceptions_allowed=0
+iter_log = ''
+pms = g1.cur_programs.copy()
+pl = Program_lib(pms, g1.dir_alpha)
+
+# %%

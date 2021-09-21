@@ -325,6 +325,7 @@ class Program_lib(Program_lib_light):
     log_probs_list_agg = [sum(x) for x in log_probs_list]
     return pd.DataFrame({'terms': programs_list_agg, 'log_prob': log_probs_list_agg})
 
+  # Task-specific customization
   def unfold_program(self, terms, data):
     if terms[:2]=='PM':
       pm = eval(terms)
@@ -345,9 +346,8 @@ class Program_lib(Program_lib_light):
           unfolded = self.content.query(f'return_type=="{tm}"&type=="base_term"')
           unfolded_terms = list(unfolded['terms'])
           unfolded_lps = list(unfolded['log_prob'])
-        elif tm == 'obj':
-          cur_data = data[-1]
-          unfolded_terms = [str(cur_data['recipient']), str(cur_data['result'])]
+        elif tm == 'egg':
+          unfolded_terms = list(set([obs['agent'].name for obs in data]))
           unfolded_lps = [self.query_obj_lp(x, all_obs) for x in unfolded_terms]
         elif 'PM' in tm:
           pm = eval(tm)
@@ -370,7 +370,7 @@ class Program_lib(Program_lib_light):
   @staticmethod
   def check_program(terms, data):
     result = Program(eval(terms)).run([data['agent'], data['recipient']])
-    return result.name == data['result'].name
+    return result == data['result']
 
 # # %%
 # pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
@@ -388,5 +388,33 @@ class Program_lib(Program_lib_light):
 
 # rf2 = pl.typed_bfs(t,2)
 # rf2.to_csv('data/task_frames_2.csv')
+
+# # %%
+# all_data = pd.read_json('for_exp/config.json')
+# task_ids = {
+#   'learn_a': [23, 42, 61],
+#   'learn_b': [35, 50, 65],
+#   'gen': [82, 8, 20, 4, 98, 48, 71, 40],
+# }
+# task_ids['gen'].sort()
+
+# task_data = {}
+# for item in task_ids:
+#   task_data[item] = []
+#   for ti in task_ids[item]:
+#     transformed = {}
+#     data = all_data[all_data.trial_id==ti]
+#     _, agent, recipient, result = list(data.iloc[0])
+#     transformed['agent'] = eval(f'Egg(S{agent[1]},O{agent[4]})')
+#     transformed['recipient'] = int(recipient[-2])
+#     transformed['result'] = int(result[-2])
+#     task_data[item].append(transformed)
+# data = task_data['learn_a']
+
+
+# pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
+# pl = Program_lib(pm_task)
+# terms = '[KK,getStripe,egg]'
+
 
 # %%
