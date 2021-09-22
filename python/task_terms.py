@@ -128,6 +128,7 @@ KK = ComRouter([K, K])
 #   .agg({'count': pd.Series.count})
 #   .sort_values(by=['type','return_type','arg_types','terms'])
 #   .reset_index(drop=1))
-# pm_task.to_csv('data/task_pm.csv')
+# pm_task['is_init'] = int(1)
+# pm_task[['terms', 'arg_types', 'return_type', 'type', 'is_init', 'count']].to_csv('data/task_pm.csv')
 
 # %%
