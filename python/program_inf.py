@@ -159,23 +159,25 @@ class Gibbs_sampler:
     ret_df = ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
     return ret_df
 
-  def merge_lib(self, extracted_df, target_df = None):
-    if target_df is not None:
-      merged_df = pd.merge(target_df.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
-    else:
-      merged_df = pd.merge(self.cur_programs.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
+  def merge_lib(self, extracted_df):
+    merged_df = pd.merge(self.cur_programs.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
     # Increase counter
     merged_df['count'] = merged_df['count_x'] + merged_df['count_y']
     set_df = (merged_df
-      .query('count_y==0')[['terms','arg_types','return_type','type','count','log_prob_x','prior_x']]
-      .rename(columns={'log_prob_x': 'log_prob', 'prior_x': 'prior'}))
+      .query('count_y==0')[['terms','arg_types','return_type','type','is_init','count','comp_lp','adaptor_lp','log_prob_x']]
+      .rename(columns={'log_prob_x': 'log_prob'}))
     # Take care of newly-created programs
     to_set_df = (merged_df
-      .query('count_x==0')[['terms','arg_types','return_type','type','count','log_prob_y', 'prior_y']]
-      .rename(columns={'log_prob_y': 'log_prob', 'prior_y': 'prior'}))
-    # Complexity penalty
-
-    return pd.concat([set_df, to_set_df],ignore_index=True).reset_index(drop=True)
+      .query('count_x==0')[['terms','arg_types','return_type','type','count','log_prob_y']]
+      .rename(columns={'log_prob_y': 'log_prob'}))
+    to_set_df['comp_lp'] = to_set_df['log_prob']
+    to_set_df['adaptor_lp'] = 0.0
+    to_set_df['is_init'] = 0
+    # Merge & take care of probabilities
+    temp_lib = Program_lib(pd.concat([set_df, to_set_df], ignore_index=True))
+    temp_lib.update_lp_adaptor()
+    temp_lib.update_overall_lp()
+    return temp_lib.content
 
   def run(self, frames, top_n=1, sample=True, frame_sample=20, base=0, logging=True, save_prefix='', exceptions_allowed=0):
     frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
@@ -241,7 +243,6 @@ class Gibbs_sampler:
             .reset_index(drop=1))
         else:
           extracted = to_add[['terms','arg_types','return_type','type','count','log_prob']]
-        extracted['prior'] = extracted.apply(lambda row: math.exp(row['log_prob']), axis=1)
         print(extracted) if logging else None
         self.extraction_history[i] = extracted
         self.cur_programs = self.merge_lib(extracted)

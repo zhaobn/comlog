@@ -1,4 +1,4 @@
-,terms,arg_types,return_type,type,is_init,count,comp_lp,adaptor_lp,lp
+,terms,arg_types,return_type,type,is_init,count,comp_lp,adaptor_lp,log_prob
 0,O0,,dot,base_term,1,1,-1.6094379124341003,-8.0,-1.6094379124341003
 1,O1,,dot,base_term,1,1,-1.6094379124341003,-8.0,-1.6094379124341003
 2,O2,,dot,base_term,1,1,-1.6094379124341003,-8.0,-1.6094379124341003

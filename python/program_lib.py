@@ -2,6 +2,7 @@
 # %%
 import pandas as pd
 pd.set_option('mode.chained_assignment', None)
+import numpy as np
 from numpy import random as np_random
 from math import log, exp
 from itertools import product as itertools_product
@@ -74,26 +75,17 @@ class Program_lib(Program_lib_light):
         if add:
           self.add(sampled)
         return sampled
-  # For priors
-  def update_log_prob(self, init=False):
-    df = self.content.query(f'type=="primitive"')
-    df['log_prob'] = self.log_dir(df['count'])
-    for t in self.SET_MARKERS:
-      sub_df = self.content.query(f'type=="base_term"&return_type=="{t}"')
-      sub_df['log_prob'] = self.log_dir(sub_df['count'])
-      df = df.append(sub_df)
-    programs = self.content.query(f'type=="program"')
-    if init==1:
-      self.content = df.append(programs).fillna(0)
-    else:
-      # complexity penalty, adjustable
-      programs['prior'] = programs.apply(lambda row: exp(row['log_prob']), axis=1)
-      programs['log_prob'] = self.log_dir(programs['count'], programs['prior'])
-      self.content = df.append(programs[['terms','arg_types','return_type','type','count','log_prob', 'prior']])
+
+  # Flat priors for PCFG
+  def initial_comp_lp(self):
+    grouped = self.content.groupby(['arg_types', 'return_type', 'type']).sum().reset_index()
+    grouped['comp_lp'] = grouped.apply(lambda row: math.log(1/row['count']), axis=1)
+    self.content = pd.merge(self.content, grouped[['arg_types', 'return_type', 'type', 'comp_lp']], on=['arg_types', 'return_type', 'type'], how='left')
+    return None
 
   # Adaptor grammar prior in log, see Percy Liang et al. 2010
   def calc_adaptor_lp_for(self, terms, type_sig, alpha=1, d=0.2):
-    Ct = self.get_cached_program(type_sig)
+    Ct = self.get_cached_program(type_sig, include_base_terms=True)
     Nt = len(Ct)
     Mz = Ct[Ct['terms']==terms]['count'].values[0]
     # Break things down for readability
@@ -102,6 +94,31 @@ class Program_lib(Program_lib_light):
     numerator_3 = (Mz-1)*Mz/2 - d*(Mz-1)
     denominator = Nt*alpha + (Nt-1)*Nt/2
     return numerator_1 + numerator_2 + numerator_3 - denominator
+
+  def update_lp_adaptor(self, alpha=1, d=0.2):
+    grouped = self.content.groupby(['arg_types', 'return_type', 'type']).agg(
+      type_sum = ('count','sum'), type_count = ('count','count')
+    ).reset_index()
+    temp = pd.merge(self.content, grouped, on=['arg_types', 'return_type', 'type'], how='left')
+    temp['num_1'] = temp['type_count']*alpha + d*(temp['type_count']*(temp['type_count']+1)/2 - temp['type_count'])
+    temp['num_2'] = 0
+    temp['num_3'] = (temp['count']-1)*temp['count']/2 - d*(temp['count']-1)
+    temp['denom'] = temp['type_count']*alpha + (temp['type_count']-1)*temp['type_count']/2
+    temp['adaptor_lp'] = temp['num_1'] + temp['num_2'] + temp['num_3'] - temp['denom']
+    self.content = (pd.merge(
+      self.content[['terms', 'arg_types', 'return_type', 'type', 'is_init', 'count', 'comp_lp']],
+      temp[['terms', 'arg_types', 'return_type', 'type', 'adaptor_lp']],
+      on=['terms', 'arg_types', 'return_type', 'type'],
+      how='left'))
+    return None
+
+  def update_overall_lp(self, tune = 1):
+    bases = self.content[self.content['is_init']==1]
+    composes = self.content[self.content['is_init']==0]
+    bases['log_prob'] = bases['comp_lp']
+    composes['log_prob'] = composes['adaptor_lp'] + tune*composes['comp_lp']
+    self.content = pd.concat([bases, composes], ignore_index=True)
+    return None
 
   # To be replaced by calc_adaptor_lp_for?
   def log_dir(self, count_vec, priors = []):
@@ -114,9 +131,10 @@ class Program_lib(Program_lib_light):
     return [ log(i/sum(dir_prob)) for i in dir_prob ]
 
   # Program generation helpers
-  def get_cached_program(self, type_signature):
+  def get_cached_program(self, type_signature, include_base_terms=False):
     arg_t, ret_t = type_signature
-    matched_pms = self.content.query(f'arg_types=="{args_to_string(arg_t)}"&return_type=="{ret_t}"&type!="base_term"')
+    exclusion = '' if include_base_terms else '&type!="base_term"'
+    matched_pms = self.content.query(f'arg_types=="{args_to_string(arg_t)}"&return_type=="{ret_t}"{exclusion}')
     return matched_pms if not matched_pms.empty else None
 
   def get_matched_program(self, return_type, filter_pm=False):
@@ -304,8 +322,6 @@ class Program_lib(Program_lib_light):
     else:
       combined['terms'] = '[' + router + ',' + combined['left_terms'] + ',' + combined['right_terms'] + ']'
       combined['log_prob'] = combined['left_log_prob'] + combined['right_log_prob'] + router_lp
-    # combined = combined.astype({'left_log_prob': 'int32', 'right_log_prob': 'int32'})
-    # combined['log_prob'] = combined['left_log_prob'] | combined['right_log_prob']
     return combined[['terms', 'log_prob']]
 
   @staticmethod
@@ -373,10 +389,13 @@ class Program_lib(Program_lib_light):
     return result == data['result']
 
 # # %%
-# pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
+# pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)[['terms', 'arg_types', 'return_type', 'type', 'is_init', 'count']]
 # pl = Program_lib(pm_task)
-# pl.update_log_prob(init=True)
-# pl.update_log_prob(init=False)
+
+# pl.initial_comp_lp()
+# pl.update_lp_adaptor()
+# pl.update_overall_lp()
+
 # pl.content.to_csv('data/task_pm.csv')
 
 # pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
@@ -415,6 +434,5 @@ class Program_lib(Program_lib_light):
 # pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
 # pl = Program_lib(pm_task)
 # terms = '[KK,getStripe,egg]'
-
 
 # %%
