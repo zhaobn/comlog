@@ -12,9 +12,8 @@ from helpers import args_to_string, names_to_string, term_to_dict, secure_list, 
 
 # %%
 class Program_lib_light:
-  def __init__(self, df, dir_alpha=0.1):
+  def __init__(self, df):
     self.content = df
-    self.DIR_ALPHA = dir_alpha
   def add(self, entry_list):
     entry_list = secure_list(entry_list)
     for et in entry_list:
@@ -34,8 +33,8 @@ class Program_lib_light:
         }), ignore_index=True)
 
 class Program_lib(Program_lib_light):
-  def __init__(self, df, dir_alpha=0.1):
-    Program_lib_light.__init__(self, df, dir_alpha)
+  def __init__(self, df):
+    Program_lib_light.__init__(self, df)
     self.ERROR_TERM = {'terms': 'ERROR', 'arg_types': '', 'return_type': '', 'type': 'ERROR'}
     self.SET_MARKERS = set(list(self.content[self.content['type']=='base_term'].return_type))
 
@@ -55,7 +54,8 @@ class Program_lib(Program_lib_light):
           dot_df.iloc[o].at['count'],
         ]
         eggs_df = eggs_df.append(pd.DataFrame({'terms': [f'Egg({",".join(egg_feats)})'], 'count': [sum(counts)]}), ignore_index=True)
-    eggs_df['log_prob'] = self.log_dir(list(eggs_df['count']))
+    total = eggs_df['count'].sum()
+    eggs_df['log_prob'] = eggs_df.apply(lambda row: math.log(row['count']/total), axis=1)
     return eggs_df[['terms', 'log_prob']]
 
   # Sample base terms (task specific)
@@ -119,16 +119,6 @@ class Program_lib(Program_lib_light):
     composes['log_prob'] = composes['adaptor_lp'] + tune*composes['comp_lp']
     self.content = pd.concat([bases, composes], ignore_index=True)
     return None
-
-  # To be replaced by calc_adaptor_lp_for?
-  def log_dir(self, count_vec, priors = []):
-    if len(count_vec) == 1:
-      dir_prob = [1]
-    elif len(priors) == 0:
-      dir_prob = [ i+self.DIR_ALPHA-1 for i in count_vec ]
-    else:
-      dir_prob = [ i+j+self.DIR_ALPHA-1 for i,j in zip(count_vec, priors) ]
-    return [ log(i/sum(dir_prob)) for i in dir_prob ]
 
   # Program generation helpers
   def get_cached_program(self, type_signature, include_base_terms=False):
@@ -400,13 +390,22 @@ class Program_lib(Program_lib_light):
 
 # pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)
 # pl = Program_lib(pm_init)
-# t = [['egg', 'num'], 'num']
+# # t = [['egg', 'num'], 'num']
 
-# rf = pl.typed_bfs(t,1)
+# # rf = pl.typed_bfs(t,1)
 # rf.to_csv('data/task_frames.csv')
 
 # rf2 = pl.typed_bfs(t,2)
 # rf2.to_csv('data/task_frames_2.csv')
+
+# pm_extended = pd.read_csv('data/task_pm_extended.csv',index_col=0,na_filter=False)
+# pl = Program_lib(pm_extended)
+# t = [['egg', 'num'], 'num']
+# rf = pl.typed_bfs(t,1)
+# rf_trimmed = rf[~rf.terms.str.contains("ifElse,bol|num_bol")].reset_index(drop=True)
+# rf_trimmed.to_csv('data/task_frames_extended.csv')
+# pm_extended_final = pm_extended[~pm_extended.terms.str.contains('numBol|baseBol')].reset_index(drop=True)
+# pm_extended_final.to_csv('data/task_pm_extended.csv')
 
 # # %%
 # all_data = pd.read_json('for_exp/config.json')
