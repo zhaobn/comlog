@@ -11,160 +11,21 @@ from program_lib import Program_lib_light, Program_lib
 
 # %%
 class Gibbs_sampler:
-  def __init__(self, program_lib, data_list, iteration, inc=False, burnin=0, down_weight=1, iter_start=0, data_start=0):
-    self.init_programs = program_lib.content
+  def __init__(self, program_lib, data_list, iteration, burnin=0, down_weight=1):
     self.cur_programs = program_lib.content
-    self.dir_alpha = program_lib.DIR_ALPHA
     self.data = data_list
     self.dw = down_weight
     self.iter = iteration
-    self.inc = inc
     self.burnin = burnin
-    self.iter_start = iter_start
-    self.data_start = data_start
     self.extraction_history = [None] * iteration
     self.filtering_history = [None] * iteration
-
-  @staticmethod
-  def find_ret_type(terms):
-    terms = list(pd.core.common.flatten(terms))
-    first_primitive = next(t for t in terms if isinstance(t,bool)==0 and t.ctype=='primitive')
-    return first_primitive.return_type
-
-  @staticmethod
-  def strip_terms_spaces(terms_str):
-    return ','.join([tm.strip() for tm in terms_str.split(',')])
-
-  def get_base_primitives(self, terms):
-    df = Program_lib_light(pd.DataFrame(columns=['terms','arg_types','return_type','type','count']))
-    bases = set(list(self.cur_programs[self.cur_programs['type']=='base_term'].return_type))
-    if isinstance(terms, str):
-      terms = eval(terms)
-    tm_list = list(pd.core.common.flatten(terms))
-    for t in tm_list:
-      if isinstance(t, int):
-        df.add(t)
-      elif isinstance(t, bool) == 0 and t.ctype in (list(bases) + ['primitive']):
-        df.add(t)
-    return df.content
-
-  def refactor_router_K(self, pm_dict):
-    terms_list = eval(pm_dict['terms'])
-    if isinstance(terms_list, list):
-      router_str =  terms_list[0].name
-      n_dropped = router_str.count('K')
-      if n_dropped > 0 and n_dropped < len(router_str):
-        new_router = eval(terms_list[0].name.replace('K', ''))
-        new_terms = names_to_string(print_name([new_router]+terms_list[1:]))
-        return {
-            'terms': self.strip_terms_spaces(new_terms),
-            'arg_types': '_'.join(['obj']*new_router.n_arg),
-            'return_type': pm_dict['return_type'],
-            'type': 'program',
-            'count': 1,
-        }
-      else:
-        return None
-    else:
-      return None
-
-  def get_sub_programs(self, terms):
-    sub_programs = []
-    if isinstance(terms, str):
-      terms = eval(terms)
-    if len(terms) < 2:
-      return sub_programs
-    else:
-      left_index = 1 if len(terms) == 3 else 0
-      right_index = 2 if len(terms) == 3 else 1
-      if len(secure_list(terms[right_index])) > 1:
-        program_dict = {
-          'terms': self.strip_terms_spaces(names_to_string(print_name(terms[right_index]))),
-          'arg_types': '_'.join(['obj'] * terms[right_index][0].n_arg),
-          'return_type': self.find_ret_type(terms[right_index]),
-          'type': 'program',
-          'count': 1,
-        }
-        sub_programs.append(program_dict)
-      sub_programs += self.get_sub_programs(secure_list(terms[left_index]))
-      sub_programs += self.get_sub_programs(secure_list(terms[right_index]))
-      return sub_programs
-
-  @staticmethod
-  def is_all_K(terms):
-    terms_eval = eval(terms) if isinstance(terms, str) else terms
-    terms_str = print_name(terms_eval)
-    first_router = terms_str[0]
-    return first_router == 'K'*len(first_router)
-
-  def extract_programs(self, terms):
-    terms_eval = eval(terms) if isinstance(terms, str) else terms
-    terms_str = terms if isinstance(terms, str) else print_name(terms)
-    df = pd.DataFrame({
-      'terms': [ terms_str ],
-      'arg_types': [ '_'.join(['obj'] * terms_eval[0].n_arg) ],
-      'return_type': [ self.find_ret_type(terms_eval) ],
-      'type': [ 'program' ],
-      'count': [ 1 ],
-    })
-    if self.is_all_K(terms_str):
-      return df
-    else:
-      # df = df.append(self.get_base_primitives(terms_eval))
-      # # Add first primitive
-      # all_primitives = list(self.cur_programs[self.cur_programs['type']=='primitive'].terms)
-      # striped_terms = str(terms)
-      # for r in (('Stone',''), ('(',''),(')',''),('[',''),(']','')):
-      #   striped_terms = striped_terms.replace(*r)
-      # first_primitive = next(x for x in striped_terms.split(',') if x in all_primitives)
-      # fp_info = self.cur_programs.query(f'terms=="{first_primitive}"&type=="primitive"').iloc[0].to_dict()
-      # df = df.append(pd.DataFrame({
-      #   'terms': [ first_primitive ],
-      #   'arg_types': [ fp_info['arg_types'] ],
-      #   'return_type': [ fp_info['return_type']],
-      #   'type': [ 'primitive' ],
-      #   'count': [ 1 ],
-      # }))
-      # Add subtrees
-      df_pm = pd.DataFrame(self.get_sub_programs(terms_eval))
-      if len(df_pm) > 0:
-        df_pm = df_pm.groupby(by=['terms','arg_types','return_type','type'], as_index=False).agg({'count': pd.Series.count})
-        df = df.append(df_pm)
-      return df
-
-  def extract(self, df, top_n=1, sample=True, base=0):
-    ret_df = pd.DataFrame({'terms':[],'arg_types':[],'return_type':[],'type':[],'count':[]})
-    if sample == 1:
-      df['prob'] = df.apply(lambda row: math.exp(row['log_prob']), axis=1)
-      df['prob'] = normalize(df['prob']) if base == 0 else softmax(df['prob'], base)
-      to_add = df.sample(n=top_n, weights='prob')
-    else:
-      to_add = df.sort_values(['log_prob'], ascending=False).head(top_n)
-    for i in range(len(to_add)):
-      if 'n_exceptions' in to_add.columns:
-        likelihood = math.exp(-2 * to_add.iloc[i].n_exceptions)
-      else:
-        likelihood = 1
-      terms = to_add.iloc[i].terms
-      extracted = self.extract_programs(terms)
-      ret_df = pd.concat([ret_df, extracted])
-      ret_df['terms'] = ret_df.apply(lambda row: self.strip_terms_spaces(row['terms']), axis=1)
-      ret_df['count'] = ret_df['count'] * likelihood
-      programs = extracted.query('type=="program"')
-      if len(programs) > 0:
-        for j in range(len(programs)):
-          refactored = self.refactor_router_K(programs.iloc[j].to_dict())
-          if refactored is not None:
-            ret_df = pd.concat([ret_df, pd.DataFrame([refactored])])
-    ret_df = ret_df.groupby(['terms', 'arg_types', 'return_type', 'type'], as_index=False)['count'].sum()
-    return ret_df
 
   def merge_lib(self, extracted_df):
     merged_df = pd.merge(self.cur_programs.copy(), extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
     # Increase counter
     merged_df['count'] = merged_df['count_x'] + merged_df['count_y']
     set_df = (merged_df
-      .query('count_y==0')[['terms','arg_types','return_type','type','is_init','count','comp_lp','adaptor_lp','log_prob_x']]
+      .query('count_x>0')[['terms','arg_types','return_type','type','is_init','count','comp_lp','adaptor_lp','log_prob_x']]
       .rename(columns={'log_prob_x': 'log_prob'}))
     # Take care of newly-created programs
     to_set_df = (merged_df
@@ -177,26 +38,16 @@ class Gibbs_sampler:
     temp_lib = Program_lib(pd.concat([set_df, to_set_df], ignore_index=True))
     temp_lib.update_lp_adaptor()
     temp_lib.update_overall_lp()
-    return temp_lib.content
+    return temp_lib.content.copy()
 
   def run(self, frames, top_n=1, sample=True, frame_sample=20, base=0, logging=True, save_prefix='', exceptions_allowed=0):
     frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
-    for i in range(self.iter_start, self.iter):
+    for i in range(self.iter):
       iter_log = f'Iter {i+1}/{self.iter}'
       data = self.data
 
-      # Remove previously-extracted counts
       pms = self.cur_programs.copy()
-      if i > 0:
-        previous = self.extraction_history[i-1]
-        if previous is not None:
-          lhs = pms.copy()
-          rhs = previous[['terms', 'arg_types', 'return_type', 'type', 'count']]
-          pms = pd.merge(lhs, rhs, on=['terms', 'arg_types', 'return_type', 'type'], how='outer').fillna(0)
-          pms['count'] = pms['count_x'] - self.dw*pms['count_y'] # dw by default is 1
-          pms = pms[pms['count']>=1][['terms', 'arg_types', 'return_type', 'type', 'count', 'log_prob', 'prior']]
-          pms['log_prob'] = pl.log_dir(pms['count'], pms['prior'])
-      pl = Program_lib(pms, self.dir_alpha)
+      pl = Program_lib(pms)
 
       # Sample frames
       frames_left = frames.copy()
@@ -220,6 +71,7 @@ class Gibbs_sampler:
             passed_pm['log_prob'] = passed_pm['log_prob'] - 2*passed_pm['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
             print(f"[{iter_log}|{k}/{len(sampled_frames)}, -{ns}th] {sampled_frames.iloc[k].at['terms']}: {len(passed_pm)} passed") if logging else None
             filtered = filtered.append(passed_pm[['terms', 'log_prob', 'n_exceptions']], ignore_index=True)
+
       # Extract resusable bits
       if len(filtered) < 1:
         print('Nothing consistent, skipping to next...') if logging else None
@@ -277,23 +129,27 @@ all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
 data_len_a = len(task_data['learn_a'])
 data_len_b = len(task_data['learn_b'])
 
+# # %%
+# pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
+# g1 = Gibbs_sampler(pl, task_data['learn_a'], iteration=2)
 
-# %%
-pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
-g1 = Gibbs_sampler(pl, task_data['learn_a'], iteration=2)
-# g1.run(all_frames, top_n=1, save_prefix='./sims/samples/test')
+# frames = all_frames
+# data = task_data['learn_a']
+# top_n=1
+# sample=True
+# frame_sample=20
+# base=0
+# logging=True
+# save_prefix=''
+# exceptions_allowed=0
+# iter_log = ''
+# pms = g1.cur_programs.copy()
+# pl = Program_lib(pms)
 
-frames = all_frames
-data = task_data['learn_a']
-top_n=1
-sample=True
-frame_sample=20
-base=0
-logging=True
-save_prefix=''
-exceptions_allowed=0
-iter_log = ''
-pms = g1.cur_programs.copy()
-pl = Program_lib(pms, g1.dir_alpha)
+# # %%
+# all_frames = pd.read_csv('data/task_frames_2.csv',index_col=0)
+# pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
+# g1 = Gibbs_sampler(pl, task_data['learn_a'], iteration=3)
+# g1.run(all_frames, top_n=1, save_prefix='test/tt')
 
 # %%
