@@ -104,30 +104,30 @@ class Gibbs_sampler:
           extracted.to_csv(f'{save_prefix}_extracted_{str(i+1).zfill(padding)}.csv')
           self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}.csv')
 
-# %% Debug
-all_data = pd.read_json('for_exp/config.json')
-task_ids = {
-  'learn_a': [23, 42, 61],
-  'learn_b': [35, 50, 65],
-  'gen': [82, 8, 20, 4, 98, 48, 71, 40],
-}
-task_ids['gen'].sort()
+# # %% Debug
+# all_data = pd.read_json('for_exp/config.json')
+# task_ids = {
+#   'learn_a': [23, 42, 61],
+#   'learn_b': [35, 50, 65],
+#   'gen': [82, 8, 20, 4, 98, 48, 71, 40],
+# }
+# task_ids['gen'].sort()
 
-task_data = {}
-for item in task_ids:
-  task_data[item] = []
-  for ti in task_ids[item]:
-    transformed = {}
-    data = all_data[all_data.trial_id==ti]
-    _, agent, recipient, result = list(data.iloc[0])
-    transformed['agent'] = eval(f'Egg(S{agent[1]},O{agent[4]})')
-    transformed['recipient'] = int(recipient[-2])
-    transformed['result'] = int(result[-2])
-    task_data[item].append(transformed)
+# task_data = {}
+# for item in task_ids:
+#   task_data[item] = []
+#   for ti in task_ids[item]:
+#     transformed = {}
+#     data = all_data[all_data.trial_id==ti]
+#     _, agent, recipient, result = list(data.iloc[0])
+#     transformed['agent'] = eval(f'Egg(S{agent[1]},O{agent[4]})')
+#     transformed['recipient'] = int(recipient[-2])
+#     transformed['result'] = int(result[-2])
+#     task_data[item].append(transformed)
 
-all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-data_len_a = len(task_data['learn_a'])
-data_len_b = len(task_data['learn_b'])
+# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
+# data_len_a = len(task_data['learn_a'])
+# data_len_b = len(task_data['learn_b'])
 
 # # %%
 # pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
