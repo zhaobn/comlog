@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 pd.set_option('mode.chained_assignment', None)
 
-from task_terms import *
+from task_terms_extra import *
 from helpers import secure_list, names_to_string, print_name, normalize, softmax
 from program_lib import Program_lib_light, Program_lib
 
@@ -43,34 +43,7 @@ class Gibbs_sampler:
   def run(self, frames, top_n=1, sample=True, frame_sample=20, base=0, logging=True, save_prefix='', exceptions_allowed=0):
     frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
     for i in range(self.iter):
-      iter_log = f'Iter {i+1}/{self.iter}'
-      data = self.data
-
-      pms = self.cur_programs.copy()
-      pl = Program_lib(pms)
-
-      # Sample frames
-      frames_left = frames.copy()
-      filtered = pd.DataFrame({'terms': [], 'log_prob': [], 'n_exceptions': []})
-      ns = 0
-      while (len(filtered)) < 1 and ns < 100:
-        ns += 1
-        if len(frames_left) <= frame_sample:
-          sampled_frames = frames_left.copy()
-        else:
-          sampled_frames = frames_left.sample(n=frame_sample, weights='prob').reset_index(drop=True)
-        frames_left = frames_left[~frames_left['terms'].isin(sampled_frames['terms'])]
-        for k in range(len(sampled_frames)):
-          all_programs = pl.unfold_programs_with_lp(sampled_frames.iloc[k].at['terms'], sampled_frames.iloc[k].at['log_prob'], data)
-          if len(all_programs) > 0:
-            for d in range(len(data)):
-              all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
-            all_programs['total_consistency'] = all_programs[all_programs.columns[pd.Series(all_programs.columns).str.startswith('consistent')]].sum(axis=1)
-            all_programs['n_exceptions'] = len(data) - all_programs['total_consistency']
-            passed_pm = all_programs.query(f'n_exceptions<={exceptions_allowed}')
-            passed_pm['log_prob'] = passed_pm['log_prob'] - 2*passed_pm['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
-            print(f"[{iter_log}|{k}/{len(sampled_frames)}, -{ns}th] {sampled_frames.iloc[k].at['terms']}: {len(passed_pm)} passed") if logging else None
-            filtered = filtered.append(passed_pm[['terms', 'log_prob', 'n_exceptions']], ignore_index=True)
+      filtered = self.find_programs(frames, self.cur_programs.copy(), self.data, f'Iter {i+1}/{self.iter}')
 
       # Extract resusable bits
       if len(filtered) < 1:
@@ -104,30 +77,63 @@ class Gibbs_sampler:
           extracted.to_csv(f'{save_prefix}_extracted_{str(i+1).zfill(padding)}.csv')
           self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}.csv')
 
-# # %% Debug
-# all_data = pd.read_json('for_exp/config.json')
-# task_ids = {
-#   'learn_a': [23, 42, 61],
-#   'learn_b': [35, 50, 65],
-#   'gen': [82, 8, 20, 4, 98, 48, 71, 40],
-# }
-# task_ids['gen'].sort()
+  def find_programs(self, frames, pm_lib, data, iter_log, frame_sample=20, fs_cap=100, logging=True, save_prefix='', exceptions_allowed=0):
+    data = secure_list(data)
+    pl = Program_lib(pm_lib)
 
-# task_data = {}
-# for item in task_ids:
-#   task_data[item] = []
-#   for ti in task_ids[item]:
-#     transformed = {}
-#     data = all_data[all_data.trial_id==ti]
-#     _, agent, recipient, result = list(data.iloc[0])
-#     transformed['agent'] = eval(f'Egg(S{agent[1]},O{agent[4]})')
-#     transformed['recipient'] = int(recipient[-2])
-#     transformed['result'] = int(result[-2])
-#     task_data[item].append(transformed)
+    frames_left = frames.copy()
+    filtered = pd.DataFrame({'terms': [], 'log_prob': [], 'n_exceptions': []})
+    ns = 0
+    while (len(filtered)) < 1 and ns < fs_cap+1:
+      ns += 1
+      if len(frames_left) <= frame_sample:
+        sampled_frames = frames_left.copy()
+      else:
+        sampled_frames = frames_left.sample(n=frame_sample, weights='prob').reset_index(drop=True)
+      frames_left = frames_left[~frames_left['terms'].isin(sampled_frames['terms'])]
+      for k in range(len(sampled_frames)):
+        all_programs = pl.unfold_programs_with_lp(sampled_frames.iloc[k].at['terms'], sampled_frames.iloc[k].at['log_prob'], data)
+        if len(all_programs) > 0:
+          for d in range(len(data)):
+            all_programs[f'consistent_{d}'] = all_programs.apply(lambda row: pl.check_program(row['terms'], data[d]), axis=1)
+          all_programs['total_consistency'] = all_programs[all_programs.columns[pd.Series(all_programs.columns).str.startswith('consistent')]].sum(axis=1)
+          all_programs['n_exceptions'] = len(data) - all_programs['total_consistency']
+          passed_pm = all_programs.query(f'n_exceptions<={exceptions_allowed}')
+          passed_pm['log_prob'] = passed_pm['log_prob'] - 2*passed_pm['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
+          print(f"[{iter_log}|{k}/{len(sampled_frames)}, -{ns}th] {sampled_frames.iloc[k].at['terms']}: {len(passed_pm)} passed") if logging else None
+          filtered = filtered.append(passed_pm[['terms', 'log_prob', 'n_exceptions']], ignore_index=True)
 
-# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-# data_len_a = len(task_data['learn_a'])
-# data_len_b = len(task_data['learn_b'])
+    if len(save_prefix) > 0 and len(filtered) > 0:
+      padding = len(str(self.iter))
+      filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}.csv')
+
+    return filtered
+
+
+# %% Debug
+all_data = pd.read_json('for_exp/config.json')
+task_ids = {
+  'learn_a': [23, 42, 61],
+  'learn_b': [35, 50, 65],
+  'gen': [82, 8, 20, 4, 98, 48, 71, 40],
+}
+task_ids['gen'].sort()
+
+task_data = {}
+for item in task_ids:
+  task_data[item] = []
+  for ti in task_ids[item]:
+    transformed = {}
+    data = all_data[all_data.trial_id==ti]
+    _, agent, recipient, result = list(data.iloc[0])
+    transformed['agent'] = eval(f'Egg(S{agent[1]},O{agent[4]})')
+    transformed['recipient'] = int(recipient[-2])
+    transformed['result'] = int(result[-2])
+    task_data[item].append(transformed)
+
+all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
+data_len_a = len(task_data['learn_a'])
+data_len_b = len(task_data['learn_b'])
 
 # # %%
 # pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
@@ -146,10 +152,16 @@ class Gibbs_sampler:
 # pms = g1.cur_programs.copy()
 # pl = Program_lib(pms)
 
+# %%
+all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
+pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
+g1 = Gibbs_sampler(pl, task_data['learn_a'], iteration=3)
+g1.run(all_frames, top_n=1, save_prefix='test/tt')
+
 # # %%
-# all_frames = pd.read_csv('data/task_frames_2.csv',index_col=0)
-# pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
-# g1 = Gibbs_sampler(pl, task_data['learn_a'], iteration=3)
+# all_frames = pd.read_csv('data/task_frames_extended.csv',index_col=0)
+# pl = Program_lib(pd.read_csv('data/task_pm_extended.csv', index_col=0, na_filter=False))
+# g1 = Gibbs_sampler(pl, task_data['learn_b'], iteration=3)
 # g1.run(all_frames, top_n=1, save_prefix='test/tt')
 
 # %%

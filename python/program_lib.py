@@ -7,7 +7,7 @@ from numpy import random as np_random
 from math import log, exp
 from itertools import product as itertools_product
 
-from task_terms import *
+from task_terms_extra import *
 from helpers import args_to_string, names_to_string, term_to_dict, secure_list, print_name
 
 # %%

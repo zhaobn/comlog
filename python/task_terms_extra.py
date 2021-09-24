@@ -6,7 +6,7 @@ from copy import copy
 
 from helpers import secure_list, copy_list
 from task_terms import *
-from program_lib import Program_lib
+# from program_lib import Program_lib
 
 # %%
 # Placeholders for typed program enumeration
