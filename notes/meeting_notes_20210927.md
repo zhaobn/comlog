@@ -25,5 +25,5 @@ Our model now can produce:
 Questions/comments:
 
 * Gibbs sampling: what are the parameters that I'm approximating?
-* Adaptor grammar prior prob definitions not working: AG encourages sharing and reusing of *sub-programs*, but we got a lot program samples with the *same* type signature
+* Adaptor grammar (AG) prior prob definitions not working: AG encourages sharing and reusing of *sub-programs*, but we got a lot of program samples with the *same* type signature
 * We achieve efficient re-use, in practice, by compressing programs with the same type with our "typed frames"
