@@ -19,7 +19,7 @@ Our model now can produce:
 * Successful constructive learning with depth=1 search and a basic set of primitives (no `ifElse`)
 * Finding ground truth in the de-construction setting with depth=2 search and a basic set of primitives
 * Finding approximate rules (like people) with depth=1 search, a basic set of primitives, and allowing exceptions
-* Finding approximate rules with depth=1 search and an extended set of primitves (with `ifElse`, `moreDots`, `lessDots`)
+* Finding alternative rules with depth=1 search and an extended set of primitves (with `ifElse`, `moreDots`, `lessDots`)
 * Finding complex rules (like people) with depth=1 search, extended set of primitves, and a local + global search procedure
 
 Questions/comments:
