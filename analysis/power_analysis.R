@@ -12,13 +12,11 @@ labels = labels  %>%
                              condition=='comp_mult_reverse'~'discern'))
 
 # Pull out measures for analysis
-
 self_report_acc = labels %>%
   mutate(acc = input_a_correct+input_b_correct,
          condition=factor(condition)) %>%
   select(ix, condition, acc)
   
-
 # Check assumptions
 group_by(self_report_acc, condition) %>%
   summarise(
@@ -35,13 +33,8 @@ boxplot(acc ~ condition, data = self_report_acc,
 res.aov <- aov(acc ~ condition, data = self_report_acc)
 summary(res.aov)
 
-var(c(1.29, 1.33, 0.714)) / var(self_report_acc$acc) # Effect size 0.14
+sd(self_report_acc$acc)
 
-# G*power total sample size suggestion: 719
-
-sd(c(1.29, 1.33, 0.714))
-
-(self_report_acc$acc)
 
 
 
