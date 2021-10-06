@@ -7,23 +7,26 @@ pd.set_option('mode.chained_assignment', None)
 
 from task_terms_extra import *
 from helpers import secure_list, names_to_string, print_name, normalize, softmax
-from program_lib import Program_lib_light, Program_lib
+from program_lib import Program_lib
 
 # %%
 class Gibbs_sampler:
-  def __init__(self, program_lib, data_list, iteration, burnin=0, down_weight=1):
-    self.cur_programs = program_lib.content
-    self.local_programs = program_lib.content
-    self.data = data_list
-    self.dw = down_weight
+  def __init__(self, program_lib, frames, data_list, iteration, burnin=0):
+    self.init_lib = program_lib.content.copy()      # Initial program library
+    self.post_samples = program_lib.content.copy()  # Posterier samples
+    self.sample_cache = None                        # Temp cache for each iteration
+
+    self.frames = frames
+    self.frames['prob'] = self.frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
+
+    self.data = secure_list(data_list)
     self.iter = iteration
     self.burnin = burnin
 
   # Frames => programs consistent with data
-  def find_programs(self, frames, pm_lib, data, iter_log, frame_sample=20, fs_cap=100, exceptions_allowed=0):
-    data = secure_list(data)
+  def find_programs(self, iter_log, data, pm_lib, frame_sample=20, fs_cap=100, exceptions_allowed=0):
     pl = Program_lib(pm_lib)
-    frames_left = frames.copy()
+    frames_left = self.frames.copy()
     filtered = pd.DataFrame({'terms': [], 'log_prob': [], 'n_exceptions': []})
     ns = 0
     while (len(filtered)) < 1 and ns < fs_cap+1:
@@ -71,47 +74,63 @@ class Gibbs_sampler:
       extracted = to_add[['terms','arg_types','return_type','type','count','log_prob']]
     return extracted
 
-  # Add extracted programs to library
-  def merge_lib(self, extracted_df, target_df=None):
-    base_df = self.cur_programs.copy() if target_df is None else target_df
-    merged_df = pd.merge(base_df, extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
-    # Increase counter
-    merged_df['count'] = merged_df['count_x'] + merged_df['count_y']
-    set_df = (merged_df
-      .query('count_x>0')[['terms','arg_types','return_type','type','is_init','count','comp_lp','adaptor_lp','log_prob_x']]
-      .rename(columns={'log_prob_x': 'log_prob'}))
-    # Take care of newly-created programs
-    to_set_df = (merged_df
-      .query('count_x==0')[['terms','arg_types','return_type','type','count','log_prob_y']]
-      .rename(columns={'log_prob_y': 'log_prob'}))
-    to_set_df['comp_lp'] = to_set_df['log_prob']
-    to_set_df['adaptor_lp'] = 0.0
-    to_set_df['is_init'] = 0
-    # Merge & take care of probabilities
-    temp_lib = Program_lib(pd.concat([set_df, to_set_df], ignore_index=True))
-    temp_lib.update_lp_adaptor()
-    temp_lib.update_overall_lp()
-    return temp_lib.content.copy()
+  @staticmethod # Add extractions to program lib; use_ag: update adaptor grammar prior
+  def merge_lib(extracted_df, target_df, use_ag=True):
+    if extracted_df is None or len(extracted_df) < 1:
+      return target_df
+    else:
+      merged_df = pd.merge(target_df, extracted_df, how='outer', on=['terms','arg_types','return_type','type']).fillna(0)
+      # Increase counter
+      merged_df['count'] = merged_df['count_x'] + merged_df['count_y']
+      set_df = (merged_df
+        .query('count_x>0')[['terms','arg_types','return_type','type','is_init','count','comp_lp','adaptor_lp','log_prob_x']]
+        .rename(columns={'log_prob_x': 'log_prob'}))
+      # Take care of newly-created programs
+      to_set_df = (merged_df
+        .query('count_x==0')[['terms','arg_types','return_type','type','count','log_prob_y']]
+        .rename(columns={'log_prob_y': 'log_prob'}))
+      to_set_df['comp_lp'] = to_set_df['log_prob']
+      to_set_df['adaptor_lp'] = 0.0
+      to_set_df['is_init'] = 0
+      # Merge & take care of probabilities
+      temp_lib = Program_lib(pd.concat([set_df, to_set_df], ignore_index=True))
+      if use_ag:
+        temp_lib.update_lp_adaptor()
+        temp_lib.update_overall_lp()
+      return temp_lib.content.copy()
 
   # Main sampling procedure
-  def run(self, frames, top_n=1, sample=True, frame_sample=20, fs_cap=100, base=0, logging=True, save_prefix='', exceptions_allowed=0):
-    frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
+  def run(
+    self, top_n=1, sample=True, frame_sample=20, fs_cap=100, exceptions_allowed=0, base=0,
+    logging=True, save_prefix='', save_intermediate=False
+  ):
     for i in range(self.iter):
       iter_log = f'Iter {i+1}/{self.iter}' if logging else ''
-      filtered = self.find_programs(frames, self.cur_programs.copy(), self.data, iter_log, frame_sample, fs_cap, exceptions_allowed)
+      if i > 0:
+        cur_pm = self.merge_lib(self.sample_cache, self.init_lib)
+      else:
+        cur_pm = self.init_lib.copy()
+      filtered = self.find_programs(iter_log, self.data, cur_pm, frame_sample, fs_cap, exceptions_allowed)
       # Extract resusable bits
       if len(filtered) < 1:
-        print('Nothing consistent, skipping to next...') if logging else None
+        print('Nothing consistent, skipping to next...') if logging else None # TODO: random sample?
       else:
         extracted = self.sample_extraction(filtered, top_n, sample, base)
         print(extracted) if logging else None
-        self.cur_programs = self.merge_lib(extracted)
-        # Save intermediate samples, optional
+        # Add to cache => use in next iteration
+        self.sample_cache = extracted.copy()
+        # Collect for posterior
+        if i >= self.burnin:
+          self.post_samples = self.merge_lib(extracted, self.post_samples, use_ag=False)
+        # Save
         if len(save_prefix) > 0:
-          padding = len(str(self.iter))
-          filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}.csv')
-          extracted.to_csv(f'{save_prefix}_extracted_{str(i+1).zfill(padding)}.csv')
-          self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}.csv')
+          self.post_samples.to_csv(f'{save_prefix}post_samples.csv')
+          if save_intermediate:
+            padding = len(str(self.iter))
+            filtered.to_csv(f'{save_prefix}filtered_{str(i+1).zfill(padding)}.csv')
+            extracted.to_csv(f'{save_prefix}extracted_{str(i+1).zfill(padding)}.csv')
+            # cur_pm.to_csv(f'{save_prefix}curpm_{str(i+1).zfill(padding)}.csv')
+            self.post_samples.to_csv(f'{save_prefix}post_{str(i+1).zfill(padding)}.csv')
 
 
 # # %% Debug
@@ -135,46 +154,11 @@ class Gibbs_sampler:
 #     transformed['result'] = int(result[-2])
 #     task_data[item].append(transformed)
 
-# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-# data_len_a = len(task_data['learn_a'])
-# data_len_b = len(task_data['learn_b'])
-
-# # %%
-# pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
-# g1 = Gibbs_sampler(pl, task_data['learn_a'], iteration=2)
-
-# all_frames = pd.read_csv('data/task_frames_extended.csv',index_col=0)
-# pl = Program_lib(pd.read_csv('data/task_pm_extended.csv', index_col=0, na_filter=False))
-# frames = all_frames
-# frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
-# data = task_data['learn_a']
-# top_n=1
-# sample=True
-# frame_sample=20
-# base=0
-# logging=True
-# save_prefix=''
-# exceptions_allowed=0
-# iter_log = ''
-# fs_cap=100
-
-# # %%
-# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-# pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
-# g1 = Gibbs_sampler(pl, task_data['learn_a'], iteration=3)
-# g1.run(all_frames, top_n=1, save_prefix='test/tt')
-
 # # %%
 # all_frames = pd.read_csv('data/task_frames_extended.csv',index_col=0)
 # pl = Program_lib(pd.read_csv('data/task_pm_extended.csv', index_col=0, na_filter=False))
-# g1 = Gibbs_sampler(pl, task_data['learn_b'], iteration=3)
-# g1.run(all_frames, top_n=1, save_prefix='test/tt')
-
-# # %%
-# all_frames = pd.read_csv('data/task_frames_extended.csv',index_col=0)
-# pl = Program_lib(pd.read_csv('data/task_pm_extended.csv', index_col=0, na_filter=False))
-# g1 = Gibbs_sampler(pl, task_data['learn_b'], iteration=3)
-# g1.local_run(all_frames, top_n=1, save_prefix='test/tt')
+# g1 = Gibbs_sampler(pl, all_frames, task_data['learn_a'], iteration=3)
+# g1.run(top_n=1, save_prefix='test/tt_', save_intermediate=True)
 
 
 # %%
