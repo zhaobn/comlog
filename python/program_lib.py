@@ -84,24 +84,15 @@ class Program_lib(Program_lib_light):
     return None
 
   # Adaptor grammar prior in log, see Percy Liang et al. 2010
-  def calc_adaptor_lp_for(self, terms, type_sig, alpha=1, d=0.2):
-    Ct = self.get_cached_program(type_sig, include_base_terms=True)
-    Nt = len(Ct)
-    Mz = Ct[Ct['terms']==terms]['count'].values[0]
-    # Break things down for readability
-    numerator_1 = Nt*alpha + d*(Nt*(Nt+1)/2 - Nt)
-    numerator_2 = 0
-    numerator_3 = (Mz-1)*Mz/2 - d*(Mz-1)
-    denominator = Nt*alpha + (Nt-1)*Nt/2
-    return numerator_1 + numerator_2 + numerator_3 - denominator
-
   def update_lp_adaptor(self, alpha=1, d=0.2):
-    grouped = self.content.groupby(['arg_types', 'return_type', 'type']).agg(
-      type_sum = ('count','sum'), type_count = ('count','count')
+    df = self.content.copy()
+    df['sum_comp_lp'] = df['count'] * df['comp_lp']
+    grouped = df.groupby(['arg_types', 'return_type', 'type']).agg(
+      type_count = ('count','count'), total_comp = ('sum_comp_lp','sum'),
     ).reset_index()
     temp = pd.merge(self.content, grouped, on=['arg_types', 'return_type', 'type'], how='left')
     temp['num_1'] = temp['type_count']*alpha + d*(temp['type_count']*(temp['type_count']+1)/2 - temp['type_count'])
-    temp['num_2'] = 0
+    temp['num_2'] = temp['total_comp']
     temp['num_3'] = (temp['count']-1)*temp['count']/2 - d*(temp['count']-1)
     temp['denom'] = temp['type_count']*alpha + (temp['type_count']-1)*temp['type_count']/2
     temp['adaptor_lp'] = temp['num_1'] + temp['num_2'] + temp['num_3'] - temp['denom']
@@ -384,8 +375,11 @@ class Program_lib(Program_lib_light):
 
 # pl.initial_comp_lp()
 # pl.update_lp_adaptor()
-# pl.update_overall_lp()
+# pl.content.to_csv('data/task_pm.csv')
+# # Edit programs comp_lp manually for now
 
+# pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
+# pl.update_overall_lp()
 # pl.content.to_csv('data/task_pm.csv')
 
 # pm_init = pd.read_csv('data/task_pm.csv',index_col=0,na_filter=False)

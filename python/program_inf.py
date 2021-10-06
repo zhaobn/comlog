@@ -113,48 +113,6 @@ class Gibbs_sampler:
           extracted.to_csv(f'{save_prefix}_extracted_{str(i+1).zfill(padding)}.csv')
           self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}.csv')
 
-  @staticmethod
-  def combine_libs(lib_1, lib_2):
-    combined = pd.merge(lib_1, lib_2, on=['terms','arg_types','return_type','type'], how='outer').fillna(0)
-    combined['is_init'] = combined.apply(lambda row: max(row['is_init_x'], row['is_init_y']), axis=1)
-    combined['count'] = combined.apply(lambda row: max(row['count_x'], row['count_y']), axis=1)
-    combined['comp_lp'] = combined.apply(lambda row: min(row['comp_lp_x'], row['comp_lp_y']), axis=1)
-    combined['adaptor_lp'] = combined.apply(lambda row: min(row['adaptor_lp_x'], row['adaptor_lp_y']), axis=1)
-    combined['log_prob'] = combined.apply(lambda row: min(row['log_prob_x'], row['log_prob_y']), axis=1)
-    return combined[['terms','arg_types','return_type','type','is_init','count','comp_lp','adaptor_lp','log_prob']]
-
-  # Local iteration
-  def local_run(self, frames, top_n=1, sample=True, frame_sample=20, fs_cap=1000, base=0, logging=True, save_prefix='', exceptions_allowed=0):
-    frames['prob'] = frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
-
-    for i in range(self.iter):
-      for j in range(len(self.data)):
-        local_data = secure_list(self.data[j])
-        iter_log = f'Iter {i+1}/{self.iter}|data {j+1}/{len(self.data)}' if logging else ''
-        local_filtered = self.find_programs(frames, self.local_programs.copy(), local_data, iter_log, frame_sample, fs_cap, exceptions_allowed)
-        if len(local_filtered) < 1:
-          print('Nothing consistent, skipping to next...') if logging else None
-        else:
-          extracted = self.sample_extraction(local_filtered, top_n, sample, base)
-          print(extracted) if logging else None
-          self.local_programs = self.merge_lib(extracted, self.local_programs)
-        if j > 0:
-          until_data = self.data[:j+1]
-          iter_log = f'Iter {i+1}/{self.iter}|up to {j+1}/{len(self.data)}' if logging else ''
-          temp_lib = self.combine_libs(self.cur_programs.copy(), self.local_programs.copy())
-          filtered = self.find_programs(frames, temp_lib, until_data, iter_log, frame_sample, fs_cap, exceptions_allowed)
-          if len(filtered) < 1:
-            print('Nothing consistent, skipping to next...') if logging else None
-          else:
-            extracted = self.sample_extraction(filtered, top_n, sample, base)
-            print(extracted) if logging else None
-            self.cur_programs = self.merge_lib(extracted)
-          if len(save_prefix) > 0:
-            padding = len(str(self.iter))
-            filtered.to_csv(f'{save_prefix}_filtered_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-            extracted.to_csv(f'{save_prefix}_extracted_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-            self.cur_programs.to_csv(f'{save_prefix}_lib_{str(i+1).zfill(padding)}_{str(j+1).zfill(padding)}.csv')
-
 
 # # %% Debug
 # all_data = pd.read_json('for_exp/config.json')
