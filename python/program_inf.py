@@ -57,6 +57,7 @@ class Gibbs_sampler:
     if len(filtered) <= top_n or sample == 0:
       to_add = filtered.copy()
     else:
+      # TODO: Likelihood
       filtered['prob'] = filtered.apply(lambda row: math.exp(row['log_prob']), axis=1)
       filtered['prob'] = normalize(filtered['prob']) if base == 0 else softmax(filtered['prob'], base)
       to_add = filtered.sample(n=top_n, weights='prob')
@@ -128,9 +129,9 @@ class Gibbs_sampler:
           if save_intermediate:
             padding = len(str(self.iter))
             filtered.to_csv(f'{save_prefix}filtered_{str(i+1).zfill(padding)}.csv')
-            extracted.to_csv(f'{save_prefix}extracted_{str(i+1).zfill(padding)}.csv')
+            # extracted.to_csv(f'{save_prefix}extracted_{str(i+1).zfill(padding)}.csv')
             # cur_pm.to_csv(f'{save_prefix}curpm_{str(i+1).zfill(padding)}.csv')
-            self.post_samples.to_csv(f'{save_prefix}post_{str(i+1).zfill(padding)}.csv')
+            # self.post_samples.to_csv(f'{save_prefix}post_{str(i+1).zfill(padding)}.csv')
 
 
 # # %% Debug
