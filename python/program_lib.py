@@ -104,8 +104,8 @@ class Program_lib(Program_lib_light):
     return None
 
   def update_overall_lp(self, tune = 1):
-    bases = self.content[self.content['is_init']==1]
-    composes = self.content[self.content['is_init']==0]
+    bases = self.content[self.content['type']!='program']
+    composes = self.content[self.content['type']=='program']
     bases['log_prob'] = bases['comp_lp']
     composes['log_prob'] = composes['adaptor_lp'] + tune*composes['comp_lp']
     self.content = pd.concat([bases, composes], ignore_index=True)
