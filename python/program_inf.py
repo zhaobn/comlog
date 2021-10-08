@@ -24,10 +24,11 @@ class Gibbs_sampler:
     self.burnin = burnin
 
   # Frames => programs consistent with data
-  def find_programs(self, iter_log, data, pm_lib, frame_sample=20, fs_cap=100, exceptions_allowed=0):
+  def find_programs(self, iter_log, pm_lib, frame_sample=20, fs_cap=100, exceptions_allowed=0):
     pl = Program_lib(pm_lib)
+    data = self.data
     frames_left = self.frames.copy()
-    filtered = pd.DataFrame({'terms': [], 'log_prob': [], 'n_exceptions': []})
+    filtered = pd.DataFrame({'terms': [], 'comp_lp': [], 'log_prob': [], 'n_exceptions': []})
     ns = 0
     while (len(filtered)) < 1 and ns < fs_cap+1:
       ns += 1
@@ -47,9 +48,10 @@ class Gibbs_sampler:
           all_programs['total_consistency'] = all_programs[all_programs.columns[pd.Series(all_programs.columns).str.startswith('consistent')]].sum(axis=1)
           all_programs['n_exceptions'] = len(data) - all_programs['total_consistency']
           passed_pm = all_programs.query(f'n_exceptions<={exceptions_allowed}')
+          # Likelihood with exceptions
           passed_pm['log_prob'] = passed_pm['log_prob'] - 2*passed_pm['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
           print(f"[{iter_log}|{k}/{len(sampled_frames)}, -{ns}th] {sampled_frames.iloc[k].at['terms']}: {len(passed_pm)} passed") if len(iter_log)>0 else None
-          filtered = filtered.append(passed_pm[['terms', 'log_prob', 'n_exceptions']], ignore_index=True)
+          filtered = filtered.append(passed_pm[['terms', 'comp_lp', 'log_prob', 'n_exceptions']], ignore_index=True)
     return filtered
 
   # Sample extracted programs for reuse
@@ -57,6 +59,7 @@ class Gibbs_sampler:
     if len(filtered) <= top_n or sample == 0:
       to_add = filtered.copy()
     else:
+      # Sample according to log_prob (adaptor grammar prior considered)
       filtered['prob'] = filtered.apply(lambda row: math.exp(row['log_prob']), axis=1)
       filtered['prob'] = normalize(filtered['prob']) if base == 0 else softmax(filtered['prob'], base)
       to_add = filtered.sample(n=top_n, weights='prob')
@@ -68,10 +71,10 @@ class Gibbs_sampler:
     if len(to_add) > 1:
       extracted = (to_add
         .groupby(by=['terms','arg_types','return_type','type'], as_index=False)
-        .agg({'count': pd.Series.count, 'log_prob': pd.Series.max})
+        .agg({'count': pd.Series.count, 'comp_lp': pd.Series.max, 'log_prob': pd.Series.max})
         .reset_index(drop=1))
     else:
-      extracted = to_add[['terms','arg_types','return_type','type','count','log_prob']]
+      extracted = to_add[['terms','arg_types','return_type','type','count','comp_lp','log_prob']]
     return extracted
 
   @staticmethod # Add extractions to program lib; use_ag: update adaptor grammar prior
@@ -83,14 +86,12 @@ class Gibbs_sampler:
       # Increase counter
       merged_df['count'] = merged_df['count_x'] + merged_df['count_y']
       set_df = (merged_df
-        .query('count_x>0')[['terms','arg_types','return_type','type','is_init','count','comp_lp','adaptor_lp','log_prob_x']]
-        .rename(columns={'log_prob_x': 'log_prob'}))
+        .query('count_x>0')[['terms','arg_types','return_type','type','is_init','count','comp_lp_x']]
+        .rename(columns={'comp_lp_x': 'comp_lp'}))
       # Take care of newly-created programs
       to_set_df = (merged_df
-        .query('count_x==0')[['terms','arg_types','return_type','type','count','log_prob_y']]
-        .rename(columns={'log_prob_y': 'log_prob'}))
-      to_set_df['comp_lp'] = to_set_df['log_prob']
-      to_set_df['adaptor_lp'] = 0.0
+        .query('count_x==0')[['terms','arg_types','return_type','type','count','comp_lp_y']]
+        .rename(columns={'comp_lp_y': 'comp_lp'}))
       to_set_df['is_init'] = 0
       # Merge & take care of probabilities
       temp_lib = Program_lib(pd.concat([set_df, to_set_df], ignore_index=True))
@@ -110,7 +111,7 @@ class Gibbs_sampler:
         cur_pm = self.merge_lib(self.sample_cache.copy(), self.init_lib.copy())
       else:
         cur_pm = self.init_lib.copy()
-      filtered = self.find_programs(iter_log, self.data, cur_pm, frame_sample, fs_cap, exceptions_allowed)
+      filtered = self.find_programs(iter_log, cur_pm, frame_sample, fs_cap, exceptions_allowed)
       # Extract resusable bits
       if len(filtered) < 1:
         print('Nothing consistent, skipping to next...') if logging else None # TODO: random sample?
@@ -155,10 +156,33 @@ class Gibbs_sampler:
 #     task_data[item].append(transformed)
 
 # # %%
-# all_frames = pd.read_csv('data/task_frames_extended.csv',index_col=0)
-# pl = Program_lib(pd.read_csv('data/task_pm_extended.csv', index_col=0, na_filter=False))
-# g1 = Gibbs_sampler(pl, all_frames, task_data['learn_a'], iteration=3)
+# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
+# pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
+# g1 = Gibbs_sampler(pl, all_frames, task_data['learn_a'], iteration=10)
 # g1.run(top_n=1, save_prefix='test/tt_', save_intermediate=True)
 
+# # %%
+# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
+# pl = Program_lib(pd.read_csv('trials/tmp/curpm.csv', index_col=0, na_filter=False))
+# g1 = Gibbs_sampler(pl, all_frames, task_data['learn_a'], iteration=3)
+
+# top_n=1
+# sample=True
+# frame_sample=20
+# fs_cap=100
+# exceptions_allowed=0
+# base=0
+# logging=True
+# save_prefix=''
+# save_intermediate=False
+# iter_log = 'debugging'
+
+# cur_pm = g1.init_lib.copy()
+# filtered = g1.find_programs(iter_log, cur_pm, frame_sample, fs_cap, exceptions_allowed)
+
+# extracted = g1.sample_extraction(filtered, top_n, sample, base)
+
+# extracted_df = extracted.copy()
+# target_df =  pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
 
 # %%

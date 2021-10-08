@@ -104,8 +104,8 @@ class Program_lib(Program_lib_light):
     return None
 
   def update_overall_lp(self, tune = 1):
-    bases = self.content[self.content['is_init']==1]
-    composes = self.content[self.content['is_init']==0]
+    bases = self.content[self.content['type']!='program']
+    composes = self.content[self.content['type']=='program']
     bases['log_prob'] = bases['comp_lp']
     composes['log_prob'] = composes['adaptor_lp'] + tune*composes['comp_lp']
     self.content = pd.concat([bases, composes], ignore_index=True)
@@ -311,6 +311,7 @@ class Program_lib(Program_lib_light):
 
   def unfold_programs_with_lp(self, terms, log_prob, data):
     programs = self.unfold_program(terms, data)
+    programs['comp_lp'] = programs['comp_lp'] + log_prob
     programs['log_prob'] = programs['log_prob'] + log_prob
     return programs
 
@@ -432,9 +433,12 @@ class Program_lib(Program_lib_light):
 #     task_data[item].append(transformed)
 # data = task_data['learn_a']
 
-
-# pm_task = pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
+# pm_task = pd.read_csv('trials/tmp/curpm.csv', index_col=0, na_filter=False)
 # pl = Program_lib(pm_task)
-# terms = '[KK,getStripe,egg]'
+
+# frame_term = '[CC,[BB,mulnn,PM("egg_num_num")],num]'
+# frame_lp = -4.1588830833596715
+
+# pl.unfold_program(frame_term, frame_lp)
 
 # %%
