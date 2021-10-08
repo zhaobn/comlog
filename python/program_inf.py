@@ -57,7 +57,6 @@ class Gibbs_sampler:
     if len(filtered) <= top_n or sample == 0:
       to_add = filtered.copy()
     else:
-      # TODO: Likelihood
       filtered['prob'] = filtered.apply(lambda row: math.exp(row['log_prob']), axis=1)
       filtered['prob'] = normalize(filtered['prob']) if base == 0 else softmax(filtered['prob'], base)
       to_add = filtered.sample(n=top_n, weights='prob')
@@ -108,7 +107,7 @@ class Gibbs_sampler:
     for i in range(self.iter):
       iter_log = f'Iter {i+1}/{self.iter}' if logging else ''
       if i > 0:
-        cur_pm = self.merge_lib(self.sample_cache, self.init_lib)
+        cur_pm = self.merge_lib(self.sample_cache.copy(), self.init_lib.copy())
       else:
         cur_pm = self.init_lib.copy()
       filtered = self.find_programs(iter_log, self.data, cur_pm, frame_sample, fs_cap, exceptions_allowed)
@@ -122,16 +121,16 @@ class Gibbs_sampler:
         self.sample_cache = extracted.copy()
         # Collect for posterior
         if i >= self.burnin:
-          self.post_samples = self.merge_lib(extracted, self.post_samples, use_ag=False)
+          self.post_samples = self.merge_lib(extracted.copy(), self.post_samples.copy(), use_ag=False)
         # Save
         if len(save_prefix) > 0:
           self.post_samples.to_csv(f'{save_prefix}post_samples.csv')
           if save_intermediate:
             padding = len(str(self.iter))
             filtered.to_csv(f'{save_prefix}filtered_{str(i+1).zfill(padding)}.csv')
-            # extracted.to_csv(f'{save_prefix}extracted_{str(i+1).zfill(padding)}.csv')
-            # cur_pm.to_csv(f'{save_prefix}curpm_{str(i+1).zfill(padding)}.csv')
-            # self.post_samples.to_csv(f'{save_prefix}post_{str(i+1).zfill(padding)}.csv')
+            extracted.to_csv(f'{save_prefix}extracted_{str(i+1).zfill(padding)}.csv')
+            cur_pm.to_csv(f'{save_prefix}curpm_{str(i+1).zfill(padding)}.csv')
+            self.post_samples.to_csv(f'{save_prefix}post_{str(i+1).zfill(padding)}.csv')
 
 
 # # %% Debug

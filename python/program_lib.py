@@ -104,8 +104,8 @@ class Program_lib(Program_lib_light):
     return None
 
   def update_overall_lp(self, tune = 1):
-    bases = self.content[self.content['type']!='program']
-    composes = self.content[self.content['type']=='program']
+    bases = self.content[self.content['is_init']==1]
+    composes = self.content[self.content['is_init']==0]
     bases['log_prob'] = bases['comp_lp']
     composes['log_prob'] = composes['adaptor_lp'] + tune*composes['comp_lp']
     self.content = pd.concat([bases, composes], ignore_index=True)
@@ -315,12 +315,14 @@ class Program_lib(Program_lib_light):
     return programs
 
   @staticmethod
-  def iter_compose_programs(terms_list, lp_list):
+  def iter_compose_programs(terms_list, cp_list, lp_list):
     programs_list = list(itertools_product(*terms_list))
     programs_list_agg = [','.join(p) for p in programs_list]
+    comp_lp_list = list(itertools_product(*cp_list))
+    comp_lp_list_agg = [sum(x) for x in comp_lp_list]
     log_probs_list = list(itertools_product(*lp_list))
     log_probs_list_agg = [sum(x) for x in log_probs_list]
-    return pd.DataFrame({'terms': programs_list_agg, 'log_prob': log_probs_list_agg})
+    return pd.DataFrame({'terms': programs_list_agg, 'comp_lp':comp_lp_list_agg, 'log_prob': log_probs_list_agg})
 
   # Task-specific customization
   def unfold_program(self, terms, data):
@@ -328,11 +330,12 @@ class Program_lib(Program_lib_light):
       pm = eval(terms)
       unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"&type=="program"')
       if len(unfolded) > 0:
-        return unfolded[['terms', 'log_prob']]
+        return unfolded[['terms', 'comp_lp', 'log_prob']]
       else:
-        return pd.DataFrame({'terms': [], 'log_prob': []})
+        return pd.DataFrame({'terms': [], 'comp_lp': [], 'log_prob': []})
     else:
       programs_list = []
+      comp_lps_list = []
       log_probs_list = []
       term_list = terms.split(',')
       all_obs = self.get_all_objs()
@@ -342,27 +345,33 @@ class Program_lib(Program_lib_light):
         if tm in list(self.SET_MARKERS):
           unfolded = self.content.query(f'return_type=="{tm}"&type=="base_term"')
           unfolded_terms = list(unfolded['terms'])
+          unfolded_cps = list(unfolded['comp_lp'])
           unfolded_lps = list(unfolded['log_prob'])
         elif tm == 'egg':
           unfolded_terms = list(set([obs['agent'].name for obs in data]))
           unfolded_lps = [self.query_obj_lp(x, all_obs) for x in unfolded_terms]
+          unfolded_cps = unfolded_lps.copy()
         elif 'PM' in tm:
           pm = eval(tm)
           qs = '&type=="program"' if (pm.arg_types == ['obj'] and pm.return_type == 'obj') else ''
           unfolded = self.content.query(f'arg_types=="{args_to_string(pm.arg_types)}"&return_type=="{pm.return_type}"{qs}')
           unfolded_terms = list(unfolded['terms'])
+          unfolded_cps = list(unfolded['comp_lp'])
           unfolded_lps = list(unfolded['log_prob'])
         elif eval(tm).ctype == 'router':
           unfolded_terms = [tm]
-          unfolded_lps = [0] # Taken care of by the frame base lp
+          unfolded_cps = [0] # Taken care of by the frame base lp
+          unfolded_lps = [0]
         elif eval(tm).ctype == 'primitive':
           unfolded_terms = [tm]
           unfolded_lps = list(self.content.query(f'terms=="{tm}"&type=="primitive"').log_prob)
+          unfolded_cps = unfolded_lps.copy()
         else:
           print('Unknow term!')
         programs_list.append([t.replace(tm, u) for u in unfolded_terms])
+        comp_lps_list.append(unfolded_cps)
         log_probs_list.append(unfolded_lps)
-      return self.iter_compose_programs(programs_list, log_probs_list)
+      return self.iter_compose_programs(programs_list, comp_lps_list, log_probs_list)
 
   @staticmethod
   def check_program(terms, data):

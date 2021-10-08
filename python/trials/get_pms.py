@@ -4,15 +4,17 @@ import sys
 sys.path.append('../')
 from program_inf import *
 
-# %% Setting up
+# %%
+# Setting up
 
 cond = 'construct'
-save_dir_1 = f'tmp/{cond}_a_'
-save_dir_2 = f'tmp/{cond}_b_'
-
 EXCEPTS = 0
+
 TOP_N = 3
 LEARN_ITER = 100
+
+save_dir_1 = f'tmp/{cond}_a_'
+save_dir_2 = f'tmp/{cond}_b_'
 
 
 # Prep data
