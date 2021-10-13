@@ -3,6 +3,7 @@
 import math
 import numpy as np
 import pandas as pd
+from pandas.io.stata import StataMissingValue
 pd.set_option('mode.chained_assignment', None)
 
 from task_terms_extra import *
@@ -11,10 +12,11 @@ from program_lib import Program_lib
 
 # %%
 class Gibbs_sampler:
-  def __init__(self, program_lib, frames, data_list, iteration, burnin=0):
-    self.init_lib = program_lib.content.copy()      # Initial program library
-    self.post_samples = program_lib.content.copy()  # Posterier samples
-    self.sample_cache = None                        # Temp cache for each iteration
+  def __init__(self, program_lib, frames, data_list, iteration, burnin=0, lib_is_post=False):
+    input_lib = program_lib.content
+    self.init_lib = input_lib.copy()                        # Initial program library
+    self.post_samples = input_lib[input_lib['is_init']==1]  # Place holder for posterior samples
+    self.sample_cache = None                                # Temp cache for each iteration
 
     self.frames = frames
     self.frames['prob'] = self.frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
@@ -22,6 +24,7 @@ class Gibbs_sampler:
     self.data = secure_list(data_list)
     self.iter = iteration
     self.burnin = burnin
+    self.lib_is_post = lib_is_post
 
   # Frames => programs consistent with data
   def find_programs(self, iter_log, pm_lib, frame_sample=20, fs_cap=100, exceptions_allowed=0):
@@ -107,10 +110,22 @@ class Gibbs_sampler:
   ):
     for i in range(self.iter):
       iter_log = f'Iter {i+1}/{self.iter}' if logging else ''
-      if i > 0:
-        cur_pm = self.merge_lib(self.sample_cache.copy(), self.init_lib.copy())
+      # Prep starting point
+      if self.lib_is_post:
+        df_init = self.init_lib[self.init_lib['is_init']==1]
+        df_posts = self.init_lib[self.init_lib['is_init']==0]
+        df_sampled = df_posts.sample(top_n+exceptions_allowed, weights='count')
+        helper_pm = Program_lib(pd.concat([df_init, df_sampled], ignore_index=True))
+        helper_pm.update_lp_adaptor()
+        helper_pm.update_overall_lp()
+        init_lib = helper_pm.content
       else:
-        cur_pm = self.init_lib.copy()
+        init_lib = self.init_lib
+      # Prep current lib
+      if i > 0:
+        cur_pm = self.merge_lib(self.sample_cache.copy(), init_lib.copy())
+      else:
+        cur_pm = init_lib.copy()
       filtered = self.find_programs(iter_log, cur_pm, frame_sample, fs_cap, exceptions_allowed)
       # Extract resusable bits
       if len(filtered) < 1:
@@ -159,30 +174,10 @@ class Gibbs_sampler:
 # all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
 # pl = Program_lib(pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False))
 # g1 = Gibbs_sampler(pl, all_frames, task_data['learn_a'], iteration=10)
-# g1.run(top_n=1, save_prefix='test/tt_', save_intermediate=True)
+# g1.run(top_n=3, save_prefix='test/tt_')
 
-# # %%
-# all_frames = pd.read_csv('data/task_frames.csv',index_col=0)
-# pl = Program_lib(pd.read_csv('trials/tmp/curpm.csv', index_col=0, na_filter=False))
-# g1 = Gibbs_sampler(pl, all_frames, task_data['learn_a'], iteration=3)
-
-# top_n=1
-# sample=True
-# frame_sample=20
-# fs_cap=100
-# exceptions_allowed=0
-# base=0
-# logging=True
-# save_prefix=''
-# save_intermediate=False
-# iter_log = 'debugging'
-
-# cur_pm = g1.init_lib.copy()
-# filtered = g1.find_programs(iter_log, cur_pm, frame_sample, fs_cap, exceptions_allowed)
-
-# extracted = g1.sample_extraction(filtered, top_n, sample, base)
-
-# extracted_df = extracted.copy()
-# target_df =  pd.read_csv('data/task_pm.csv', index_col=0, na_filter=False)
+# pp = Program_lib(pd.read_csv('test/tt_post_samples.csv', index_col=0, na_filter=False))
+# g2 = Gibbs_sampler(pp, all_frames, task_data['learn_b'], iteration=10, lib_is_post=True)
+# g2.run(top_n=3, save_prefix='test/t2_', save_intermediate=1)
 
 # %%
