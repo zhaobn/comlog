@@ -115,7 +115,9 @@ class Gibbs_sampler:
         df_init = self.init_lib[self.init_lib['is_init']==1]
         df_posts = self.init_lib[self.init_lib['is_init']==0]
         df_sampled = df_posts.sample(top_n+exceptions_allowed, weights='count')
-        helper_pm = Program_lib(pd.concat([df_init, df_sampled], ignore_index=True))
+        df_to_start = pd.concat([df_init, df_sampled], ignore_index=True)
+        df_to_start['count'] = 1.0
+        helper_pm = Program_lib(df_to_start)
         helper_pm.update_lp_adaptor()
         helper_pm.update_overall_lp()
         init_lib = helper_pm.content
