@@ -22,6 +22,7 @@ all_data = pd.read_json('../for_exp/config.json')
 task_ids = {
   'learn_a': [23, 42, 61],
   'learn_b': [35, 50, 65],
+  'learn_c': [27, 31, 35],
   'gen': [82, 8, 20, 4, 98, 48, 71, 40],
 }
 task_ids['gen'].sort()
@@ -45,7 +46,7 @@ task_configs = {
   },
   'combine': {
     'phase_1': task_data['learn_a'],
-    'phase_2': task_data['learn_b']
+    'phase_2': task_data['learn_c']
   },
   'decon': {
     'phase_1': task_data['learn_b'],
