@@ -144,9 +144,9 @@ class Gibbs_sampler:
           if save_intermediate:
             padding = len(str(self.iter))
             filtered.to_csv(f'{save_prefix}filtered_{str(i+1).zfill(padding)}.csv')
-            extracted.to_csv(f'{save_prefix}extracted_{str(i+1).zfill(padding)}.csv')
-            cur_pm.to_csv(f'{save_prefix}curpm_{str(i+1).zfill(padding)}.csv')
-            self.post_samples.to_csv(f'{save_prefix}post_{str(i+1).zfill(padding)}.csv')
+            # extracted.to_csv(f'{save_prefix}extracted_{str(i+1).zfill(padding)}.csv')
+            # cur_pm.to_csv(f'{save_prefix}curpm_{str(i+1).zfill(padding)}.csv')
+            # self.post_samples.to_csv(f'{save_prefix}post_{str(i+1).zfill(padding)}.csv')
 
 
 # # %% Debug

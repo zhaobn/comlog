@@ -58,13 +58,8 @@ pl = Program_lib(pd.read_csv('../data/task_pm.csv', index_col=0, na_filter=False
 g1 = Gibbs_sampler(pl, all_frames, task_configs[cond]['phase_1'], iteration=LEARN_ITER)
 g1.run(top_n=TOP_N, exceptions_allowed=EXCEPTS, save_prefix=save_dir_1, save_intermediate=True)
 
-post_pms = g1.post_samples.query('arg_types=="egg_num"&return_type=="num"&type=="program"')
-post_to_add = post_pms.sample(TOP_N, weights='count')
-post_lib = Program_lib(pd.concat([g1.init_lib, post_to_add], ignore_index=True))
-post_lib.update_lp_adaptor()
-post_lib.update_overall_lp()
-
-g2 = Gibbs_sampler(post_lib, all_frames, task_configs[cond]['phase_2'], iteration=LEARN_ITER)
+post_lib = Program_lib(g1.post_samples)
+g2 = Gibbs_sampler(post_lib, all_frames, task_configs[cond]['phase_2'], iteration=LEARN_ITER, lib_is_post=True)
 g2.run(top_n=TOP_N, exceptions_allowed=EXCEPTS, save_prefix=save_dir_2, save_intermediate=True)
 
 # %%
