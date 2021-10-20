@@ -5,32 +5,44 @@ from numpy import column_stack
 import pandas as pd
 
 import sys
+
+from pandas._config import config
 sys.path.append('../')
-from task_configs import *
-from task import *
+from task_terms import *
 from helpers import normalize, softmax
 
 # %% Get all intermediate samples
-programs_df = pd.read_csv('../test/si_inc/t5_filtered_001_002.csv', index_col=0).reset_index(drop=True)
-programs_df = programs_df.append(pd.read_csv(f'../test/si_inv/t5_filtered_001_002.csv', index_col=0).reset_index(drop=True), ignore_index=True)
-for a in range(100):
-  for b in range(6):
-    iter = str(a+1).zfill(3)
-    programs_df = programs_df.append(pd.read_csv(f'../test/si_inc/t5_filtered_{iter}_00{b+1}.csv', index_col=0).reset_index(drop=True), ignore_index=True)
-    programs_df = programs_df.append(pd.read_csv(f'../test/si_inv/t5_filtered_{iter}_00{b+1}.csv', index_col=0).reset_index(drop=True), ignore_index=True)
+programs_df = pd.DataFrame(columns=['terms','comp_lp','log_prob','n_exceptions'])
+prefixes = [
+  'combine_0a', 'combine_0b', 'combine_1a', 'combine_1b', 'combine_2a', 'combine_2b',
+  'construct_0a', 'construct_0b', 'construct_1a', 'construct_1b', 'construct_2a', 'construct_2b',
+  'decon_1a', 'decon_1b', 'decon_2a', 'decon_2b',
+]
+for pr in prefixes:
+  for i in range(100):
+    iter = str(i+1).zfill(3)
+    programs_df = programs_df.append(pd.read_csv(f'tmp/{pr}_filtered_{iter}.csv', index_col=0).reset_index(drop=True), ignore_index=True)
+
+# %% Prep data
+config_data = pd.read_json('../for_exp/config.json')
+all_pairs_df = pd.DataFrame(columns=['agent', 'recipient'])
+for i in range(len(config_data)):
+  agent_info = config_data.agent[i].split(',')
+  recipient_info = config_data.recipient[i].split(',')
+  all_pairs_df.at[i,'agent'] = f'Egg(S{agent_info[0][1:]},O{agent_info[1][1:]})'
+  all_pairs_df.at[i,'recipient'] = int(recipient_info[2][:-1])
 
 # %% Collapse into equivalent classes
-all_pairs_df = pd.read_csv('../data/gen_pairs.csv', index_col=0)
 eq_class_df = pd.DataFrame(columns=['pred_list', 'terms', 'count'])
-
 for i in range(len(programs_df)):
   terms = programs_df.at[i, 'terms']
   pm = Program(eval(terms))
   pred_list = []
   for j in range(len(all_pairs_df)):
-    data = [eval(all_pairs_df.at[j,'agent']), eval(all_pairs_df.at[j,'recipient'])]
+    data = [eval(all_pairs_df.at[j,'agent']), int(all_pairs_df.at[j,'recipient'])]
     pred = pm.run(data)
     pred_rounded = 0 if pred < 0 else pred
+    pred_rounded = 16 if pred_rounded > 16 else pred_rounded
     pred_list.append(pred_rounded)
   pred_list_joined = ','.join([str(x) for x in pred_list])
   matched_idx = eq_class_df.index[eq_class_df['pred_list'] == pred_list_joined].tolist()
@@ -47,19 +59,6 @@ for i in range(len(programs_df)):
       eq_class_df.at[found_idx, 'terms'] = terms
     eq_class_df.at[found_idx, 'count'] += 1
 
-eq_class_df.to_csv('test/all_eqc.csv')
+eq_class_df.to_csv('data/all_eqc.csv')
 
-# # %%
-# incs = pd.read_csv('../for_exp/full_inc_eqc.csv', index_col=0)
-# invs = pd.read_csv('../for_exp/full_inv_eqc.csv', index_col=0)
-# total = pd.merge(incs, invs, how='outer', on='pred_list').fillna(value={"terms_x": '', "count_x": 0, "terms_y": '', "count_y": 0})
-# total['count'] = total['count_x'] + total['count_y']
-# total['merged_terms'] = total['terms_x'].where(total['terms_x']!='', total['terms_y'])
-# total['compare_terms'] = total.apply(lambda row: len(row['terms_y'])-len(row['merged_terms']), axis=1)
-
-# total_a = total[(total['merged_terms']!='')&(total['terms_y']!='')&(total['compare_terms']<0)]
-# total_a['merged_terms'] = total['terms_y']
-# total_b = total[~total.index.isin(total_a.index)]
-# final = pd.concat([total_a, total_b], ignore_index=True)[['pred_list', 'merged_terms', 'count']].rename(columns={'merge_terms': 'terms'})
-
-# final.to_csv('../for_exp/full_eqc.csv')
+# %%

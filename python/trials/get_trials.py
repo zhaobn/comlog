@@ -8,31 +8,42 @@ import math
 
 import sys
 sys.path.append('../')
-from task_configs import *
-from task import *
+from task_terms import *
 from helpers import normalize, softmax
 
-
 # %% Global vars
-RAND_SEED = 1009
-CAND_PROGRAMS = pd.read_csv('eqcs.csv', index_col=0)
+CAND_PROGRAMS = pd.read_csv('data/all_eqc.csv', index_col=0)
 N_PROGRAMS = len(CAND_PROGRAMS)
 print(N_PROGRAMS)
-ALL_PAIRS = pd.read_csv('../data/gen_pairs.csv', index_col=0)
-ALL_OBS = pd.read_csv('../data/gen_obs.csv', index_col=0)[['pair_index', 'agent', 'recipient', 'result']]
+
+# %% Prep data
+config_data = pd.read_json('../for_exp/config.json')
+results_col = pd.DataFrame({'result':range(16+1)})
+results_col['joiner'] = 0
+
+ALL_PAIRS = pd.DataFrame(columns=['agent', 'recipient'])
+for i in range(len(config_data)):
+  agent_info = config_data.agent[i].split(',')
+  recipient_info = config_data.recipient[i].split(',')
+  ALL_PAIRS.at[i,'agent'] = f'Egg(S{agent_info[0][1:]},O{agent_info[1][1:]})'
+  ALL_PAIRS.at[i,'recipient'] = int(recipient_info[2][:-1])
+ALL_PAIRS['pair_index'] = ALL_PAIRS.index
+ALL_PAIRS['joiner'] = 0
+ALL_OBS = pd.merge(ALL_PAIRS, results_col, how='outer', on='joiner')[['pair_index','agent','recipient','result']]
 
 PM_LL = ALL_OBS.copy()
 for i in CAND_PROGRAMS.index:
   PM_LL[f'pm_{str(i)}'] = 0
   preds = CAND_PROGRAMS.at[i, 'pred_list'].split(',')
   for pi in range(len(ALL_PAIRS)):
-    predicted_idx = PM_LL[(PM_LL['pair_index']==pi)&(PM_LL['result']==f'Stone(S0,O0,L{preds[pi]})')].index[0]
+    predicted_idx = PM_LL[(PM_LL['pair_index']==pi)&(PM_LL['result']==int(preds[pi]))].index[0]
     PM_LL.at[predicted_idx, f'pm_{str(i)}'] = 1
 
 PM_WEIGHTS = normalize(CAND_PROGRAMS['count'])
+# PM_WEIGHTS = [1/len(CAND_PROGRAMS)]
 
 # %%
-def get_sim(program_id, pair_ids, n=20, noise=5):
+def get_sim(program_id, pair_ids, n=20, noise=4):
   ret_data = pd.DataFrame(columns=['pair_index', 'agent', 'recipient', 'result', 'count'])
   for pi in pair_ids:
     data = PM_LL[PM_LL['pair_index']==pi][['pair_index', 'agent', 'recipient', 'result', program_id]]
@@ -40,17 +51,17 @@ def get_sim(program_id, pair_ids, n=20, noise=5):
     data['count'] = 0
     i = 0
     while i < n:
-      data.at[data.sample(1, weights='prob', random_state=RAND_SEED).index[0], 'count'] += 1
+      data.at[data.sample(1, weights='prob').index[0], 'count'] += 1
       i += 1
     ret_data = ret_data.append(data[['pair_index', 'agent', 'recipient', 'result', 'count']])
   return ret_data
-# get_sim('pm_4', [3,7], n=20, noise=4)
+# get_sim('pm_4', [3,7], n=40, noise=4)
 
-def conditional_entropy(sim_data, noise=5, weights=PM_WEIGHTS, sample=False):
+def conditional_entropy(sim_data, noise=4, weights=PM_WEIGHTS, sample=False):
   post_pp = []
   for mi in range(len(CAND_PROGRAMS)): # If sample, check just a few of programs
     pm_id = f'pm_{mi}'
-    pm_counts = sim_data[['count', pm_id]]
+    pm_counts = sim_data[['count', pm_id]].copy()
     pm_counts['ll'] = softmax(pm_counts[pm_id], noise)
     pm_counts = pm_counts[pm_counts['count']>0]
     pm_counts['pp'] = pm_counts.apply(lambda row: row['ll'] ** row['count'], axis=1)
@@ -66,19 +77,13 @@ trials_df = pd.DataFrame(columns=['pair_index', 'agent', 'recipient','EIG'])
 # CAND_PROGRAMS = CAND_PROGRAMS.sample(3)
 # N_PROGRAMS = len(CAND_PROGRAMS)
 
-# prior_entropy = -1 * N_PROGRAMS * (1/N_PROGRAMS) * math.log((1/N_PROGRAMS))
 prior_entropy = -sum([x * math.log(x) for x in PM_WEIGHTS])
 
 # Get learned pair indices
-task_data_df = pd.read_csv('../data/task_data.csv', na_filter=False)
-phase_indexes = [2, 15, 32, 11, 23, 35]
-task_phase = task_data_df[task_data_df.index.isin(phase_indexes)].reindex(phase_indexes)
-# task_df = pd.merge(task_phase, ALL_PAIRS, how='left', on=['agent', 'recipient'])
-# learned_pairs = list(task_df['pair_index'])
-
+learned_pair_idx = [x+1 for x in [23, 42, 61, 35, 50, 65, 27, 31, 35]] # config_data.task_id := index+1
+task_phase = ALL_PAIRS[ALL_PAIRS.index.isin(learned_pair_idx)]
 
 # Get the first one
-# candidate_pairs = ALL_PAIRS[~ALL_PAIRS['pair_index'].isin(learned_pairs)].reset_index(drop=True)
 candidate_pairs = ALL_PAIRS[~ALL_PAIRS['agent'].isin(task_phase['agent'])].reset_index(drop=True)
 pair_eigs = []
 for pi in range(len(candidate_pairs)):
@@ -96,7 +101,7 @@ best_pair = candidate_pairs[candidate_pairs.index==pair_eigs.index(max(pair_eigs
 best_pair['EIG'] = max(pair_eigs)
 trials_df = trials_df.append(best_pair, ignore_index=True)
 print(best_pair)
-trials_df.to_csv('../test/eig_trials.csv')
+trials_df.to_csv('../data/eig_trials.csv')
 
 # Build greedily
 while (len(trials_df) < 20):
@@ -117,6 +122,6 @@ while (len(trials_df) < 20):
   best_pair['EIG'] = max(pair_eigs)
   trials_df = trials_df.append(best_pair, ignore_index=True)
   print(best_pair)
-  trials_df.to_csv('../test/eig_trials.csv')
+  trials_df.to_csv('../data/eig_trials.csv')
 
-trials_df.to_csv('../test/eig_trials.csv')
+trials_df.to_csv('../data/eig_trials.csv')
