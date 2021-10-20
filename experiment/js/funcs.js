@@ -569,7 +569,7 @@ function showCompletion(code, nCorrect) {
   let t = document.createTextNode(code);
   let co = createText('p', `You got ${nCorrect} predictions correct!
   You will get £${bonusVal} bonus on top of your base pay.
-  Bonus on writing the correct causal relationships will be paid after manual checks.`)
+  Bonus for writing the correct causal relationships will be paid after manual checks.`)
   let returnLink = createCustomElement('p', '', '')
   returnLink.innerHTML = `Click <a href=‘https://app.prolific.co/submissions/complete?cc=${code}>here</a> to redirect to Prolific.`
   document.getElementById('completion-code').append(t);
@@ -747,13 +747,13 @@ function createLearnTask(learnDivPrefix, learnConfig, total=0, isMainTask = true
 }
 function createInputForm(formPrefix, isSecond=false) {
   let box = createCustomElement("div", "box", `${formPrefix}-box`);
-  let emphaseText = isSecond? ' (all six, including previously shown ones)': '';
+  let emphaseText = isSecond? 'Please account for <i>all</i> the magic eggs you checked, and ': 'Please ';
   box.innerHTML = `
           <div class="display-box" id="${formPrefix}-display-box">
             <form class="input-form" id="${formPrefix}-input-form">
               <p>
-                <b>What is your best guess about these magic eggs${emphaseText}?</b>
-                (Please be specific about <i>what properties you think matter or do not matter for the effects,
+                <b>What is your best guess about these magic eggs?</b>
+                (${emphaseText}be specific about <i>what properties you think matter or do not matter for the effects,
                 and how they do so</i>.)
                 <br />
               </p>
@@ -851,7 +851,7 @@ function createGenTask(genDivPrefix, genConfigs, total=0) {
   let displayMain = createCustomElement("div", "display-main", `${genDivPrefix}-displaymain-${trialId}`);
   displayMain = createGenStones(genConfigs, displayMain, genDivPrefix, true);
 
-  displayBox.append(createText('h2', taskNumText + 'What will the blocks look like if touched by this magic egg?'))
+  displayBox.append(createText('h2', taskNumText + 'What will the blocks look like if touched by the magic egg?'))
   displayBox.append(beforeMain)
   displayBox.append(createText('h3', 'Make your prediction by clicking on the blocks:'))
   displayBox.append(displayMain)
