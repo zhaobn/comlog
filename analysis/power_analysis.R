@@ -34,7 +34,8 @@ res.aov <- aov(acc ~ condition, data = self_report_acc)
 summary(res.aov)
 
 sd(self_report_acc$acc)
-
+# Effect size f: 0.3114
+# with alpha 0.05, beta 0.95 => Total sample size 165
 
 
 
