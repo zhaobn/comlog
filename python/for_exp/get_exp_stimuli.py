@@ -40,14 +40,17 @@ trials_df.reset_index().to_json('config.json', orient='records')
 
 # %%
 def translate_name(name):
-  if len(name) < 1:
-    return ''
-  else:
-    for r in (('Stone',''), ('(',''),(')',''), ('S',''), ('O',''), ('L','')):
+  if isinstance(name, str):
+    for r in (('Egg',''), ('(',''),(')',''), ('S',''), ('O','')):
       name = name.replace(*r)
     vals = name.split(',')
-    return f'({vals[0]}, {vals[1]}, {vals[2]})'
-# translate_name('Stone(S4,O3,L1)')
+    return f'({vals[0]}, {vals[1]}, 1)'
+  elif isinstance(name, int):
+    return f'(0, 0, {str(name)})'
+  else:
+    return ''
+# translate_name('Egg(S4,O3)')
+# translate_name(1)
 
 # %%
 trials_df = pd.read_json('config.json')
@@ -67,7 +70,7 @@ learn_c = pd.DataFrame({
   'recipient': ["(0, 0, 3)", "(0, 0, 3)", "(0, 0, 3)"],
   'result': ["(0, 0, 2)", "(0, 0, 1)", "(0, 0, 0)"],
 })
-gen = pd.read_csv('../trials/trials.csv', index_col=0).rename(columns={'agent': 'agent_stone','recipient': 'recipient_stone'})
+gen = pd.read_csv('../trials/data/final_trials.csv', index_col=0).rename(columns={'agent': 'agent_stone','recipient': 'recipient_stone'})
 gen['agent'] = gen.apply(lambda row: translate_name(row['agent_stone']), axis=1)
 gen['recipient'] = gen.apply(lambda row: translate_name(row['recipient_stone']), axis=1)
 gen_trials = pd.merge(gen, trials_df, how='left', on=['agent', 'recipient']).dropna()
@@ -79,4 +82,4 @@ learn_b_ids = list(pd.merge(learn_b, trials_df, how='left', on=['agent', 'recipi
 learn_c_ids = list(pd.merge(learn_c, trials_df, how='left', on=['agent', 'recipient', 'result'])['trial_id'])
 # [27, 31, 35]
 gen_ids = [int(x) for x in list(gen_trials['trial_id'])]
-# [82, 8, 20, 4, 98, 48, 71, 40]
+# [100, 71, 78, 55, 47, 83, 9, 3]
