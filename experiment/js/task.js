@@ -477,10 +477,10 @@ doneBtn.onclick = () => {
         method: 'POST',
         body: JSON.stringify(clientData),
     })
-    .then(() => showCompletion('8ECB0DFE', nCorrect))
+    .then(() => showCompletion('8692C148', nCorrect))
     .catch((error) => console.log(error));
   } else {
-    showCompletion('8ECB0DFE', nCorrect);
+    showCompletion('8692C148', nCorrect);
     // console.log(clientData);
     download(JSON.stringify(clientData), 'data.txt', '"text/csv"');
   }
