@@ -552,7 +552,7 @@ function compIsFilled () {
   return (checked > checks.length-1)
 }
 function removeSpecial (text) {
-  text = text.replace(/[&\/\\#,+()$~%"\[\]:*<>{}!@^=_|`;']/gi, '-');
+  text = text.replace(/[&\/\\#,$~%"\[\]*<>{}@^_|`']/gi, '');
   text = text.replace(/(\r\n|\n|\r|\t)/gm, " ")
   return text
 }
