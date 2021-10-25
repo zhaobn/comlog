@@ -1,5 +1,6 @@
 library(RPostgreSQL)
 library(rjson)
+library(dplyr)
 rm(list=ls())
 
 # First run this in the terminal to connect to the database:
@@ -19,13 +20,14 @@ dbExistsTable(con, "task")
 
 # Then you can pull the task data from postgreSQL 
 td <- dbGetQuery(con, "SELECT * from task")
-#Here it is as json
+# Here it is as json
 td$subjectwise
 td$trialwise
+# Reorder according to id
+td = arrange(td, id)
 
 #Un-jsonify it
-inv_fromJSON<-function(js)
-{
+inv_fromJSON<-function(js) {
   js <- chartr("\'\"","\"\'",js)
   fromJSON(js)
 }
@@ -35,15 +37,14 @@ tw<-sapply(sapply(td$trialwise, inv_fromJSON, simplify=F), as.data.frame, simpli
 N<-length(tw)
 M<-22
 
-start_index = 2 # Row 1 is Bonan testing
-end_index = 21 # Pilot size = 20
+start_index = 23 # Row 1 is Bonan testing
+end_index = 27 # Pilot size = 20
 td_batch = td[start_index:end_index, ]
 
 #Combine them
 df.sw.aux<-sw[[start_index]]
 df.tw.aux<-tw[[start_index]]
-for (i in (start_index+1):end_index)
-{
+for (i in (start_index+1):end_index) {
   df.sw.aux<-rbind(df.sw.aux, sw[[i]])
   df.tw.aux<-rbind(df.tw.aux, tw[[i]])
 }
