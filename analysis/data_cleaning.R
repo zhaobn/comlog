@@ -2,12 +2,14 @@
 library(dplyr)
 rm(list=ls())
 
-load('data/pilot_1_raw.rdata')
+load('data/exp_1_raw.rdata')
 
 # Output to googlesheet to bonus participants
-to_sheet = df.sw %>%
-  select(ix, prolific_id, condition, task.input.a_input, task.input.b_input, feedback, correct)
-write.csv(to_sheet, file='data/pilot_1_responses.csv')
+# When bonus-ing, select prolific_id column
+# When publishing data, remove the prolific_id column
+to_sheet = df.sw %>% 
+  select(ix, condition, task.input.a_input, task.input.b_input, feedback, correct)
+write.csv(to_sheet, file='data/exp_1_responses.csv')
 
 # Clean up for analysis
 df.sw.raw = df.sw
@@ -28,8 +30,10 @@ df.sw = df.sw.raw %>%
          certainty_b=as.numeric(as.character(certainty_b))) %>%
   mutate(condition=case_when(condition=='comp_const'~'combine', 
                              condition=='comp_mult'~'construct', 
-                             condition=='comp_mult_reverse'~'discern'))
-df.sw[3,'age'] = 42
+                             condition=='comp_mult_reverse'~'decon'))
+df.sw[144,'age'] = 33
+df.sw[35,'age'] = 31
+
 
 #### Transform trial data ####
 colnames(df.tw.raw)<-c('ix', 'id', 'batch', 'phase', 'trial', 'tid', 'agent', 'agent_color', 'recipient', 'result', 'selection', 'correct')
@@ -67,11 +71,18 @@ trial_data = trial_data %>%
   arrange(ix, condition, batch, trial)
 
 df.tw = trial_data
-save(df.sw, df.tw, file='data/pilot_1_cleaned.rdata')
+save(df.sw, df.tw, file='data/exp_1_cleaned.rdata')
 
-
-
-
+# Label data
+labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
+labels = labels  %>%
+  mutate(condition=case_when(condition=='comp_const'~'combine', 
+                             condition=='comp_mult'~'construct', 
+                             condition=='comp_mult_reverse'~'discern'))
+labels = labels %>% select(-prolific_id)
+colnames(labels) <- c('ix', 'condition', 'input_a', 'match_a', 'input_b', 'match_b', 'feedback', 'correct')
+labels = labels %>% select('ix', 'condition', 'input_a', 'match_a', 'input_b', 'match_b', 'feedback')
+save(labels, file='data/exp_1_coded.Rdata')
 
 
 
