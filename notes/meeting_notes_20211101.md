@@ -2,7 +2,7 @@
 # Notes (2021-11-01)
 
 - Comput Brain Behav acceptance :tada:
-- [WHY-21 workshop](https://why21.causalai.net) review ([Google Doc](https://docs.google.com/document/d/1_jfqJCaYIBhxSm5qxbaCMuxl5tfO1hXHYpmICBEpZUE/edit?usp=sharing))
+- [WHY-21 workshop](https://why21.causalai.net) submission review ([Google Doc](https://docs.google.com/document/d/1_jfqJCaYIBhxSm5qxbaCMuxl5tfO1hXHYpmICBEpZUE/edit?usp=sharing))
 - Experiment 1 data initial look ([R Markdown](https://eco.ppls.ed.ac.uk/~s1941626/exp_1_analysis.html))
 - Experiment 1 free responses ([Google Sheet](https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/edit?usp=sharing))
   - Code alternative rules?
