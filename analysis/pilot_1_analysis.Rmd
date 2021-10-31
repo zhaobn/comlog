@@ -50,7 +50,7 @@ And three **learning conditions**:
   ![](figs/construct.png)
 
 2. `Discern`: reverse order of the `construct` condition
-  ![](figs/discern.png)
+  ![](figs/decon.png)
 
 3. `Combine`: First build the `Stripes(A) * Blocks(R)` sub-part, and then build the `- Dots(A)` sub-part
   ![](figs/combine.png)
@@ -60,7 +60,7 @@ And three **learning conditions**:
 **Generalization trials** are picked by a mixture of novelty & EIG re. potential causal rules.
 Their orders were randomized for every participant.
 
-* ![](figs/gen_trials.png) 
+* ![](figs/pilot_1_gens.png) 
 
 
 
