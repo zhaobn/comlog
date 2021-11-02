@@ -1,4 +1,4 @@
-const mode = '' // '', 'dev', 'test', 'flask'
+const mode = 'dev' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const conds_for_exp = [ 'comp_mult', 'comp_mult_reverse', 'comp_const' ]
@@ -48,7 +48,7 @@ document.getElementById('intro-demo-test-btn-1').onclick = () => {
 }
 
 /** Prep data */
-const taskIds = getConfigs(config, cond)
+const taskIds = prepConfigs(cond)
 
 let aliceLearn = fmtConfig(config.filter(c => taskIds['learnA'].indexOf(c.trial_id) > -1), 'alice', 'learn')
 let aliceGen = fmtConfig(shuffleArray(config.filter(c => taskIds['genA'].indexOf(c.trial_id) > -1)), 'alice', 'gen')
