@@ -1,5 +1,6 @@
 
 library(dplyr)
+library(googlesheets4)
 rm(list=ls())
 
 load('data/exp_1_raw.rdata')
@@ -82,8 +83,17 @@ labels = labels  %>%
 labels = labels %>% select(-prolific_id)
 colnames(labels) <- c('ix', 'condition', 'input_a', 'match_a', 'input_b', 'match_b', 'feedback', 'correct')
 labels = labels %>% select('ix', 'condition', 'input_a', 'match_a', 'input_b', 'match_b', 'feedback')
-save(labels, file='data/exp_1_coded.Rdata')
+save(labels, file='../data/exp_1_coded.Rdata')
 
+labels_2 = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
+labels_2 = labels_2  %>%
+  mutate(condition=case_when(condition=='comp_const'~'combine', 
+                             condition=='comp_mult'~'construct', 
+                             condition=='comp_mult_reverse'~'discern')) %>% 
+  select(-prolific_id)
+colnames(labels_2) <- c('ix', 'condition', 'input_a', 'match_a', 'input_b', 'match_b', 'feedback', 'correct')
+labels_2 = labels_2 %>% select('ix', 'condition', 'input_a', 'match_a', 'input_b', 'match_b', 'feedback')
+save(labels, labels_2, file='data/exp_1_coded.Rdata')
 
 
 

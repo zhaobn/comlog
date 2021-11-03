@@ -21,8 +21,8 @@ library(ggridges)
 ```
 
 ```{r data, include=FALSE}
-load('data/exp_1_cleaned.rdata')
-load('data/exp_1_coded.Rdata')
+load('../data/exp_1_cleaned.rdata')
+load('../data/exp_1_coded.Rdata')
 ```
 
 # Experiment
@@ -40,19 +40,19 @@ In this experiment we have:
 And three **learning conditions**:
 
 1. `Construct`: First build the `Stripes(A) * Blocks(R)` sub-part, and then re-use it to build the ground truth rule
-  ![](figs/construct.png)
+  ![](../figs/construct.png)
   
 2. `Deconstruct`: reverse order of the `construct` condition
-  ![](figs/decon.png)
+  ![](../figs/decon.png)
   
 3. `Combine`: First build the `Stripes(A) * Blocks(R)` sub-part, and then build the `- Dots(A)` sub-part
-  ![](figs/combine.png)
+  ![](../figs/combine.png)
   
 
 **Generalization trials** are picked by a mixture of novelty & EIG re. potential causal rules.
 Their orders were randomized for every participant.
 
-* ![](figs/exp_1_gens.png)
+* ![](../figs/exp_1_gens.png)
 
   
 ## Procedure
