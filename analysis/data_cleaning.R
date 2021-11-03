@@ -79,21 +79,35 @@ labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoic
 labels = labels  %>%
   mutate(condition=case_when(condition=='comp_const'~'combine', 
                              condition=='comp_mult'~'construct', 
-                             condition=='comp_mult_reverse'~'discern'))
+                             condition=='comp_mult_reverse'~'decon'))
 labels = labels %>% select(-prolific_id)
-colnames(labels) <- c('ix', 'condition', 'input_a', 'match_a', 'input_b', 'match_b', 'feedback', 'correct')
-labels = labels %>% select('ix', 'condition', 'input_a', 'match_a', 'input_b', 'match_b', 'feedback')
-save(labels, file='../data/exp_1_coded.Rdata')
+labels = labels %>% 
+  rename(
+    input_a=task.input.a_input, match_a=a_correct, rule_a=a_rule,
+    input_b=task.input.b_input, match_b=b_correct, rule_b=b_rule,
+  ) %>%
+  select(
+    'ix', 'condition', 
+    'input_a', 'match_a', 'match_a', 'rule_a',
+    'input_b', 'match_b', 'match_b', 'rule_b',
+    'local_change', 'feedback')
+save(labels, file='data/exp_1_coded.Rdata')
 
-labels_2 = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
-labels_2 = labels_2  %>%
-  mutate(condition=case_when(condition=='comp_const'~'combine', 
-                             condition=='comp_mult'~'construct', 
-                             condition=='comp_mult_reverse'~'discern')) %>% 
-  select(-prolific_id)
-colnames(labels_2) <- c('ix', 'condition', 'input_a', 'match_a', 'input_b', 'match_b', 'feedback', 'correct')
-labels_2 = labels_2 %>% select('ix', 'condition', 'input_a', 'match_a', 'input_b', 'match_b', 'feedback')
-save(labels, labels_2, file='data/exp_1_coded.Rdata')
+
+# Add coarse rule cat
+labels = labels %>% 
+  mutate(rule_cat_a=case_when(
+    rule_a %in% c('incompatible', 'not_sure') ~ 'uncertain',
+    rule_a %in% c('relative', 'position', 'parity', 'nominal', 'description', 
+                     'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
+    TRUE ~ rule_a
+  )) %>%
+  mutate(rule_cat_b=case_when(
+    rule_b %in% c('incompatible', 'not_sure') ~ 'uncertain',
+    rule_b %in% c('relative', 'position', 'parity', 'nominal', 'description', 
+                       'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
+    TRUE ~ rule_b
+  ))
 
 
 

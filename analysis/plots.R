@@ -4,6 +4,7 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(forcats)
+library(networkD3)
 
 rm(list=ls())
 
@@ -13,119 +14,191 @@ rm(list=ls())
 load('data/exp_1_cleaned.rdata')
 load('data/exp_1_coded.Rdata')
 
-# Plot fine-grained self-report match accuracy
-labels_2 %>%
-  select(ix, condition, match_a, match_b) %>%
-  gather(phase, match, match_a, match_b) %>%
-  mutate(
-    phase=toupper(substr(phase,7,7)),
-    match=case_when(
-      match==1 ~ 'perfect',
-      match==.5 ~ 'half',
-      match==0 ~ 'wrong'
-    )) %>%
-  mutate(match=factor(match, levels=c('perfect', 'half', 'wrong'))) %>%
-  count(condition, phase, match) %>%
-  ggplot(aes(x=phase, y=n, fill=match)) +
-  geom_bar(stat='identity', color='black', position = position_dodge(preserve="single"), width = 0.7) +
-  ylim(0, 60) +
-  # scale_fill_manual(values=c('#999999'))
-  facet_grid(~condition) +
-  theme_bw()
-
 # Plot fine-grained match acc per match type
-labels_2 %>%
-  select(ix, condition, match_a, match_b) %>%
-  gather(phase, match, match_a, match_b) %>%
+labels %>%
+  select(ix, condition, rule_a, rule_b) %>%
+  gather(phase, rule_type, rule_a, rule_b) %>%
   mutate(
-    phase=toupper(substr(phase,7,7)),
-    match=case_when(
-      match==1 ~ 'perfect',
-      match==.5 ~ 'half',
-      match==0 ~ 'wrong'
-    )) %>%
-  mutate(
-    condition=factor(condition, levels=c('construct', 'combine', 'discern')),
-    match=factor(match, levels=c('perfect', 'half', 'wrong'))
+    phase=toupper(substr(phase,6,6)),
+    condition=factor(condition, levels=c('construct', 'combine', 'decon'))
   ) %>%
-  count(condition, phase, match) %>%
-  ggplot(aes(x=phase, y=n, fill=condition)) +
-  geom_bar(stat='identity', color='black', position = position_dodge(preserve="single"), width = 0.7) +
-  ylim(0, 60) +
-  # scale_fill_manual(values=c('#999999'))
-  facet_grid(~match) +
-  theme_bw()
-
-# Plot with fill
-labels_2 %>%
-  select(ix, condition, match_a, match_b) %>%
-  gather(phase, match, match_a, match_b) %>%
-  mutate(
-    phase=toupper(substr(phase,7,7)),
-    match=case_when(
-      match==1 ~ 'perfect',
-      match==.5 ~ 'half',
-      match==0 ~ 'wrong'
-    )) %>%
-  mutate(match=factor(match, levels=c('perfect', 'half', 'wrong'))) %>%
-  count(condition, phase, match) %>%
-  ggplot(aes(x=phase, y=n, fill=match)) +
+  count(condition, phase, rule_type) %>%
+  ggplot(aes(x=phase, y=n, fill=rule_type)) +
+  # geom_bar(stat='identity', color='black', position = position_dodge(preserve="single"), width = 0.7) +
   geom_bar(stat='identity', position='fill') +
   # scale_fill_manual(values=c('#999999'))
   facet_grid(~condition) +
   theme_bw()
 
-
 # Use dot + line plots
-match_acc_count = labels_2 %>%
-  select(ix, condition, match_a, match_b) %>%
-  gather(phase, match, match_a, match_b) %>%
-  mutate(phase=toupper(substr(phase,7,7))) %>%
-  count(condition, phase, match)
-match_acc_group = labels_2 %>%
-  select(ix, condition, match_a, match_b) %>%
-  gather(phase, match, match_a, match_b) %>%
-  mutate(phase=toupper(substr(phase,7,7))) %>%
+rule_count = labels %>%
+  select(ix, condition, rule_a, rule_b) %>%
+  gather(phase, rule_type, rule_a, rule_b) %>%
+  mutate(
+    phase=toupper(substr(phase,6,6)),
+    condition=factor(condition, levels=c('construct', 'combine', 'decon'))
+  ) %>%
+  count(condition, phase, rule_type)
+rule_group = labels %>%
+  select(ix, condition, rule_a, rule_b) %>%
+  gather(phase, rule_type, rule_a, rule_b) %>%
+  mutate(
+    phase=toupper(substr(phase,6,6)),
+    condition=factor(condition, levels=c('construct', 'combine', 'decon'))
+  ) %>%
   count(condition, phase) %>%
   rename(total=n)
-match_acc_full = expand.grid(
-  condition=c('combine','construct','discern'),
+rule_full = expand.grid(
+  condition=c('combine','construct','decon'),
   phase=c('A','B'),
-  match=c(0, 1, .5),
+  rule_type=unique(c(labels$rule_a, labels$rule_b)),
   default=0)
 
-match_acc_data = match_acc_full %>%
-  left_join(match_acc_count, by=c('condition', 'phase', 'match')) %>%
-  left_join(match_acc_group, by=c('condition', 'phase')) %>%
+rule_data = rule_full %>%
+  left_join(rule_count, by=c('condition', 'phase', 'rule_type')) %>%
+  left_join(rule_group, by=c('condition', 'phase')) %>%
+  mutate(n=if_else(is.na(n), 0, as.numeric(n))) %>%
+  mutate(share=n/total) %>%
   mutate(
-    share=n/total,
-    match=case_when(
-      match==1 ~ 'perfect',
-      match==.5 ~ 'half',
-      match==0 ~ '-'
-    )
-  ) %>%
-  mutate(
-    share=if_else(is.na(share), 0, share),
-    condition=factor(condition, levels=c('construct', 'combine', 'discern')),
-    match=factor(match, levels=c('perfect', 'half', '-'))
+    condition=factor(condition, levels=c('construct', 'combine', 'decon')),
+    rule_type=factor(rule_type, levels=c(
+      "ground_truth",
+      "mult",
+      "subtraction",
+      "add_2",
+      "relative",
+      "position",
+      "parity",
+      "nominal",
+      "description", 
+      "increase",
+      "decrease",
+      "mix",
+      "reverse",  
+      "not_sure",
+      "incompatible"
+    ))
   )
 
-ggplot(match_acc_data, aes(x=phase, y=share, group=match)) +
-  geom_line(aes(color=match),linetype="dashed", size=1.2) +
-  geom_point(aes(shape=match, color=match), size=3.5) +
-  labs(x='', y='', title='Self-report accuracy') +
-  scale_color_manual(values=c('#1F78B4', '#A6CEE3', '#A9A9A9')) +
+ggplot(rule_data, aes(x=phase, y=share, group=rule_type)) +
+  geom_line(aes(color=rule_type),linetype="dashed", size=1.2) +
+  geom_point(aes(shape=rule_type, color=rule_type), size=3.5) +
+  labs(x='', y='', title='Self-report rules') +
   theme_bw() +
   facet_wrap(~condition)
 
 # Per condition
-ggplot(match_acc_data, aes(x=phase, y=share, group=condition)) +
+ggplot(rule_data, aes(x=phase, y=share, group=condition)) +
+  geom_line(linetype="dashed") +
+  geom_point() +
+  labs(x='', y='', title='') +
+  scale_y_continuous(breaks=c(0,1)) +
+  theme_bw() +
+  facet_grid(rule_type~condition, switch = "y") +
+  theme(strip.text.y.left = element_text(angle = 0))
+
+
+# Local change
+sum(labels$local_change)/nrow(labels)
+labels %>%
+  select(ix, condition, local_change) %>%
+  group_by(condition) %>%
+  summarise(local_change=sum(local_change), n= n())
+
+# Ground truth stats
+labels %>%
+  group_by(condition) %>%
+  summarise(ground_truth=sum(rule_b=='ground_truth'), n=n()) %>%
+  mutate(ground_truth_perc=round(100*ground_truth/n,2))
+
+res.aov <- aov(rule_b=='ground_truth' ~ condition, data=labels)
+summary(res.aov)
+#eta_square
+4.632/(4.632+24.616)
+
+
+labels$total_match=labels$match_a+labels$match_b
+boxplot(total_match ~ condition, data = labels,
+        xlab = "Treatment", ylab = "match", frame = FALSE)
+
+match.aov <- aov(total_match ~ condition, data=labels)
+summary(match.aov)
+# eta_square
+10.25/(10.25+46.06)
+
+
+# Look at interesting ones
+# Ground truth
+rule_data %>%
+  filter(rule_type=='ground_truth') %>%
+  ggplot(aes(x=phase, y=share, group=condition)) +
   geom_line(aes(color=condition),linetype="dashed", size=1.2) +
   geom_point(aes(shape=condition, color=condition), size=3.5) +
-  labs(x='', y='', title='Self-report accuracy') +
+  labs(x='', y='', title='Self-reported ground truth rates') +
+  theme_bw()
+
+# Merge some rule types
+rule_cat_data = rule_data %>%
+  mutate(rule_type=as.character(rule_type)) %>%
+  mutate(rule_cat=case_when(
+    rule_type %in% c('incompatible', 'not_sure') ~ 'uncertain',
+    rule_type %in% c('relative', 'position', 'parity', 'nominal', 'description', 
+                     'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
+    TRUE ~ rule_type
+  )) %>%
+  select(-rule_type) %>%
+  group_by(condition, phase, rule_cat) %>%
+  summarise(n=sum(n), total=max(total)) %>%
+  mutate(share=n/total) %>%
+  mutate(rule_cat=factor(rule_cat, levels = c(
+    'ground_truth', 'mult', 'subtraction', 'add_2', 'complex', 'uncertain'
+  )))
+  
+
+# A cool one
+rule_cat_data %>%
+  ggplot(aes(x=phase, y=n, fill=rule_cat)) +
+  geom_bar(stat='identity', color='black', position='fill') +
+  # geom_bar(stat='identity', color='black', position = position_dodge(preserve="single"), width = 0.7) +
+  labs(x='', y='', title='Self-reported rules') +
   theme_bw() +
-  facet_wrap(~match)
+  facet_grid(~condition) +
+  scale_fill_brewer('Paired', direction=-1)
+
+
+# Try Sankey diagram
+links_construct=filter(labels, condition=='construct') %>%
+  select(ix, rule_a=rule_cat_a, rule_b=rule_cat_b) %>%
+  count(rule_a, rule_b) %>%
+  mutate(rule_a_match=paste0('A:', rule_a), rule_b_match=paste0('B:', rule_b))
+# Have a look
+unique(c(links_construct$rule_a_match, links_construct$rule_b_match))
+# Order manually
+rules_construct=c(
+  "A:mult", "A:add_2", "A:complex", "A:uncertain",
+  "B:ground_truth", "B:add_2", "B:complex", "B:uncertain"
+)
+# Get nodes
+nodes_construct=data.frame(
+  node=c(0:(length(rules_construct)-1)),
+  match_name=rules_construct
+)
+nodes_construct$name=substr(nodes_construct$match_name, 3, nchar(nodes_construct$match_name))
+# Add node refs back to links
+links_construct = links_construct %>%
+  left_join(select(nodes_construct, rule_a_match=match_name, node), by='rule_a_match') %>%
+  rename(source=node) %>%
+  left_join(select(nodes_construct, rule_b_match=match_name, node), by='rule_b_match') %>%
+  rename(target=node)
+# Draw Sankey plot
+sankeyNetwork(
+  Links=as.data.frame(links_construct), Nodes=nodes_construct,
+  Source='source', Target='target', Value='n', NodeID='name',
+  fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica',
+)
+
+
+
 
 #### End of Experiment 1 data plots #######################
 
