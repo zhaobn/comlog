@@ -50,10 +50,10 @@ document.getElementById('intro-demo-test-btn-1').onclick = () => {
 /** Prep data */
 const taskIds = prepConfigs(cond)
 
-let aliceLearn = fmtConfig(config.filter(c => taskIds['learnA'].indexOf(c.trial_id) > -1), 'alice', 'learn')
+let aliceLearn = fmtConfig(taskIds['learnA'].map(id => config.filter(c => c['trial_id']==id)[0]), 'alice', 'learn')
 let aliceGen = fmtConfig(shuffleArray(config.filter(c => taskIds['genA'].indexOf(c.trial_id) > -1)), 'alice', 'gen')
 
-let bobLearn = fmtConfig(config.filter(c => taskIds['learnB'].indexOf(c.trial_id) > -1), 'bob', 'learn')
+let bobLearn = fmtConfig(taskIds['learnB'].map(id => config.filter(c => c['trial_id']==id)[0]), 'bob', 'learn')
 bobLearn.map(bl => bl.trial = bl.trial + aliceLearn.length)
 let bobGen = fmtConfig(shuffleArray(config.filter(c => taskIds['genB'].indexOf(c.trial_id) > -1)), 'bob', 'gen')
 bobGen.map(bg => bg.trial = bg.trial + aliceGen.length)

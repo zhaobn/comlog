@@ -634,8 +634,8 @@ function prepConfigs(type) {
   }
   return setups
 }
-// Experiment 1
-// function getConfigs(config, type) {
+// // Experiment 1
+// function prepConfigs(type) {
 //   // console.log(config)
 //   let setups = {
 //     'learnA': [],
@@ -644,19 +644,20 @@ function prepConfigs(type) {
 //     'genB': [],
 //     'genC': [],
 //   }
-//   if (type=='simple_easy') {
-//     setups.learnA = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==2 && readLength(c.recipient)<4).map(c => c.trial_id)
-//     setups.genA = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==2 && readLength(c.recipient)==4).map(c => c.trial_id)
-//     setups.learnB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)<4 && readLength(c.recipient)==2).map(c => c.trial_id)
-//     setups.genB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==4 && readLength(c.recipient)==2).map(c => c.trial_id)
-//     setups.genC = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)!=2 && readLength(c.recipient)!=2).map(c => c.trial_id)
-//   } else if (type=='simple_hard') {
-//     setups.learnA = config.filter(c => readDots(c.agent)<1 && readLength(c.result)==4).map(c => c.trial_id)
-//     setups.genA = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==3 && readLength(c.recipient)==2).map(c => c.trial_id)
-//     setups.learnB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==1 && readLength(c.recipient)<4).map(c => c.trial_id)
-//     setups.genB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==1 && readLength(c.recipient)==4).map(c => c.trial_id)
-//     setups.genC = config.filter(c => readDots(c.agent)<1 && [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
-//   } else if (type=='comp_mult') {
+//   // if (type=='simple_easy') {
+//   //   setups.learnA = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==2 && readLength(c.recipient)<4).map(c => c.trial_id)
+//   //   setups.genA = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==2 && readLength(c.recipient)==4).map(c => c.trial_id)
+//   //   setups.learnB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)<4 && readLength(c.recipient)==2).map(c => c.trial_id)
+//   //   setups.genB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==4 && readLength(c.recipient)==2).map(c => c.trial_id)
+//   //   setups.genC = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)!=2 && readLength(c.recipient)!=2).map(c => c.trial_id)
+//   // } else if (type=='simple_hard') {
+//   //   setups.learnA = config.filter(c => readDots(c.agent)<1 && readLength(c.result)==4).map(c => c.trial_id)
+//   //   setups.genA = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==3 && readLength(c.recipient)==2).map(c => c.trial_id)
+//   //   setups.learnB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==1 && readLength(c.recipient)<4).map(c => c.trial_id)
+//   //   setups.genB = config.filter(c => readDots(c.agent)<1 && readStripes(c.agent)==1 && readLength(c.recipient)==4).map(c => c.trial_id)
+//   //   setups.genC = config.filter(c => readDots(c.agent)<1 && [setups.learnA, setups.learnB, setups.genA, setups.genB].flat().indexOf(c.trial_id) < 0).map(c => c.trial_id)
+//   // } else
+//   if (type=='comp_mult') {
 //     setups.learnA = [23, 42, 61]
 //     setups.genA = [100, 71, 78, 55, 47, 83, 9, 3]
 //     setups.learnB = [35, 50, 65]
