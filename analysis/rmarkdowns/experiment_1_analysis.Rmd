@@ -135,7 +135,7 @@ pred_acc = df.tw %>%
   ggplot(aes(x=batch,y=acc,group=condition)) +
   geom_line(aes(color=condition),linetype="dashed", size=1.2) +
   geom_point(aes(color=condition, shape=condition), size=3.5) +
-  labs(x='', y='', title='Prediction accuracy (strict)') +
+  labs(x='', y='', title='Pred. acc. (strict)') +
   ylim(0,0.75) +
   theme_bw()
 
@@ -149,11 +149,25 @@ report_acc = labels %>%
   ggplot(aes(x=phase, y=acc, group=condition)) +
   geom_line(aes(color=condition),linetype="dashed", size=1.2) +
   geom_point(aes(color=condition, shape=condition), size=3.5) +
-  labs(x='', y='', title='Self-report accuracy') +
+  labs(x='', y='', title='Rule acc. (partial)') +
   ylim(0,0.75) +
   theme_bw()
 
-acc_combined = pred_acc + report_acc & theme(legend.position = "bottom")
+report_acc_strict = labels %>%
+  select(ix, condition, match_a, match_b) %>%
+  gather(phase, correct, match_a, match_b) %>%
+  mutate(phase=toupper(substr(phase,7,7))) %>%
+  mutate(correct=if_else(correct<1, 0, 1)) %>%
+  group_by(condition, phase) %>%
+  summarise(acc=sum(correct)/n()) %>%
+  ggplot(aes(x=phase, y=acc, group=condition)) +
+  geom_line(aes(color=condition),linetype="dashed", size=1.2) +
+  geom_point(aes(color=condition, shape=condition), size=3.5) +
+  labs(x='', y='', title='Rule acc. (strict)') +
+  ylim(0,0.75) +
+  theme_bw()
+
+acc_combined = pred_acc + report_acc_strict + report_acc & theme(legend.position = "bottom")
 acc_combined + plot_layout(guides = "collect")
 
 ```

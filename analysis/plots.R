@@ -9,7 +9,7 @@ library(networkD3)
 rm(list=ls())
 
 
-#### Experiment 1 data plots ##############################
+#### Experiment 1 Labeles ##############################
 
 load('data/exp_1_cleaned.rdata')
 load('data/exp_1_coded.Rdata')
@@ -194,13 +194,156 @@ links_construct = links_construct %>%
 sankeyNetwork(
   Links=as.data.frame(links_construct), Nodes=nodes_construct,
   Source='source', Target='target', Value='n', NodeID='name',
-  fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica',
+  fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
+)
+
+# decon
+links_decon=filter(labels, condition=='decon') %>%
+  select(ix, rule_a=rule_cat_a, rule_b=rule_cat_b) %>%
+  count(rule_a, rule_b) %>%
+  mutate(rule_a_match=paste0('A:', rule_a), rule_b_match=paste0('B:', rule_b))
+# Have a look
+unique(c(links_decon$rule_a_match, links_decon$rule_b_match))
+# Order manually
+rules_decon=c(
+  "A:complex", "A:uncertain",
+  "B:mult", "B:add_2", "B:complex", "B:uncertain"
+)
+# Get nodes
+nodes_decon=data.frame(
+  node=c(0:(length(rules_decon)-1)),
+  match_name=rules_decon
+)
+nodes_decon$name=substr(nodes_decon$match_name, 3, nchar(nodes_decon$match_name))
+# Add node refs back to links
+links_decon = links_decon %>%
+  left_join(select(nodes_decon, rule_a_match=match_name, node), by='rule_a_match') %>%
+  rename(source=node) %>%
+  left_join(select(nodes_decon, rule_b_match=match_name, node), by='rule_b_match') %>%
+  rename(target=node)
+# Draw Sankey plot
+sankeyNetwork(
+  Links=as.data.frame(links_decon), Nodes=nodes_decon,
+  Source='source', Target='target', Value='n', NodeID='name',
+  fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
+)
+
+# combine
+links_combine=filter(labels, condition=='combine') %>%
+  select(ix, rule_a=rule_cat_a, rule_b=rule_cat_b) %>%
+  count(rule_a, rule_b) %>%
+  mutate(rule_a_match=paste0('A:', rule_a), rule_b_match=paste0('B:', rule_b))
+# Have a look
+unique(c(links_combine$rule_a_match, links_combine$rule_b_match))
+# Order manually
+rules_combine=c(
+  "A:mult",  "A:add_2", "A:complex", "A:uncertain",
+  "B:ground_truth", "B:subtraction", "B:add_2", "B:complex"
+)
+# Get nodes
+nodes_combine=data.frame(
+  node=c(0:(length(rules_combine)-1)),
+  match_name=rules_combine
+)
+nodes_combine$name=substr(nodes_combine$match_name, 3, nchar(nodes_combine$match_name))
+# Add node refs back to links
+links_combine = links_combine %>%
+  left_join(select(nodes_combine, rule_a_match=match_name, node), by='rule_a_match') %>%
+  rename(source=node) %>%
+  left_join(select(nodes_combine, rule_b_match=match_name, node), by='rule_b_match') %>%
+  rename(target=node)
+# Draw Sankey plot
+sankeyNetwork(
+  Links=as.data.frame(links_combine), Nodes=nodes_combine,
+  Source='source', Target='target', Value='n', NodeID='name',
+  fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
 )
 
 
 
+#### End of Experiment 1 Labels ##############################
 
-#### End of Experiment 1 data plots #######################
+
+#### Experiment 1 raw and model preds #######################
+load('data/exp_1_cleaned.rdata')
+answers = df.tw %>%
+  group_by(trial) %>%
+  summarise(stripe=max(stripe), dot=max(dot), block=max(block)) %>%
+  mutate(gtruth=stripe*block-dot) %>%
+  mutate(prediction=if_else(gtruth<0, 0, gtruth)) %>%
+  mutate(trial=as.factor(as.character(trial)))
+
+answers$batch='A'
+aa = answers
+bb = aa
+bb$batch = 'B'
+answers = rbind(aa, bb)
+
+
+df.tw %>%
+  mutate(trial=as.factor(as.character(trial))) %>%
+  ggplot( aes(y=trial, x=prediction, fill=trial)) +
+  geom_density_ridges(alpha=0.6, stat="binline", bins=13, scale=0.95) +
+  geom_point(data=answers) +
+  scale_x_discrete(limits=c(0,seq(max(df.tw$prediction)))) +
+  scale_y_discrete(limits=rev) +
+  # facet_grid(batch~condition) +
+  facet_grid(condition~batch) +
+  theme_bw() +
+  theme(legend.position = 'none')
+
+
+# Plot all model preds
+model.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
+for (cond in c('construct', 'combine', 'decon')) {
+  for (ph in c('a', 'b')) {
+    preds = read.csv(paste0('data/model_preds/', cond, '_preds_', ph, '.csv'))
+    preds_fmt = preds %>%
+      select(terms, starts_with('prob')) %>%
+      gather(trial, value, starts_with('prob')) %>%
+      mutate(
+        condition=cond,
+        terms=terms,
+        trial=as.numeric(substr(trial, 6, nchar(trial))),
+        batch=toupper(ph)) %>%
+      select(condition, batch, trial, prediction=terms, value)
+    model.preds = rbind(model.preds, preds_fmt)
+  }
+}
+model.preds = model.preds %>% 
+  mutate(
+    trial=as.factor(as.character(trial)),
+    # prediction=prediction+1
+  ) 
+
+
+model.preds %>%
+  ggplot(aes(y=trial, x=prediction, height=value, fill=trial)) +
+  geom_density_ridges(stat="identity", alpha=0.6) +
+  geom_point(data=model.answers) +
+  scale_x_discrete(limits=factor(c(0,seq(9)))) +
+  scale_y_discrete(limits=rev) +
+  theme_bw() +
+  theme(legend.position = 'none') +
+  facet_wrap(batch~condition)
+
+
+# Plot together
+df.tw %>%
+  mutate(trial=as.factor(as.character(trial))) %>%
+  ggplot( aes(y=trial, x=prediction, fill=trial)) +
+  geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
+  geom_point(data=answers) +
+  geom_density_ridges(data=model.preds, aes(height=value), stat="identity", alpha=0.4, scale=0.95) +
+  scale_x_discrete(limits=c(0,seq(max(model.preds$prediction)))) +
+  scale_y_discrete(limits=rev) +
+  facet_grid(batch~condition) +
+  theme_bw() +
+  theme(
+    legend.position = 'none',
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)
+  )
+#### End of Experiment 1 raw and model preds #######################
 
 
 #### Pilot data plots #####################################
@@ -224,11 +367,12 @@ answers = rbind(aa, bb)
 df.tw %>%
   mutate(trial=as.factor(as.character(trial))) %>%
   ggplot( aes(y=trial, x=prediction, fill=trial)) +
-  geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
+  geom_density_ridges(alpha=0.6, stat="binline", bins=13, scale=0.95) +
   geom_point(data=answers) +
   scale_x_discrete(limits=c(0,seq(max(df.tw$prediction)))) +
   scale_y_discrete(limits=rev) +
-  facet_grid(batch~condition) +
+  # facet_grid(batch~condition) +
+  facet_grid(condition~batch) +
   theme_bw() +
   theme(legend.position = 'none')
 

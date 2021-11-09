@@ -56,7 +56,7 @@ trial_data = df.tw %>%
          stripe=as.numeric(substr(agent, 2, 2)),
          dot=as.numeric(substr(agent, 4, 4)),
          block=as.numeric(substr(recipient, 6, 6)),
-         prediction=as.numeric(substr(selection, 6, 6)),
+         prediction=as.numeric(substr(selection, 6, nchar(selection)-1)),
   ) %>%
   select(ix, condition, batch, tid, stripe, dot, block, prediction, correct)
 
