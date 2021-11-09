@@ -564,7 +564,7 @@ function showPostCheckPage (isPass) {
 function showCompletion(code, nCorrect) {
   hide("debrief")
   showNext("completed")
-  let bonusVal = nCorrect * 0.05
+  let bonusVal = nCorrect * 0.02
   bonusVal = Math.round(bonusVal*100)/100
   let t = document.createTextNode(code);
   let co = createText('p', `You got ${nCorrect} predictions correct!
