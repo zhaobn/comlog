@@ -7,6 +7,10 @@ from task_terms import *
 
 # Setting up
 SAVE_DIR = 'samples/'
+TOP_N = 3
+EXCEPTS = 0
+LEARN_ITER = 150
+GEN_ITER = 1000
 
 # Prep data
 all_data = pd.read_json('../for_exp/config.json')
@@ -29,13 +33,15 @@ for item in task_ids:
     transformed['result'] = transform_obj(data['result'].values[0], 0)
     task_data[item].append(transformed)
 
+all_frames = pd.read_csv('../data/task_frames.csv',index_col=0)
+
 # %%
 # Gen predictions A
-a_learned = pd.read_csv(f'{SAVE_DIR}construct_0a_post_samples.csv', index_col=0, na_filter=False)
+a_learned = pd.read_csv(f'{SAVE_DIR}decon_1a_post_samples.csv', index_col=0, na_filter=False)
 a_gen = sim_for_all(task_data['gen'],  Program_lib(a_learned), 1000)
-a_gen.to_csv('construct_preds_a.csv')
+a_gen.to_csv('decon_preds_a.csv')
 
 # Gen predictions B
-b_learned = pd.read_csv(f'{SAVE_DIR}construct_0b_post_samples.csv', index_col=0, na_filter=False)
+b_learned = pd.read_csv(f'{SAVE_DIR}decon_1b_post_samples.csv', index_col=0, na_filter=False)
 b_gen = sim_for_all(task_data['gen'], Program_lib(b_learned), 1000)
-b_gen.to_csv('construct_preds_b.csv')
+b_gen.to_csv('decon_preds_b.csv')
