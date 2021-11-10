@@ -37,8 +37,8 @@ tw<-sapply(sapply(td$trialwise, inv_fromJSON, simplify=F), as.data.frame, simpli
 N<-length(tw)
 M<-22
 
-start_index = 28 # Row until 27 are tests and pilot
-end_index = 192  # Sample size 165
+start_index = 195 # Row until 194 from previous
+end_index = N  
 td_batch = td[start_index:end_index, ]
 
 # Combine them
@@ -51,8 +51,12 @@ for (i in (start_index+1):end_index) {
 # And append them to the id and upis
 df.sw<-data.frame(ix=td_batch$id, id=td_batch$participant)
 df.sw<-cbind(df.sw, df.sw.aux)
-# Remove prolific ID
-df.sw<-df.sw%>%select(-prolific_id) 
-df.tw<-cbind(ix=rep(df.sw$ix, each=M), id=rep(df.sw$id, each=M), df.tw.aux)
+# # Remove prolific ID
+# df.sw<-df.sw%>%select(-prolific_id) 
+# df.tw<-cbind(ix=rep(df.sw$ix, each=M), id=rep(df.sw$id, each=M), df.tw.aux)
 
-save(file='data/exp_1_raw.rdata', df.sw, df.tw)
+save(file='data/exp_2_raw.rdata', df.sw, df.tw)
+
+
+
+

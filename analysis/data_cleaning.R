@@ -10,7 +10,7 @@ load('data/exp_1_raw.rdata')
 # When publishing data, remove the prolific_id column
 to_sheet = df.sw %>% 
   select(ix, condition, task.input.a_input, task.input.b_input, feedback, correct)
-write.csv(to_sheet, file='data/exp_1_responses.csv')
+write.csv(to_sheet, file='data/exp_2_responses.csv')
 
 # Clean up for analysis
 df.sw.raw = df.sw
