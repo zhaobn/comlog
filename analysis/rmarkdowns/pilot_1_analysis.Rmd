@@ -41,20 +41,20 @@ In this experiment we have:
 And three **learning conditions**:
 
 1. `Construct`: First build the `Stripes(A) * Blocks(R)` sub-part, and then re-use it to build the ground truth rule
-  ![](../figs/construct.png)
+  ![](../figs/pilot_1/construct.png)
 
 2. `Discern`: reverse order of the `construct` condition
-  ![](../figs/decon.png)
+  ![](../figs/pilot_1/decon.png)
 
 3. `Combine`: First build the `Stripes(A) * Blocks(R)` sub-part, and then build the `- Dots(A)` sub-part
-  ![](../figs/combine.png)
+  ![](../figs/pilot_1/combine.png)
 
 
 
 **Generalization trials** are picked by a mixture of novelty & EIG re. potential causal rules.
 Their orders were randomized for every participant.
 
-* ![](../figs/pilot_1_gens.png) 
+* ![](../figs/pilot_1/pilot_1_gens.png) 
 
 
 
@@ -330,7 +330,7 @@ From the raw data, we can see that participants in the `combine` and `construct`
 Participants in the `discern` condition, however, showed little difference in generalization predictions between the two phases.
 
 
-![](../figs/pilot_1_raws_labeled.png)
+![](../figs/pilot_1/pilot_1_raws_labeled.png)
 
 # Model predictions
 

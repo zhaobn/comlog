@@ -3,7 +3,7 @@ library(dplyr)
 library(googlesheets4)
 rm(list=ls())
 
-load('data/exp_1_raw.rdata')
+load('data/pilot_1_raw.rdata')
 
 # Output to googlesheet to bonus participants
 # When bonus-ing, select prolific_id column
@@ -31,9 +31,11 @@ df.sw = df.sw.raw %>%
          certainty_b=as.numeric(as.character(certainty_b))) %>%
   mutate(condition=case_when(condition=='comp_const'~'combine', 
                              condition=='comp_mult'~'construct', 
-                             condition=='comp_mult_reverse'~'decon'))
-df.sw[144,'age'] = 33
-df.sw[35,'age'] = 31
+                             condition=='comp_mult_reverse'~'discern'))
+
+# df.sw[3,'age'] = 42 # Pilot 1
+# df.sw[144,'age'] = 33
+# df.sw[35,'age'] = 31
 
 
 #### Transform trial data ####
@@ -56,7 +58,7 @@ trial_data = df.tw %>%
          stripe=as.numeric(substr(agent, 2, 2)),
          dot=as.numeric(substr(agent, 4, 4)),
          block=as.numeric(substr(recipient, 6, 6)),
-         prediction=as.numeric(substr(selection, 6, nchar(selection)-1)),
+         prediction=as.numeric(substr(selection, 6, 6))
   ) %>%
   select(ix, condition, batch, tid, stripe, dot, block, prediction, correct)
 
@@ -72,7 +74,7 @@ trial_data = trial_data %>%
   arrange(ix, condition, batch, trial)
 
 df.tw = trial_data
-save(df.sw, df.tw, file='data/exp_1_cleaned.rdata')
+save(df.sw, df.tw, file='data/pilot_1_cleaned.rdata')
 
 # Label data
 labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
