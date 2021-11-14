@@ -9,6 +9,16 @@ library(networkD3)
 rm(list=ls())
 
 
+# Curious
+ggplot(df.sw, aes(x=age, y=correct)) + geom_point() + facet_grid(~condition)
+
+
+# Debug
+x = labels %>%
+  select(ix, condition, match_a, match_b) %>%
+  gather(phase, correct, match_a, match_b) %>%
+  mutate(phase=toupper(substr(phase,7,7)))
+
 #### Experiment 1 Labeles ##############################
 
 load('data/exp_1_cleaned.rdata')

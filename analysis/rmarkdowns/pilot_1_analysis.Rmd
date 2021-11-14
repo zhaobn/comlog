@@ -66,7 +66,7 @@ The pairs of generalization objects in both phases are the same, but their prese
 All learning examples were remained in the screen once they had appeared.
 Generalization trials appeared sequentially, and once a prediction was made the trial was replaced by the next one.
 
-Try it here: <https://eco.ppls.ed.ac.uk/bn_comp/>
+<!-- Try it here: <https://eco.ppls.ed.ac.uk/bn_comp/> -->
 
 
 # Pilot results

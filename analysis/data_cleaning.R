@@ -3,7 +3,7 @@ library(dplyr)
 library(googlesheets4)
 rm(list=ls())
 
-load('data/pilot_1_raw.rdata')
+load('data/exp_2_raw.rdata')
 
 # Output to googlesheet to bonus participants
 # When bonus-ing, select prolific_id column
@@ -31,9 +31,8 @@ df.sw = df.sw.raw %>%
          certainty_b=as.numeric(as.character(certainty_b))) %>%
   mutate(condition=case_when(condition=='comp_const'~'combine', 
                              condition=='comp_mult'~'construct', 
-                             condition=='comp_mult_reverse'~'discern'))
+                             condition=='comp_mult_reverse'~'decon'))
 
-# df.sw[3,'age'] = 42 # Pilot 1
 # df.sw[144,'age'] = 33
 # df.sw[35,'age'] = 31
 
@@ -58,7 +57,7 @@ trial_data = df.tw %>%
          stripe=as.numeric(substr(agent, 2, 2)),
          dot=as.numeric(substr(agent, 4, 4)),
          block=as.numeric(substr(recipient, 6, 6)),
-         prediction=as.numeric(substr(selection, 6, 6))
+         prediction=as.numeric(substr(selection, 6, nchar(selection)-1))
   ) %>%
   select(ix, condition, batch, tid, stripe, dot, block, prediction, correct)
 
@@ -74,7 +73,7 @@ trial_data = trial_data %>%
   arrange(ix, condition, batch, trial)
 
 df.tw = trial_data
-save(df.sw, df.tw, file='data/pilot_1_cleaned.rdata')
+save(df.sw, df.tw, file='data/exp_2_cleaned.rdata')
 
 # Label data
 labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
@@ -99,7 +98,7 @@ save(labels, file='data/exp_2_coded.Rdata')
 # Add coarse rule cat
 labels = labels %>% 
   mutate(rule_cat_a=case_when(
-    rule_a %in% c('incompatible', 'not_sure') ~ 'uncertain',
+    rule_a %in% c('incompatible', 'not_sure', 'random') ~ 'uncertain',
     rule_a %in% c('relative', 'position', 'parity', 'nominal', 'description', 
                      'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
     TRUE ~ rule_a
@@ -110,6 +109,7 @@ labels = labels %>%
                        'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
     TRUE ~ rule_b
   ))
+save(labels, file='data/exp_2_coded.Rdata')
 
 
 
