@@ -14,16 +14,41 @@ ggplot(df.sw, aes(x=age, y=correct)) + geom_point() + facet_grid(~condition)
 
 
 # Debug
+
 x = labels %>%
   select(ix, condition, match_a, match_b) %>%
   gather(phase, correct, match_a, match_b) %>%
   mutate(phase=toupper(substr(phase,7,7)))
 
+
+answers = df.tw %>%
+  group_by(trial) %>%
+  summarise(stripe=max(stripe), dot=max(dot), block=max(block)) %>%
+  mutate(gtruth=dot*block-stripe) %>%
+  mutate(prediction=if_else(gtruth<0, 0, gtruth)) %>%
+  mutate(trial=as.factor(as.character(trial)))
+
+answers$batch='A'
+aa = answers
+bb = aa
+bb$batch = 'B'
+answers = rbind(aa, bb)
+
+df.tw %>%
+  mutate(trial=as.factor(as.character(trial))) %>%
+  ggplot( aes(y=trial, x=prediction, fill=trial)) +
+  geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
+  geom_point(data=answers) +
+  scale_x_discrete(limits=c(0,seq(max(df.tw$prediction)))) +
+  scale_y_discrete(limits=rev) +
+  facet_grid(batch~condition) +
+  theme_bw() +
+  theme(legend.position = 'none')
+
+
 #### Experiment 2 Labeles ##############################
 load('data/exp_2_coded.Rdata')
 
-
-#### End of Experiment 2 Labeles #######################
 # Try Sankey diagram
 links_construct=filter(labels, condition=='construct') %>%
   select(ix, rule_a=rule_cat_a, rule_b=rule_cat_b) %>%
@@ -117,6 +142,7 @@ sankeyNetwork(
   fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
 )
 
+#### End of Experiment 2 Labeles #######################
 
 
 #### Experiment 1 Labeles ##############################

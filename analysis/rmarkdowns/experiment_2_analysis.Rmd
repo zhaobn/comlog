@@ -233,59 +233,59 @@ combined + plot_layout(guides = "collect")
 ![](../figs/exp_2/label_changes.png)
 
 
-<!-- # Model preds -->
+# Model preds
 
 
-<!-- ```{r preds, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=6} -->
+```{r preds, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
 
-<!-- answers = df.tw %>% -->
-<!--   group_by(trial) %>% -->
-<!--   summarise(stripe=max(stripe), dot=max(dot), block=max(block)) %>% -->
-<!--   mutate(gtruth=stripe*block-dot) %>% -->
-<!--   mutate(prediction=if_else(gtruth<0, 0, gtruth)) %>% -->
-<!--   mutate(trial=as.factor(as.character(trial))) -->
+answers = df.tw %>%
+  group_by(trial) %>%
+  summarise(stripe=max(stripe), dot=max(dot), block=max(block)) %>%
+  mutate(gtruth=dot*block-stripe) %>%
+  mutate(prediction=if_else(gtruth<0, 0, gtruth)) %>%
+  mutate(trial=as.factor(as.character(trial)))
 
-<!-- answers$batch='A' -->
-<!-- aa = answers -->
-<!-- bb = aa -->
-<!-- bb$batch = 'B' -->
-<!-- answers = rbind(aa, bb) -->
-
-
-
-<!-- model.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0)) -->
-<!-- for (cond in c('construct', 'combine', 'decon')) { -->
-<!--   for (ph in c('a', 'b')) { -->
-<!--     preds = read.csv(paste0('../data/model_preds/exp_1/', cond, '_preds_', ph, '.csv')) -->
-<!--     preds_fmt = preds %>% -->
-<!--       select(terms, starts_with('prob')) %>% -->
-<!--       gather(trial, value, starts_with('prob')) %>% -->
-<!--       mutate( -->
-<!--         condition=cond, -->
-<!--         terms=terms, -->
-<!--         trial=as.numeric(substr(trial, 6, nchar(trial))), -->
-<!--         batch=toupper(ph)) %>% -->
-<!--       select(condition, batch, trial, prediction=terms, value) -->
-<!--     model.preds = rbind(model.preds, preds_fmt) -->
-<!--   } -->
-<!-- } -->
-<!-- model.preds = model.preds %>% mutate(trial=as.factor(as.character(trial)))  -->
+answers$batch='A'
+aa = answers
+bb = aa
+bb$batch = 'B'
+answers = rbind(aa, bb)
 
 
 
-<!-- df.tw %>% -->
-<!--   mutate(trial=as.factor(as.character(trial))) %>% -->
-<!--   ggplot( aes(y=trial, x=prediction, fill=trial)) + -->
-<!--   geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) + -->
-<!--   geom_point(data=answers) + -->
-<!--   geom_density_ridges(data=model.preds, aes(height=value), stat="identity", alpha=0.4, scale=0.95) + -->
-<!--   scale_x_discrete(limits=c(0,seq(max(df.tw$prediction)))) + -->
-<!--   scale_y_discrete(limits=rev) + -->
-<!--   facet_grid(batch~condition) + -->
-<!--   theme_bw() + -->
-<!--   theme(legend.position = 'none') -->
+model.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
+for (cond in c('construct', 'combine', 'decon')) {
+  for (ph in c('a', 'b')) {
+    preds = read.csv(paste0('../data/model_preds/exp_2/', cond, '_preds_', ph, '.csv'))
+    preds_fmt = preds %>%
+      select(terms, starts_with('prob')) %>%
+      gather(trial, value, starts_with('prob')) %>%
+      mutate(
+        condition=cond,
+        terms=terms,
+        trial=as.numeric(substr(trial, 6, nchar(trial))),
+        batch=toupper(ph)) %>%
+      select(condition, batch, trial, prediction=terms, value)
+    model.preds = rbind(model.preds, preds_fmt)
+  }
+}
+model.preds = model.preds %>% mutate(trial=as.factor(as.character(trial)))
 
-<!-- ``` -->
+
+
+df.tw %>%
+  mutate(trial=as.factor(as.character(trial))) %>%
+  ggplot( aes(y=trial, x=prediction, fill=trial)) +
+  geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
+  geom_point(data=answers) +
+  geom_density_ridges(data=model.preds, aes(height=value), stat="identity", alpha=0.4, scale=0.95) +
+  scale_x_discrete(limits=c(0,seq(max(df.tw$prediction)))) +
+  scale_y_discrete(limits=rev) +
+  facet_grid(batch~condition) +
+  theme_bw() +
+  theme(legend.position = 'none')
+
+```
 
 
 
