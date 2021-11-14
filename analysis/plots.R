@@ -19,6 +19,106 @@ x = labels %>%
   gather(phase, correct, match_a, match_b) %>%
   mutate(phase=toupper(substr(phase,7,7)))
 
+#### Experiment 2 Labeles ##############################
+load('data/exp_2_coded.Rdata')
+
+
+#### End of Experiment 2 Labeles #######################
+# Try Sankey diagram
+links_construct=filter(labels, condition=='construct') %>%
+  select(ix, rule_a=rule_cat_a, rule_b=rule_cat_b) %>%
+  count(rule_a, rule_b) %>%
+  mutate(rule_a_match=paste0('A:', rule_a), rule_b_match=paste0('B:', rule_b))
+# Have a look
+unique(c(links_construct$rule_a_match, links_construct$rule_b_match))
+# Order manually
+rules_construct=c(
+  "A:mult", "A:add_2", "A:complex", "A:uncertain",
+  "B:ground_truth", "B:add_2", "B:complex", "B:uncertain", "B:subtraction"
+)
+# Get nodes
+nodes_construct=data.frame(
+  node=c(0:(length(rules_construct)-1)),
+  match_name=rules_construct
+)
+nodes_construct$name=substr(nodes_construct$match_name, 3, nchar(nodes_construct$match_name))
+# Add node refs back to links
+links_construct = links_construct %>%
+  left_join(select(nodes_construct, rule_a_match=match_name, node), by='rule_a_match') %>%
+  rename(source=node) %>%
+  left_join(select(nodes_construct, rule_b_match=match_name, node), by='rule_b_match') %>%
+  rename(target=node)
+# Draw Sankey plot
+sankeyNetwork(
+  Links=as.data.frame(links_construct), Nodes=nodes_construct,
+  Source='source', Target='target', Value='n', NodeID='name',
+  fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
+)
+
+# decon
+links_decon=filter(labels, condition=='decon') %>%
+  select(ix, rule_a=rule_cat_a, rule_b=rule_cat_b) %>%
+  count(rule_a, rule_b) %>%
+  mutate(rule_a_match=paste0('A:', rule_a), rule_b_match=paste0('B:', rule_b))
+# Have a look
+unique(c(links_decon$rule_a_match, links_decon$rule_b_match))
+# Order manually
+rules_decon=c(
+  "A:add_2", "A:complex", "A:uncertain",
+  "B:mult", "B:add_2", "B:complex", "B:uncertain", "B:ground_truth"
+)
+# Get nodes
+nodes_decon=data.frame(
+  node=c(0:(length(rules_decon)-1)),
+  match_name=rules_decon
+)
+nodes_decon$name=substr(nodes_decon$match_name, 3, nchar(nodes_decon$match_name))
+# Add node refs back to links
+links_decon = links_decon %>%
+  left_join(select(nodes_decon, rule_a_match=match_name, node), by='rule_a_match') %>%
+  rename(source=node) %>%
+  left_join(select(nodes_decon, rule_b_match=match_name, node), by='rule_b_match') %>%
+  rename(target=node)
+# Draw Sankey plot
+sankeyNetwork(
+  Links=as.data.frame(links_decon), Nodes=nodes_decon,
+  Source='source', Target='target', Value='n', NodeID='name',
+  fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
+)
+
+# combine
+links_combine=filter(labels, condition=='combine') %>%
+  select(ix, rule_a=rule_cat_a, rule_b=rule_cat_b) %>%
+  count(rule_a, rule_b) %>%
+  mutate(rule_a_match=paste0('A:', rule_a), rule_b_match=paste0('B:', rule_b))
+# Have a look
+unique(c(links_combine$rule_a_match, links_combine$rule_b_match))
+# Order manually
+rules_combine=c(
+  "A:mult",  "A:add_2", "A:complex", "A:uncertain",
+  "B:ground_truth", "B:subtraction", "B:add_2", "B:complex"
+)
+# Get nodes
+nodes_combine=data.frame(
+  node=c(0:(length(rules_combine)-1)),
+  match_name=rules_combine
+)
+nodes_combine$name=substr(nodes_combine$match_name, 3, nchar(nodes_combine$match_name))
+# Add node refs back to links
+links_combine = links_combine %>%
+  left_join(select(nodes_combine, rule_a_match=match_name, node), by='rule_a_match') %>%
+  rename(source=node) %>%
+  left_join(select(nodes_combine, rule_b_match=match_name, node), by='rule_b_match') %>%
+  rename(target=node)
+# Draw Sankey plot
+sankeyNetwork(
+  Links=as.data.frame(links_combine), Nodes=nodes_combine,
+  Source='source', Target='target', Value='n', NodeID='name',
+  fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
+)
+
+
+
 #### Experiment 1 Labeles ##############################
 
 load('data/exp_1_cleaned.rdata')

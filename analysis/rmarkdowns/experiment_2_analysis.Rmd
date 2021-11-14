@@ -228,9 +228,9 @@ combined + plot_layout(guides = "collect")
 ```  
   
 
-<!-- ## Labels -->
+## Labels
 
-<!-- ![](../figs/exp_1/label_changes.png) -->
+![](../figs/exp_2/label_changes.png)
 
 
 <!-- # Model preds -->
