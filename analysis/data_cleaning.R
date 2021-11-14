@@ -80,7 +80,7 @@ labels = labels  %>%
   mutate(condition=case_when(condition=='comp_const'~'combine', 
                              condition=='comp_mult'~'construct', 
                              condition=='comp_mult_reverse'~'decon'))
-labels = labels %>% select(-prolific_id)
+labels = labels %>% select(-bonus)
 labels = labels %>% 
   rename(
     input_a=task.input.a_input, match_a=a_correct, rule_a=a_rule,
@@ -91,7 +91,7 @@ labels = labels %>%
     'input_a', 'match_a', 'match_a', 'rule_a',
     'input_b', 'match_b', 'match_b', 'rule_b',
     'local_change', 'feedback')
-save(labels, file='data/exp_1_coded.Rdata')
+save(labels, file='data/exp_2_coded.Rdata')
 
 
 # Add coarse rule cat
@@ -103,7 +103,7 @@ labels = labels %>%
     TRUE ~ rule_a
   )) %>%
   mutate(rule_cat_b=case_when(
-    rule_b %in% c('incompatible', 'not_sure') ~ 'uncertain',
+    rule_b %in% c('incompatible', 'not_sure', 'random') ~ 'uncertain',
     rule_b %in% c('relative', 'position', 'parity', 'nominal', 'description', 
                        'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
     TRUE ~ rule_b

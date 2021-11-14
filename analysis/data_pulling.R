@@ -58,5 +58,3 @@ df.sw<-cbind(df.sw, df.sw.aux)
 save(file='data/exp_2_raw.rdata', df.sw, df.tw)
 
 
-
-
