@@ -21,8 +21,8 @@ library(ggridges)
 ```
 
 ```{r data, include=FALSE}
-load('../data/exp_2_cleaned.rdata')
-load('../data/exp_2_coded.Rdata')
+load('../../data/exp_2_cleaned.rdata')
+load('../../data/exp_2_coded.Rdata')
 ```
 
 # Experiment
@@ -256,7 +256,7 @@ answers = rbind(aa, bb)
 model.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
 for (cond in c('construct', 'combine', 'decon')) {
   for (ph in c('a', 'b')) {
-    preds = read.csv(paste0('../data/model_preds/exp_2/', cond, '_preds_', ph, '.csv'))
+    preds = read.csv(paste0('../../data/model_preds/exp_2/', cond, '_preds_', ph, '.csv'))
     preds_fmt = preds %>%
       select(terms, starts_with('prob')) %>%
       gather(trial, value, starts_with('prob')) %>%

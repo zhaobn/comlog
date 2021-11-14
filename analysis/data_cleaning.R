@@ -3,14 +3,14 @@ library(dplyr)
 library(googlesheets4)
 rm(list=ls())
 
-load('data/exp_2_raw.rdata')
+load('../data/raw/exp_2_raw.rdata')
 
 # Output to googlesheet to bonus participants
 # When bonus-ing, select prolific_id column
 # When publishing data, remove the prolific_id column
 to_sheet = df.sw %>% 
   select(ix, condition, task.input.a_input, task.input.b_input, feedback, correct)
-write.csv(to_sheet, file='data/exp_2_responses.csv')
+write.csv(to_sheet, file='../data/responses/exp_2_responses.csv')
 
 # Clean up for analysis
 df.sw.raw = df.sw
@@ -73,7 +73,7 @@ trial_data = trial_data %>%
   arrange(ix, condition, batch, trial)
 
 df.tw = trial_data
-save(df.sw, df.tw, file='data/exp_2_cleaned.rdata')
+save(df.sw, df.tw, file='../data/exp_2_cleaned.rdata')
 
 # Label data
 labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
@@ -92,7 +92,7 @@ labels = labels %>%
     'input_a', 'match_a', 'match_a', 'rule_a',
     'input_b', 'match_b', 'match_b', 'rule_b',
     'local_change', 'feedback')
-save(labels, file='data/exp_2_coded.Rdata')
+save(labels, file='../data/exp_2_coded.Rdata')
 
 
 # Add coarse rule cat
@@ -109,7 +109,11 @@ labels = labels %>%
                        'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
     TRUE ~ rule_b
   ))
-save(labels, file='data/exp_2_coded.Rdata')
+save(labels, file='../data/exp_2_coded.Rdata')
+
+
+
+
 
 
 

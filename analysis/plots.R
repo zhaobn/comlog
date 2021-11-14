@@ -47,7 +47,7 @@ df.tw %>%
 
 
 #### Experiment 2 Labeles ##############################
-load('data/exp_2_coded.Rdata')
+load('../data/exp_2_coded.Rdata')
 
 # Try Sankey diagram
 links_construct=filter(labels, condition=='construct') %>%
@@ -147,8 +147,8 @@ sankeyNetwork(
 
 #### Experiment 1 Labeles ##############################
 
-load('data/exp_1_cleaned.rdata')
-load('data/exp_1_coded.Rdata')
+load('../data/exp_1_cleaned.rdata')
+load('../data/exp_1_coded.Rdata')
 
 # Plot fine-grained match acc per match type
 labels %>%
@@ -401,7 +401,7 @@ sankeyNetwork(
 
 
 #### Experiment 1 raw and model preds #######################
-load('data/exp_1_cleaned.rdata')
+load('../data/exp_1_cleaned.rdata')
 answers = df.tw %>%
   group_by(trial) %>%
   summarise(stripe=max(stripe), dot=max(dot), block=max(block)) %>%
@@ -433,7 +433,7 @@ df.tw %>%
 model.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
 for (cond in c('construct', 'combine', 'decon')) {
   for (ph in c('a', 'b')) {
-    preds = read.csv(paste0('data/model_preds/', cond, '_preds_', ph, '.csv'))
+    preds = read.csv(paste0('../data/model_preds/exp_1/', cond, '_preds_', ph, '.csv'))
     preds_fmt = preds %>%
       select(terms, starts_with('prob')) %>%
       gather(trial, value, starts_with('prob')) %>%
@@ -483,7 +483,7 @@ df.tw %>%
 
 
 #### Pilot data plots #####################################
-load('data/pilot_1_cleaned.rdata')
+load('../data/pilot_1_cleaned.rdata')
 
 # Plot raws
 answers = df.tw %>%
@@ -517,7 +517,7 @@ df.tw %>%
 model.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
 for (cond in c('construct', 'combine', 'discern')) {
   for (ph in c('a', 'b')) {
-    preds = read.csv(paste0('preds/', cond, '_preds_', ph, '.csv'))
+    preds = read.csv(paste0('../data/model_preds/pilot_1/', cond, '_preds_', ph, '.csv'))
     preds_fmt = preds %>%
       select(terms, starts_with('prob')) %>%
       gather(trial, value, starts_with('prob')) %>%

@@ -55,6 +55,6 @@ df.sw<-cbind(df.sw, df.sw.aux)
 # df.sw<-df.sw%>%select(-prolific_id) 
 # df.tw<-cbind(ix=rep(df.sw$ix, each=M), id=rep(df.sw$id, each=M), df.tw.aux)
 
-save(file='data/exp_2_raw.rdata', df.sw, df.tw)
+save(file='../data/raw/exp_2_raw.rdata', df.sw, df.tw)
 
 
