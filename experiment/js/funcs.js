@@ -602,7 +602,39 @@ function download(content, fileName, contentType) {
   a.click();
 }
 /** Data functions */
-// Experiment 2
+// // Experiment 2
+// function prepConfigs(type) {
+//   let setups = {
+//     'learnA': [],
+//     'genA': [],
+//     'learnB': [],
+//     'genB': [],
+//     'genC': [],
+//   }
+//   if (type=='comp_mult') {
+//     setups.learnA = [7, 10, 13]
+//     setups.genA = [100, 55, 94, 71, 31, 19, 41, 3]
+//     setups.learnB = [67, 50, 33]
+//     setups.genB = [100, 55, 94, 71, 31, 19, 41, 3]
+//     setups.genC = [100, 55, 94, 71, 31, 19, 41, 3]
+//   } else if (type=='comp_mult_reverse') {
+//     setups.learnA = [67, 50, 33]
+//     setups.genA = [100, 55, 94, 71, 31, 19, 41, 3]
+//     setups.learnB = [7, 10, 13]
+//     setups.genB = [100, 55, 94, 71, 31, 19, 41, 3]
+//     setups.genC = [100, 55, 94, 71, 31, 19, 41, 3]
+//   } else if (type=='comp_const') {
+//     setups.learnA = [7, 10, 13]
+//     setups.genA = [100, 55, 94, 71, 31, 19, 41, 3]
+//     setups.learnB = [27, 47, 67]
+//     setups.genB = [100, 55, 94, 71, 31, 19, 41, 3]
+//     setups.genC = [100, 55, 94, 71, 31, 19, 41, 3]
+//   } else {
+//     console.log('Cond type not found')
+//   }
+//   return setups
+// }
+// Experiment 3 ideas
 function prepConfigs(type) {
   let setups = {
     'learnA': [],
@@ -612,9 +644,9 @@ function prepConfigs(type) {
     'genC': [],
   }
   if (type=='comp_mult') {
-    setups.learnA = [7, 10, 13]
+    setups.learnA = [35, 31, 27]
     setups.genA = [100, 55, 94, 71, 31, 19, 41, 3]
-    setups.learnB = [67, 50, 33]
+    setups.learnB = [35, 51, 67]
     setups.genB = [100, 55, 94, 71, 31, 19, 41, 3]
     setups.genC = [100, 55, 94, 71, 31, 19, 41, 3]
   } else if (type=='comp_mult_reverse') {
@@ -624,9 +656,9 @@ function prepConfigs(type) {
     setups.genB = [100, 55, 94, 71, 31, 19, 41, 3]
     setups.genC = [100, 55, 94, 71, 31, 19, 41, 3]
   } else if (type=='comp_const') {
-    setups.learnA = [7, 10, 13]
+    setups.learnA = [35, 31, 27]
     setups.genA = [100, 55, 94, 71, 31, 19, 41, 3]
-    setups.learnB = [27, 47, 67]
+    setups.learnB = [23, 43, 63]
     setups.genB = [100, 55, 94, 71, 31, 19, 41, 3]
     setups.genC = [100, 55, 94, 71, 31, 19, 41, 3]
   } else {

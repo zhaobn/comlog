@@ -1,7 +1,7 @@
 
 /** Prep data */
 const mode = ''
-const cond = 'comp_mult_reverse'
+const cond = 'comp_mult'
 const taskIds = prepConfigs(cond)
 
 

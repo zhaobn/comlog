@@ -2,7 +2,7 @@
 # %%
 import pandas as pd
 
-# %%
+# %% Experiment 1
 stripes = [0,1,2,3,4]
 dots = [0,1,2,3,4]
 init_len = [1,2,3,4]
@@ -12,7 +12,6 @@ all_recipients = []
 
 trials = []
 
-# %% Experiment 1
 for s in stripes:
   for d in dots:
     agent = (s,d,1)
@@ -180,30 +179,30 @@ trials_df.reset_index().to_json('config_3.json', orient='records')
 trials_df = pd.read_json('config_3.json')
 
 learn_sub = pd.DataFrame({
-  'agent': ["(0, 3, 1)", "(0, 2, 1)", "(0, 1, 1)"],
+  'agent': ["(1, 3, 1)", "(1, 2, 1)", "(1, 1, 1)"],
   'recipient': ["(0, 0, 3)", "(0, 0, 3)", "(0, 0, 3)"],
-  'result': ["(0, 0, 0)", "(0, 0, 4)", "(0, 0, 3)"],
-})
-learn_mult = pd.DataFrame({
-  'agent': ["(1, 3, 1)", "(2, 2, 1)", "(3, 1, 1)"],
-  'recipient': ["(0, 0, 3)", "(0, 0, 2)", "(0, 0, 1)"],
-  'result': ["(0, 0, 0)", "(0, 0, 2)", "(0, 0, 2)"],
+  'result': ["(0, 0, 0)", "(0, 0, 1)", "(0, 0, 2)"],
 })
 learn_both = pd.DataFrame({
-  'agent': ["(1, 1, 1)", "(1, 2, 1)", "(1, 3, 1)"],
+  'agent': ["(1, 3, 1)", "(2, 2, 1)", "(3, 1, 1)"],
   'recipient': ["(0, 0, 3)", "(0, 0, 3)", "(0, 0, 3)"],
-  'result': ["(0, 0, 2)", "(0, 0, 1)", "(0, 0, 0)"],
+  'result': ["(0, 0, 0)", "(0, 0, 2)", "(0, 0, 6)"],
+})
+learn_mult = pd.DataFrame({
+  'agent': ["(1, 0, 1)", "(2, 0, 1)", "(3, 0, 1)"],
+  'recipient': ["(0, 0, 3)", "(0, 0, 3)", "(0, 0, 3)"],
+  'result': ["(0, 0, 3)", "(0, 0, 6)", "(0, 0, 9)"],
 })
 gen = pd.read_csv('../trials/data/final_trials.csv', index_col=0).rename(columns={'agent': 'agent_stone','recipient': 'recipient_stone'})
 gen['agent'] = gen.apply(lambda row: translate_name(row['agent_stone']), axis=1)
 gen['recipient'] = gen.apply(lambda row: translate_name(row['recipient_stone']), axis=1)
 gen_trials = pd.merge(gen, trials_df, how='left', on=['agent', 'recipient']).dropna()
 
-learn_a_ids = list(pd.merge(learn_a, trials_df, how='left', on=['agent', 'recipient', 'result'])['trial_id'])
-# [23, 42, 61]
-learn_b_ids = list(pd.merge(learn_b, trials_df, how='left', on=['agent', 'recipient', 'result'])['trial_id'])
-# [35, 50, 65]
-learn_c_ids = list(pd.merge(learn_c, trials_df, how='left', on=['agent', 'recipient', 'result'])['trial_id'])
-# [27, 31, 35]
+learn_sub_ids = list(pd.merge(learn_sub, trials_df, how='left', on=['agent', 'recipient', 'result'])['trial_id'])
+# [35, 31, 27]
+learn_mult_ids = list(pd.merge(learn_mult, trials_df, how='left', on=['agent', 'recipient', 'result'])['trial_id'])
+# [23, 43, 63]
+learn_both_ids = list(pd.merge(learn_both, trials_df, how='left', on=['agent', 'recipient', 'result'])['trial_id'])
+# [35, 51, 67]
 gen_ids = [int(x) for x in list(gen_trials['trial_id'])]
 # [100, 71, 78, 55, 47, 83, 9, 3]
