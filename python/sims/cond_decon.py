@@ -43,7 +43,7 @@ g1.run(top_n=TOP_N, save_prefix=f'samples/{COND}a_', save_intermediate=False)
 # Gen predictions A
 a_learned = pd.read_csv(f'samples/{COND}a_post_samples.csv', index_col=0, na_filter=False)
 a_gen = sim_for_all(task_data['gen'],  Program_lib(a_learned), 1000)
-a_gen.to_csv('preds/{COND}_preds_a.csv')
+a_gen.to_csv(f'preds/{COND}_preds_a.csv')
 
 # Learning phase B
 pl2 = Program_lib(pd.read_csv(f'samples/{COND}a_post_samples.csv', index_col=0, na_filter=False))
@@ -55,7 +55,7 @@ g2.run(top_n=TOP_N, save_prefix=f'samples/{COND}b_', save_intermediate=False)
 # Gen predictions B
 b_learned = pd.read_csv(f'samples/{COND}b_post_samples.csv', index_col=0, na_filter=False)
 b_gen = sim_for_all(task_data['gen'],  Program_lib(b_learned), 1000)
-b_gen.to_csv('preds/{COND}_preds_b.csv')
+b_gen.to_csv(f'preds/{COND}_preds_b.csv')
 
 
 # %%
