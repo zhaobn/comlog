@@ -571,7 +571,7 @@ function showCompletion(code, nCorrect) {
   You will get £${bonusVal} bonus on top of your base pay.
   Bonus for writing the correct causal relationships will be paid after manual checks.`)
   let returnLink = createCustomElement('p', '', '')
-  returnLink.innerHTML = `Click <a href=‘https://app.prolific.co/submissions/complete?cc=${code}>here</a> to redirect to Prolific.`
+  returnLink.innerHTML = `Click <a href='https://app.prolific.co/submissions/complete?cc=${code}'>here</a> to redirect to Prolific.`
   document.getElementById('completion-code').append(t);
   document.getElementById('completed').append(co);
   document.getElementById('completed').append(returnLink);
@@ -721,6 +721,7 @@ function fmtConfig(dataArr, batch, phase, agentColor = 'tomato') {
     dd['agent'] = data['agent'].replace(/\s/g, '');
     dd['recipient'] = data['recipient'].replace(/\s/g, '');
     dd['result'] = data['result'].replace(/\s/g, '');
+    dd['alter'] = data['alter'].replace(/\s/g, '');
     dd['color'] = agentColor
     dd['agentSvg'] = getAgentStoneSvg(dd['agent'], agentColor)
     fmtted.push(dd)
@@ -737,8 +738,10 @@ function prepTrialData (configsArr) {
     "agent-color": [],
     "recipient": [],
     "result": [],
+    "alter": [],
     "selection": [],
     "correct": [],
+    "gtCorrect": [],
   }
   configsArr.forEach(conf => {
     trialData['batch'].push(conf['batch']);
@@ -749,8 +752,10 @@ function prepTrialData (configsArr) {
     trialData['agent-color'].push(conf['color']);
     trialData['recipient'].push(conf['recipient']);
     trialData['result'].push(conf['result']);
+    trialData['alter'].push(conf['alter']);
     trialData['selection'].push('--');
     trialData['correct'].push(0);
+    trialData['gtCorrect'].push(0);
   })
   return trialData
 }
@@ -792,7 +797,7 @@ function createLearnTask(learnDivPrefix, learnConfig, total=0, isMainTask = true
 }
 function createInputForm(formPrefix, isSecond=false) {
   let box = createCustomElement("div", "box", `${formPrefix}-box`);
-  let emphaseText = isSecond? 'Please account for <b>all the magic eggs you have checked</b>, and ': 'Please ';
+  let emphaseText = isSecond? 'Please account for <b>all</b> the magic eggs you have checked, and ': 'Please ';
   box.innerHTML = `
           <div class="display-box" id="${formPrefix}-display-box">
             <form class="input-form" id="${formPrefix}-input-form">
@@ -803,7 +808,7 @@ function createInputForm(formPrefix, isSecond=false) {
                 <br />
               </p>
               <textarea name="${formPrefix}_input" id="${formPrefix}_input" placeholder="Type here"></textarea>
-              <!-- <p class="incentive">Remember there is a $0.50 bonus if you guess correctly, and nonsense answers will result in a zero bonus or hit rejection.</p> -->
+              <!-- <p class="incentive">Remember there is a bonus if you guess correctly, and nonsense answers will result in a zero bonus or hit rejection.</p> -->
               <p>How certain are you?
                 <select name="${formPrefix}_certainty" id="${formPrefix}_certainty" class="input-rule">
                   <option value="--" SELECTED>
@@ -847,7 +852,7 @@ function createMindChangeForm(formPrefix) {
                 <br />
               </p>
               <textarea name="${formPrefix}_input" id="${formPrefix}_input" placeholder="Type here"></textarea>
-              <!-- <p class="incentive">Remember there is a $0.50 bonus if you guess correctly, and nonsense answers will result in a zero bonus or hit rejection.</p> -->
+              <!-- <p class="incentive">Remember there is a bonus if you guess correctly, and nonsense answers will result in a zero bonus or hit rejection.</p> -->
               <p>How certain are you?
                 <select name="${formPrefix}_certainty" id="${formPrefix}_certainty" class="input-rule">
                   <option value="--" SELECTED>

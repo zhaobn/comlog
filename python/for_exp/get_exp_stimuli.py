@@ -208,7 +208,6 @@ gen_ids = [int(x) for x in list(gen_trials['trial_id'])]
 # [100, 71, 78, 55, 47, 83, 9, 3]
 
 # %% Pilot 2
-# %% Experiment 1
 stripes = [0,1,2,3,4]
 dots = [0,1,2,3,4]
 init_len = [1,2,3,4]
@@ -231,11 +230,14 @@ for a in all_agents:
   for r in all_recipients:
     rp_len = a[0] * (r[2] - a[1])
     rp_len = 0 if rp_len < 0 else rp_len
-    # rp_len = 16 if rp_len > 16 else rp_len
+    # alternative
+    rp_alt = a[0] * r[2] - a[1]
+    rp_alt = 0 if rp_alt < 0 else rp_alt
     trials.append({
       'agent': str(a),
       'recipient': str(r),
-      'result': str((0,0,rp_len))
+      'result': str((0,0,rp_len)),
+      'alter': str((0,0,rp_alt))
     })
 
 trials_df = pd.DataFrame.from_dict(trials)
