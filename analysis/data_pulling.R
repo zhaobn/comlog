@@ -1,3 +1,4 @@
+
 library(RPostgreSQL)
 library(rjson)
 library(dplyr)
@@ -37,7 +38,7 @@ tw<-sapply(sapply(td$trialwise, inv_fromJSON, simplify=F), as.data.frame, simpli
 N<-length(tw)
 M<-22
 
-start_index = 195 # Row until 194 from previous
+start_index = 360 # Row until 360 from previous
 end_index = N  
 td_batch = td[start_index:end_index, ]
 
