@@ -634,35 +634,14 @@ function download(content, fileName, contentType) {
 //   }
 //   return setups
 // }
-// Experiment 3 ideas
+// Pilot 2
 function prepConfigs(type) {
-  let setups = {
-    'learnA': [],
-    'genA': [],
-    'learnB': [],
-    'genB': [],
-    'genC': [],
-  }
-  if (type=='comp_mult') {
-    setups.learnA = [35, 31, 27]
-    setups.genA = [100, 55, 94, 71, 31, 19, 41, 3]
-    setups.learnB = [35, 51, 67]
-    setups.genB = [100, 55, 94, 71, 31, 19, 41, 3]
-    setups.genC = [100, 55, 94, 71, 31, 19, 41, 3]
-  } else if (type=='comp_mult_reverse') {
-    setups.learnA = [67, 50, 33]
-    setups.genA = [100, 55, 94, 71, 31, 19, 41, 3]
-    setups.learnB = [7, 10, 13]
-    setups.genB = [100, 55, 94, 71, 31, 19, 41, 3]
-    setups.genC = [100, 55, 94, 71, 31, 19, 41, 3]
-  } else if (type=='comp_const') {
-    setups.learnA = [35, 31, 27]
-    setups.genA = [100, 55, 94, 71, 31, 19, 41, 3]
-    setups.learnB = [23, 43, 63]
-    setups.genB = [100, 55, 94, 71, 31, 19, 41, 3]
-    setups.genC = [100, 55, 94, 71, 31, 19, 41, 3]
-  } else {
-    console.log('Cond type not found')
+  setups = {
+    'learnA': [27, 31, 35],
+    'genA': [3, 9, 47, 56, 66, 71, 83, 100],
+    'learnB': [23, 42, 61],
+    'genB': [3, 9, 47, 56, 66, 71, 83, 100],
+    'genC': [3, 9, 47, 56, 66, 71, 83, 100],
   }
   return setups
 }
@@ -813,7 +792,7 @@ function createLearnTask(learnDivPrefix, learnConfig, total=0, isMainTask = true
 }
 function createInputForm(formPrefix, isSecond=false) {
   let box = createCustomElement("div", "box", `${formPrefix}-box`);
-  let emphaseText = isSecond? 'Please account for <i>all</i> the magic eggs you checked, and ': 'Please ';
+  let emphaseText = isSecond? 'Please account for <b>all the magic eggs you have checked</b>, and ': 'Please ';
   box.innerHTML = `
           <div class="display-box" id="${formPrefix}-display-box">
             <form class="input-form" id="${formPrefix}-input-form">

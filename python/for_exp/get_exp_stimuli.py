@@ -206,3 +206,41 @@ learn_both_ids = list(pd.merge(learn_both, trials_df, how='left', on=['agent', '
 # [35, 51, 67]
 gen_ids = [int(x) for x in list(gen_trials['trial_id'])]
 # [100, 71, 78, 55, 47, 83, 9, 3]
+
+# %% Pilot 2
+# %% Experiment 1
+stripes = [0,1,2,3,4]
+dots = [0,1,2,3,4]
+init_len = [1,2,3,4]
+
+all_agents = []
+all_recipients = []
+
+trials = []
+
+for s in stripes:
+  for d in dots:
+    agent = (s,d,1)
+    all_agents.append(agent)
+
+for l in init_len:
+  recipient = (0,0,l)
+  all_recipients.append(recipient)
+
+for a in all_agents:
+  for r in all_recipients:
+    rp_len = a[0] * (r[2] - a[1])
+    rp_len = 0 if rp_len < 0 else rp_len
+    # rp_len = 16 if rp_len > 16 else rp_len
+    trials.append({
+      'agent': str(a),
+      'recipient': str(r),
+      'result': str((0,0,rp_len))
+    })
+
+trials_df = pd.DataFrame.from_dict(trials)
+trials_df['trial_id'] = trials_df.index + 1
+trials_df = trials_df.set_index('trial_id')
+trials_df.reset_index().to_json('config_4.json', orient='records')
+
+# %%
