@@ -3,14 +3,15 @@ library(dplyr)
 library(googlesheets4)
 rm(list=ls())
 
-load('../data/raw/exp_2_raw.rdata')
+
+load('../data/raw/pilot_2_raw.rdata')
 
 # Output to googlesheet to bonus participants
 # When bonus-ing, select prolific_id column
 # When publishing data, remove the prolific_id column
 to_sheet = df.sw %>% 
   select(ix, condition, task.input.a_input, task.input.b_input, feedback, correct)
-write.csv(to_sheet, file='../data/responses/exp_2_responses.csv')
+write.csv(to_sheet, file='../data/responses/pilot_2_responses.csv')
 
 # Clean up for analysis
 df.sw.raw = df.sw
@@ -35,10 +36,11 @@ df.sw = df.sw.raw %>%
 
 # df.sw[144,'age'] = 33
 # df.sw[35,'age'] = 31
-
+# df.sw = df.sw %>% mutate(condition='flip') # for the pilot
 
 #### Transform trial data ####
-colnames(df.tw.raw)<-c('ix', 'id', 'batch', 'phase', 'trial', 'tid', 'agent', 'agent_color', 'recipient', 'result', 'selection', 'correct')
+colnames(df.tw.raw)<-c('ix', 'id', 'batch', 'phase', 'trial', 'tid', 'agent', 'agent_color', 
+                       'recipient', 'result', 'alter', 'selection', 'correct', 'gt_correct')
 df.tw = df.tw.raw %>%
   mutate(batch=ifelse(batch=='alice', 'A', 'B')) %>%
   filter(phase=='gen') %>%
@@ -73,14 +75,25 @@ trial_data = trial_data %>%
   arrange(ix, condition, batch, trial)
 
 df.tw = trial_data
-save(df.sw, df.tw, file='../data/exp_2_cleaned.rdata')
+
+# For pilot 2 only
+df.tw = df.tw %>%
+  mutate(ground_truth=stripe*(block-dot), alt_truth=stripe*block-dot) %>%
+  mutate(
+    ground_truth=if_else(ground_truth<0, 0, ground_truth),
+    alt_truth=if_else(alt_truth<0, 0, alt_truth)) %>%
+  mutate(gt_correct=as.numeric(prediction==ground_truth), alt_correct=as.numeric(prediction==alt_truth)) %>%
+  select(ix, condition, batch, trial, stripe, dot, block, prediction, gt_correct, alt_correct)
+
+save(df.sw, df.tw, file='../data/pilot_2_cleaned.rdata')
 
 # Label data
 labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
-labels = labels  %>%
-  mutate(condition=case_when(condition=='comp_const'~'combine', 
-                             condition=='comp_mult'~'construct', 
-                             condition=='comp_mult_reverse'~'decon'))
+labels = labels %>%
+  # mutate(condition=case_when(condition=='comp_const'~'combine', 
+  #                            condition=='comp_mult'~'construct', 
+  #                            condition=='comp_mult_reverse'~'decon'))
+  mutate(condition='flip')
 labels = labels %>% select(-bonus)
 labels = labels %>% 
   rename(
@@ -92,7 +105,7 @@ labels = labels %>%
     'input_a', 'match_a', 'match_a', 'rule_a',
     'input_b', 'match_b', 'match_b', 'rule_b',
     'local_change', 'feedback')
-save(labels, file='../data/exp_2_coded.Rdata')
+save(labels, file='../data/pilot_2_coded.Rdata')
 
 
 # Add coarse rule cat

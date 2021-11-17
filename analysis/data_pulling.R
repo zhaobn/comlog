@@ -26,6 +26,7 @@ td <- dbGetQuery(con, "SELECT * from task")
 # td$trialwise
 # Reorder according to id
 td = arrange(td, id)
+td_batch = td[td$id>361,] # Row until 361 from previous
 
 #Un-jsonify it
 inv_fromJSON<-function(js) {
@@ -33,14 +34,14 @@ inv_fromJSON<-function(js) {
   fromJSON(js)
 }
 # and turn each subject into a dataframe
-sw<-sapply(sapply(td$subjectwise, inv_fromJSON, simplify=F), as.data.frame, simplify=F)
-tw<-sapply(sapply(td$trialwise, inv_fromJSON, simplify=F), as.data.frame, simplify=F)
+sw<-sapply(sapply(td_batch$subjectwise, inv_fromJSON, simplify=F), as.data.frame, simplify=F)
+tw<-sapply(sapply(td_batch$trialwise, inv_fromJSON, simplify=F), as.data.frame, simplify=F)
 N<-length(tw)
 M<-22
 
-start_index = 360 # Row until 360 from previous
-end_index = N  
-td_batch = td[start_index:end_index, ]
+start_index = 1
+end_index = nrow(td_batch)
+# td_batch = td[start_index:end_index, ]
 
 # Combine them
 df.sw.aux<-sw[[start_index]]
@@ -52,10 +53,10 @@ for (i in (start_index+1):end_index) {
 # And append them to the id and upis
 df.sw<-data.frame(ix=td_batch$id, id=td_batch$participant)
 df.sw<-cbind(df.sw, df.sw.aux)
+df.tw<-cbind(ix=rep(df.sw$ix, each=M), id=rep(df.sw$id, each=M), df.tw.aux)
+
 # # Remove prolific ID
 # df.sw<-df.sw%>%select(-prolific_id) 
-# df.tw<-cbind(ix=rep(df.sw$ix, each=M), id=rep(df.sw$id, each=M), df.tw.aux)
-
-save(file='../data/raw/exp_2_raw.rdata', df.sw, df.tw)
+save(file='../data/raw/pilot_2_raw.rdata', df.sw, df.tw)
 
 
