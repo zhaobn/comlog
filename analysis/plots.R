@@ -9,44 +9,43 @@ library(networkD3)
 rm(list=ls())
 
 
-# Curious
-ggplot(df.sw, aes(x=age, y=correct)) + geom_point() + facet_grid(~condition)
+##### Pilot 2 Labels ##################################
+load('../data/pilot_2_coded.Rdata')
+
+# Sankey plots
+links=labels %>%
+  select(ix, rule_a=rule_cat_a, rule_b=rule_cat_b) %>%
+  count(rule_a, rule_b) %>%
+  mutate(rule_a_match=paste0('A:', rule_a), rule_b_match=paste0('B:', rule_b))
+
+# Have a look
+unique(c(links$rule_a_match, links$rule_b_match))
+
+# Order manually
+rules=c(
+  "A:subtraction", "A:complex", "A:uncertain",
+  "B:mult", "B:add_2", "B:complex", "B:uncertain", "B:alternative"
+)
+# Get nodes
+nodes=data.frame(node=c(0:(length(rules)-1)), match_name=rules)
+nodes$name=substr(nodes$match_name, 3, nchar(nodes$match_name))
+# Add node refs back to links
+links = links %>%
+  left_join(select(nodes, rule_a_match=match_name, node), by='rule_a_match') %>%
+  rename(source=node) %>%
+  left_join(select(nodes, rule_b_match=match_name, node), by='rule_b_match') %>%
+  rename(target=node)
+# Draw Sankey plot
+sankeyNetwork(
+  Links=as.data.frame(links), Nodes=nodes,
+  Source='source', Target='target', Value='n', NodeID='name',
+  fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
+)
+
+##### End of Pilot 2 Labels ###########################
 
 
-# Debug
-
-x = labels %>%
-  select(ix, condition, match_a, match_b) %>%
-  gather(phase, correct, match_a, match_b) %>%
-  mutate(phase=toupper(substr(phase,7,7)))
-
-
-answers = df.tw %>%
-  group_by(trial) %>%
-  summarise(stripe=max(stripe), dot=max(dot), block=max(block)) %>%
-  mutate(gtruth=dot*block-stripe) %>%
-  mutate(prediction=if_else(gtruth<0, 0, gtruth)) %>%
-  mutate(trial=as.factor(as.character(trial)))
-
-answers$batch='A'
-aa = answers
-bb = aa
-bb$batch = 'B'
-answers = rbind(aa, bb)
-
-df.tw %>%
-  mutate(trial=as.factor(as.character(trial))) %>%
-  ggplot( aes(y=trial, x=prediction, fill=trial)) +
-  geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
-  geom_point(data=answers) +
-  scale_x_discrete(limits=c(0,seq(max(df.tw$prediction)))) +
-  scale_y_discrete(limits=rev) +
-  facet_grid(batch~condition) +
-  theme_bw() +
-  theme(legend.position = 'none')
-
-
-#### Experiment 2 Labeles ##############################
+#### Experiment 2 Labels ##############################
 load('../data/exp_2_coded.Rdata')
 
 # Try Sankey diagram

@@ -111,18 +111,18 @@ save(labels, file='../data/pilot_2_coded.Rdata')
 # Add coarse rule cat
 labels = labels %>% 
   mutate(rule_cat_a=case_when(
-    rule_a %in% c('incompatible', 'not_sure', 'random') ~ 'uncertain',
+    rule_a %in% c('incompatible', 'not_sure', 'random', 'no_effect') ~ 'uncertain',
     rule_a %in% c('relative', 'position', 'parity', 'nominal', 'description', 
                      'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
     TRUE ~ rule_a
   )) %>%
   mutate(rule_cat_b=case_when(
-    rule_b %in% c('incompatible', 'not_sure', 'random') ~ 'uncertain',
+    rule_b %in% c('incompatible', 'not_sure', 'random', 'no_effect') ~ 'uncertain',
     rule_b %in% c('relative', 'position', 'parity', 'nominal', 'description', 
                        'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
     TRUE ~ rule_b
   ))
-save(labels, file='../data/exp_2_coded.Rdata')
+save(labels, file='../data/pilot_2_coded.Rdata')
 
 
 
