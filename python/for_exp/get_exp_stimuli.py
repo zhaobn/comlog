@@ -245,4 +245,28 @@ trials_df['trial_id'] = trials_df.index + 1
 trials_df = trials_df.set_index('trial_id')
 trials_df.reset_index().to_json('config_4.json', orient='records')
 
-# %%
+# %% Get Pilot 2 trials
+trials_df = pd.read_json('config_4.json')
+
+learn_mult = pd.DataFrame({
+  'agent': ["(1, 0, 1)", "(2, 0, 1)", "(3, 0, 1)"],
+  'recipient': ["(0, 0, 3)", "(0, 0, 2)", "(0, 0, 1)"],
+  'result': ["(0, 0, 3)", "(0, 0, 4)", "(0, 0, 3)"],
+})
+learn_sub = pd.DataFrame({
+  'agent': ["(1, 1, 1)", "(1, 2, 1)", "(1, 3, 1)"],
+  'recipient': ["(0, 0, 3)", "(0, 0, 3)", "(0, 0, 3)"],
+  'result': ["(0, 0, 2)", "(0, 0, 1)", "(0, 0, 0)"],
+})
+
+gen = pd.read_csv('../trials/data/final_trials_flip.csv', index_col=0).rename(columns={'agent': 'agent_stone','recipient': 'recipient_stone'})
+gen['agent'] = gen.apply(lambda row: translate_name(row['agent_stone']), axis=1)
+gen['recipient'] = gen.apply(lambda row: translate_name(row['recipient_stone']), axis=1)
+gen_trials = pd.merge(gen, trials_df, how='left', on=['agent', 'recipient']).dropna()
+
+learn_mult_ids = list(pd.merge(learn_mult, trials_df, how='left', on=['agent', 'recipient', 'result'])['trial_id'])
+# [23, 42, 61]
+learn_sub_ids = list(pd.merge(learn_sub, trials_df, how='left', on=['agent', 'recipient', 'result'])['trial_id'])
+# [27, 31, 35]
+gen_ids = [int(x) for x in list(gen_trials['trial_id'])]
+# [100, 91, 78, 55, 47, 83, 9, 3]

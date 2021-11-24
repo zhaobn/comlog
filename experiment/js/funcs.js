@@ -636,12 +636,23 @@ function download(content, fileName, contentType) {
 // }
 // Pilot 2
 function prepConfigs(type) {
-  setups = {
-    'learnA': [27, 31, 35],
-    'genA': [3, 9, 47, 56, 66, 71, 83, 100],
-    'learnB': [23, 42, 61],
-    'genB': [3, 9, 47, 56, 66, 71, 83, 100],
-    'genC': [3, 9, 47, 56, 66, 71, 83, 100],
+  let setups = {}
+  if (type==='sub') {
+    setups = {
+      'learnA': [27, 31, 35],
+      'genA': [100, 91, 78, 55, 47, 83, 9, 3],
+      'learnB': [23, 42, 61],
+      'genB': [100, 91, 78, 55, 47, 83, 9, 3],
+      'genC': [100, 91, 78, 55, 47, 83, 9, 3],
+    }
+  } else {
+    setups = {
+      'learnA': [23, 42, 61],
+      'genA': [100, 91, 78, 55, 47, 83, 9, 3],
+      'learnB': [27, 31, 35],
+      'genB': [100, 91, 78, 55, 47, 83, 9, 3],
+      'genC': [100, 91, 78, 55, 47, 83, 9, 3],
+    }
   }
   return setups
 }
