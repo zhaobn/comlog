@@ -1,7 +1,7 @@
 
 ####################### General imports ###############################
 from copy import copy
-from math import exp
+from math import exp, fabs
 from pandas.core.algorithms import isin
 
 from pandas.core.dtypes.missing import isneginf_scalar
@@ -74,3 +74,13 @@ def term_to_dict(term):
     return_type = term.ctype
     type = 'base_term'
   return dict(terms=terms, arg_types=arg_types, return_type=return_type,type=type)
+
+# Approximate motor noise
+# Input choice_list should be a one-hot coded list
+def add_motor_noise(choice_list, softmax_base=0):
+  center_index = choice_list.index(1)
+  weights = [ exp(-1*fabs(x-center_index)) for x in range(len(choice_list))]
+  if softmax_base==0:
+    return normalize(weights)
+  else:
+    return softmax(weights, softmax_base)

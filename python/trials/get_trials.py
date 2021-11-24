@@ -9,10 +9,10 @@ import math
 import sys
 sys.path.append('../')
 from task_terms import *
-from helpers import normalize, softmax
+from helpers import normalize, softmax, add_motor_noise
 
 # %% Global vars
-CAND_PROGRAMS = pd.read_csv('data/all_eqc.csv', index_col=0)
+CAND_PROGRAMS = pd.read_csv('data/flip_all_eqc.csv', index_col=0)
 N_PROGRAMS = len(CAND_PROGRAMS)
 print(N_PROGRAMS)
 
@@ -43,11 +43,11 @@ PM_WEIGHTS = normalize(CAND_PROGRAMS['count'])
 # PM_WEIGHTS = [1/len(CAND_PROGRAMS)]
 
 # %%
-def get_sim(program_id, pair_ids, n=20, noise=4):
+def get_sim(program_id, pair_ids, n=50, noise=4):
   ret_data = pd.DataFrame(columns=['pair_index', 'agent', 'recipient', 'result', 'count'])
   for pi in pair_ids:
     data = PM_LL[PM_LL['pair_index']==pi][['pair_index', 'agent', 'recipient', 'result', program_id]]
-    data['prob'] = softmax(data[program_id], noise)
+    data['prob'] = add_motor_noise(list(data[program_id]), noise)
     data['count'] = 0
     i = 0
     while i < n:
@@ -55,7 +55,7 @@ def get_sim(program_id, pair_ids, n=20, noise=4):
       i += 1
     ret_data = ret_data.append(data[['pair_index', 'agent', 'recipient', 'result', 'count']])
   return ret_data
-# get_sim('pm_4', [3,7], n=40, noise=4)
+# get_sim('pm_1', [3,7], n=50, noise=4)
 
 def conditional_entropy(sim_data, noise=4, weights=PM_WEIGHTS, sample=False):
   post_pp = []
@@ -73,14 +73,15 @@ def conditional_entropy(sim_data, noise=4, weights=PM_WEIGHTS, sample=False):
 
 # %%
 trials_df = pd.DataFrame(columns=['pair_index', 'agent', 'recipient','EIG'])
-# # For the sake of testing
+# # For testing
 # CAND_PROGRAMS = CAND_PROGRAMS.sample(3)
 # N_PROGRAMS = len(CAND_PROGRAMS)
 
 prior_entropy = -sum([x * math.log(x) for x in PM_WEIGHTS])
 
 # Get learned pair indices
-learned_pair_idx = [x+1 for x in [23, 42, 61, 35, 50, 65, 27, 31, 35]] # config_data.task_id := index+1
+# learned_pair_idx = [x+1 for x in [23, 42, 61, 35, 50, 65, 27, 31, 35]] # config_data.task_id := index+1
+learned_pair_idx = [22, 41, 60, 26, 30, 34]
 task_phase = ALL_PAIRS[ALL_PAIRS.index.isin(learned_pair_idx)]
 
 # Get the first one
@@ -101,7 +102,7 @@ best_pair = candidate_pairs[candidate_pairs.index==pair_eigs.index(max(pair_eigs
 best_pair['EIG'] = max(pair_eigs)
 trials_df = trials_df.append(best_pair, ignore_index=True)
 print(best_pair)
-trials_df.to_csv('../data/eig_trials.csv')
+trials_df.to_csv('../data/flip_eig_trials.csv')
 
 # Build greedily
 while (len(trials_df) < 20):
@@ -122,6 +123,6 @@ while (len(trials_df) < 20):
   best_pair['EIG'] = max(pair_eigs)
   trials_df = trials_df.append(best_pair, ignore_index=True)
   print(best_pair)
-  trials_df.to_csv('../data/eig_trials.csv')
+  trials_df.to_csv('../data/flip_eig_trials.csv')
 
-trials_df.to_csv('../data/eig_trials.csv')
+trials_df.to_csv('../data/flip_eig_trials.csv')

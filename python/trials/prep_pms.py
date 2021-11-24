@@ -12,16 +12,25 @@ from task_terms import *
 from helpers import normalize, softmax
 
 # %% Get all intermediate samples
-programs_df = pd.DataFrame(columns=['terms','comp_lp','log_prob','n_exceptions'])
-prefixes = [
-  'combine_0a', 'combine_0b', 'combine_1a', 'combine_1b', 'combine_2a', 'combine_2b',
-  'construct_0a', 'construct_0b', 'construct_1a', 'construct_1b', 'construct_2a', 'construct_2b',
-  'decon_1a', 'decon_1b', 'decon_2a', 'decon_2b',
-]
-for pr in prefixes:
-  for i in range(100):
-    iter = str(i+1).zfill(3)
-    programs_df = programs_df.append(pd.read_csv(f'tmp/{pr}_filtered_{iter}.csv', index_col=0).reset_index(drop=True), ignore_index=True)
+# programs_df = pd.DataFrame(columns=['terms','comp_lp','log_prob','n_exceptions'])
+# prefixes = [
+#   'combine_0a', 'combine_0b', 'combine_1a', 'combine_1b', 'combine_2a', 'combine_2b',
+#   'construct_0a', 'construct_0b', 'construct_1a', 'construct_1b', 'construct_2a', 'construct_2b',
+#   'decon_1a', 'decon_1b', 'decon_2a', 'decon_2b',
+# ]
+# for pr in prefixes:
+#   for i in range(100):
+#     iter = str(i+1).zfill(3)
+#     programs_df = programs_df.append(pd.read_csv(f'tmp/{pr}_filtered_{iter}.csv', index_col=0).reset_index(drop=True), ignore_index=True)
+
+# %%
+# For the "flip" conditions, only care about two alternatives
+programs_df = pd.DataFrame({
+  'terms': [
+    "[SC,[BB,subnn,[BC,[B,mulnn,[B,I,I]],getDot]],getStripe]",
+    "[SB,[B,mulnn,getDot],[BC,[B,subnn,[B,I,I]],getStripe]]",
+  ]
+})
 
 # %% Prep data
 config_data = pd.read_json('../for_exp/config.json')
@@ -59,6 +68,6 @@ for i in range(len(programs_df)):
       eq_class_df.at[found_idx, 'terms'] = terms
     eq_class_df.at[found_idx, 'count'] += 1
 
-eq_class_df.to_csv('data/all_eqc.csv')
+eq_class_df.to_csv('data/flip_all_eqc.csv')
 
 # %%
