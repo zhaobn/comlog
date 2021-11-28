@@ -48,7 +48,7 @@ B -> 3
 - IV: `stripe`, `spot`, `stick`
 - DV: `L'` (round to int)
 - Formula: `L' = a*stripe + b*spot + c*stick`
-- What if with `L' = a*stripe + b*spot + c*stick + d*stripe*spot + e*stripe*stick + f*spot*stick`?
+- Non-linear: `L' = a*stripe + b*spot + c*stick + d*stripe*spot + e*stripe*stick + f*spot*stick`
 
 ### Gaussian Process
 
