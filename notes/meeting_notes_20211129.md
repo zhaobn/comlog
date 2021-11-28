@@ -3,7 +3,7 @@
 
 ## WHY-21 workshop
 
-- Camera ready submitted. Also on [arXiv](http://arxiv.org/abs/2111.12560).
+- Camera ready version submitted. Also on [arXiv](http://arxiv.org/abs/2111.12560).
 - [Poster](https://drive.google.com/file/d/1ujjimjUzyOkIsoucPk0bgtGtPQt6S_WA/view?usp=sharing) (due Dec 1)
 - Thumbnail?
 
@@ -54,4 +54,4 @@ B -> 3
 
 ## General question
 
-Fit individual participants
+- Fit individual participants?
