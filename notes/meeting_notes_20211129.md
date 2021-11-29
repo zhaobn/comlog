@@ -1,6 +1,12 @@
 
 # Notes (2021-11-29)
 
+## CompBrainBeh manuscript
+
+- Proof corrections sent - should be out online this week or so
+- It's OA. Edinburgh has a deal with (some journals of) Springer Nature
+- CC-BY is good. Make it easy if people want to include our stuff in a book or so
+
 ## WHY-21 workshop
 
 - Camera-ready version submitted. Also on [arXiv](http://arxiv.org/abs/2111.12560).
