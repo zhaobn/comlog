@@ -26,7 +26,7 @@ td <- dbGetQuery(con, "SELECT * from task")
 # td$trialwise
 # Reorder according to id
 td = arrange(td, id)
-td_batch = td[td$id>361,] # Row until 361 from previous
+td_batch = td[td$id>382,]
 
 #Un-jsonify it
 inv_fromJSON<-function(js) {
@@ -41,7 +41,6 @@ M<-22
 
 start_index = 1
 end_index = nrow(td_batch)
-# td_batch = td[start_index:end_index, ]
 
 # Combine them
 df.sw.aux<-sw[[start_index]]
@@ -55,8 +54,11 @@ df.sw<-data.frame(ix=td_batch$id, id=td_batch$participant)
 df.sw<-cbind(df.sw, df.sw.aux)
 df.tw<-cbind(ix=rep(df.sw$ix, each=M), id=rep(df.sw$id, each=M), df.tw.aux)
 
+# Check for Prolific
+df.sw %>% filter(prolific_id=='5e8e5058e690d70ebefeb033')
+
 # # Remove prolific ID
 # df.sw<-df.sw%>%select(-prolific_id) 
-save(file='../data/raw/pilot_2_raw.rdata', df.sw, df.tw)
+save(file='../data/raw/exp_3_raw.rdata', df.sw, df.tw)
 
 

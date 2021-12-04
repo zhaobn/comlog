@@ -4,14 +4,14 @@ library(googlesheets4)
 rm(list=ls())
 
 
-load('../data/raw/pilot_2_raw.rdata')
+load('../data/raw/exp_3_raw.rdata')
 
 # Output to googlesheet to bonus participants
 # When bonus-ing, select prolific_id column
 # When publishing data, remove the prolific_id column
 to_sheet = df.sw %>% 
   select(ix, condition, task.input.a_input, task.input.b_input, feedback, correct)
-write.csv(to_sheet, file='../data/responses/pilot_2_responses.csv')
+write.csv(to_sheet, file='../data/responses/exp_3_responses.csv')
 
 # Clean up for analysis
 df.sw.raw = df.sw
@@ -30,9 +30,8 @@ df.sw = df.sw.raw %>%
          difficulty=as.numeric(as.character(difficulty)),
          certainty_a=as.numeric(as.character(certainty_a)),
          certainty_b=as.numeric(as.character(certainty_b))) %>%
-  mutate(condition=case_when(condition=='comp_const'~'combine', 
-                             condition=='comp_mult'~'construct', 
-                             condition=='comp_mult_reverse'~'decon'))
+  mutate(condition=case_when(condition=='mult'~'combine', 
+                             condition=='sub'~'flip'))
 
 # df.sw[144,'age'] = 33
 # df.sw[35,'age'] = 31
@@ -71,31 +70,18 @@ trial_data = trial_data %>%
   left_join(trial_lookup, by='tid')
 
 trial_data = trial_data %>%
-  select(ix, condition, batch, trial, stripe, dot, block, prediction, correct) %>%
+  select(ix, condition, batch, trial, stripe, dot, block, prediction) %>%
   arrange(ix, condition, batch, trial)
 
 df.tw = trial_data
-
-# For pilot 2 only
-df.tw = df.tw %>%
-  mutate(ground_truth=stripe*(block-dot), alt_truth=stripe*block-dot) %>%
-  mutate(
-    ground_truth=if_else(ground_truth<0, 0, ground_truth),
-    alt_truth=if_else(alt_truth<0, 0, alt_truth)) %>%
-  mutate(gt_correct=as.numeric(prediction==ground_truth), alt_correct=as.numeric(prediction==alt_truth)) %>%
-  select(ix, condition, batch, trial, stripe, dot, block, prediction, gt_correct, alt_correct)
-
-save(df.sw, df.tw, file='../data/pilot_2_cleaned.rdata')
+save(df.sw, df.tw, file='../data/exp_3_cleaned.rdata')
 
 # Label data
 labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
 labels = labels %>%
-  # mutate(condition=case_when(condition=='comp_const'~'combine', 
-  #                            condition=='comp_mult'~'construct', 
-  #                            condition=='comp_mult_reverse'~'decon'))
-  mutate(condition='flip')
-labels = labels %>% select(-bonus)
-labels = labels %>% 
+  mutate(condition=case_when(condition=='mult'~'combine',
+                             condition=='sub'~'flip')) %>%
+  select(-prolific_id, -bonus) %>% 
   rename(
     input_a=task.input.a_input, match_a=a_correct, rule_a=a_rule,
     input_b=task.input.b_input, match_b=b_correct, rule_b=b_rule,
@@ -105,24 +91,24 @@ labels = labels %>%
     'input_a', 'match_a', 'match_a', 'rule_a',
     'input_b', 'match_b', 'match_b', 'rule_b',
     'local_change', 'feedback')
-save(labels, file='../data/pilot_2_coded.Rdata')
+save(labels, file='../data/exp_3_coded.Rdata')
 
 
 # Add coarse rule cat
 labels = labels %>% 
   mutate(rule_cat_a=case_when(
-    rule_a %in% c('incompatible', 'not_sure', 'random', 'no_effect') ~ 'uncertain',
+    rule_a %in% c('incompatible', 'not_sure', 'random', 'no_effect', 'uncertain') ~ 'uncertain',
     rule_a %in% c('relative', 'position', 'parity', 'nominal', 'description', 
                      'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
     TRUE ~ rule_a
   )) %>%
   mutate(rule_cat_b=case_when(
-    rule_b %in% c('incompatible', 'not_sure', 'random', 'no_effect') ~ 'uncertain',
+    rule_b %in% c('incompatible', 'not_sure', 'random', 'no_effect', 'uncertain') ~ 'uncertain',
     rule_b %in% c('relative', 'position', 'parity', 'nominal', 'description', 
                        'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
     TRUE ~ rule_b
   ))
-save(labels, file='../data/pilot_2_coded.Rdata')
+save(labels, file='../data/exp_3_coded.Rdata')
 
 
 
