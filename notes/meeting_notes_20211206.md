@@ -1,9 +1,12 @@
 
 # Notes (2021-11-29)
 
-## Experiment 3
+## Experiments
 
-See [Rmarkdown](https://eco.ppls.ed.ac.uk/~s1941626/exp_3_analysis.html)
+In Experiment 1 and 2, we found that an incremental currciulum design can bootstrap causal generalization via constructive composition.
+However, when it comes to the functional form of composition, it seems that people "add" the later bit on top of the initial bit.
+
+To investigate whether this preference for "addition" overrules order, or the other way around, we conducted [Experiment 3](https://eco.ppls.ed.ac.uk/~s1941626/exp_3_analysis.html). Results demonstrate that when facing both a multiplicative and an additive relations, people tend to wrap multiplication within addition, regardless of order.
 
 ## Alternative models
 
@@ -49,10 +52,10 @@ Implementation plan:
 
 ### Gaussian process regression
 
-- 6 learning + 8 generalization = 14 dimensional covariance matrix
 - Each data point has 3 dimentional input (stripe, spot, stick) and 1 output prediction (L')
+- 6 learning + 8 generalization = 14 dimensional covariance matrix
 - Scikit-learn package?
-- Kernel choice: sum?
+- Kernel choices
 
 ## General question
 
