@@ -10,7 +10,7 @@ To investigate whether this preference for "addition" overrules order, or the ot
 
 ## Alternative models
 
-### PCFG in CNF form
+### PCFG
 
 Productions (with flat prior):
 
