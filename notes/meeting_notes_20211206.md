@@ -62,3 +62,4 @@ Implementation plan:
 ## General question
 
 - Fit individual participants?
+- Cogsci submission
