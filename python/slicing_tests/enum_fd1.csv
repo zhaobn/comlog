@@ -1,0 +1,8 @@
+,terms,log_prob,construct_a,construct_b,decon_a,decon_b,combine_a,combine_b
+0,"[BC,[B,mulnn,[B,I,I]],getStripe]",-1.791759469228055,True,False,False,False,True,False
+1,"[CB,[B,mulnn,getStripe],[B,I,I]]",-1.791759469228055,True,False,False,False,True,False
+2,"[CS,[BK,mulnn,getStripe],[B,I,I]]",-1.791759469228055,True,False,False,False,True,False
+3,"[SB,[B,mulnn,getStripe],[KB,I,I]]",-1.791759469228055,True,False,False,False,True,False
+4,"[SC,[BB,mulnn,[KB,I,I]],getStripe]",-1.791759469228055,True,False,False,False,True,False
+5,"[SC,[KB,mulnn,[B,I,I]],getStripe]",-1.791759469228055,True,False,False,False,True,False
+6,"[SS,[BK,mulnn,getStripe],[KB,I,I]]",-1.791759469228055,True,False,False,False,True,False
