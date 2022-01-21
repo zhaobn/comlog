@@ -71,7 +71,7 @@ Pre-registration: <https://osf.io/ud7jc>
 # Pilot results
 
 
-Recruited N = 165 participants on Prolific (age = `r round(mean(df.sw$age))` ± `r round(sd(df.sw$age),1)`). 
+Recruited N = 165 participants on Prolific (age = `r round(mean(df.sw$age),1)` ± `r round(sd(df.sw$age),1)`). 
 
 Mean time spent `r round(mean(df.sw$instructions_duration+df.sw$task_duration)/60000,2)` minutes.
 
@@ -169,6 +169,10 @@ report_acc_strict = labels %>%
 
 acc_combined = pred_acc + report_acc_strict + report_acc & theme(legend.position = "bottom")
 acc_combined + plot_layout(guides = "collect")
+
+acc_combined = pred_acc + report_acc_strict & theme(legend.position = "bottom")
+acc_combined + plot_layout(guides = "collect")
+
 
 ```
 
@@ -275,11 +279,12 @@ df.tw %>%
   mutate(trial=as.factor(as.character(trial))) %>%
   ggplot( aes(y=trial, x=prediction, fill=trial)) +
   geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
-  geom_point(data=answers) +
+  geom_point(data=answers, size=2) +
   geom_density_ridges(data=model.preds, aes(height=value), stat="identity", alpha=0.4, scale=0.95) +
   scale_x_discrete(limits=c(0,seq(max(df.tw$prediction)))) +
   scale_y_discrete(limits=rev) +
   facet_grid(batch~condition) +
+  labs(x='', y='') +
   theme_bw() +
   theme(legend.position = 'none')
 

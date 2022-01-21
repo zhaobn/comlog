@@ -11,9 +11,19 @@ rm(list=ls())
 ##### Experiment 3 Labels ##################################
 load('../data/exp_3_coded.Rdata')
 
+# Tune labels
+labels_2 = labels %>%
+  mutate(
+    rule_cat_a=if_else(condition=='combine' & rule_cat_a=='comp', 'model', rule_cat_a),
+    rule_cat_a=if_else(condition=='flip' & rule_cat_a=='comp', 'alt', rule_cat_a),
+    rule_cat_b=if_else(condition=='combine' & rule_cat_b=='comp', 'model', rule_cat_b),
+    rule_cat_b=if_else(condition=='flip' & rule_cat_b=='comp', 'alt', rule_cat_b),
+  )
+
+
 # Sankey plots
-links=labels %>%
-  filter(condition=='flip') %>%
+links=labels_2 %>%
+  filter(condition=='combine') %>%
   select(ix, rule_a=rule_cat_a, rule_b=rule_cat_b) %>%
   count(rule_a, rule_b) %>%
   mutate(rule_a_match=paste0('A:', rule_a), rule_b_match=paste0('B:', rule_b))
@@ -23,9 +33,10 @@ unique(c(links$rule_a_match, links$rule_b_match))
 
 # Order manually
 rules=c(
-  "A:subtraction", "A:complex", "A:uncertain",
-  "B:model", "B:alt", "B:comp", "B:mult", "B:add_2", "B:complex", "B:uncertain"
+  "A:mult", "A:add_2", "A:complex", "A:uncertain",
+  "B:model", "B:subtraction", "B:add_2", "B:complex", "B:uncertain"
 )
+
 # Get nodes
 nodes=data.frame(node=c(0:(length(rules)-1)), match_name=rules)
 nodes$name=substr(nodes$match_name, 3, nchar(nodes$match_name))

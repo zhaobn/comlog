@@ -21,12 +21,30 @@ MANOVA(
   EMMEANS('condition')
 
 
+aov(match2 ~ condition, data=self_report_match) %>% summary()
+aov(match2 ~ condition, data=self_report_match) %>% summary()
+
+aov(correct ~ condition, data=filter(df.tw, batch=='B')) %>% summary()
+
+df.sw %>%
+  group_by(condition) %>%
+  summarise(sum(certainty_a)/n(), sd(certainty_a))
+
+df.sw %>%
+  group_by(condition) %>%
+  summarise(sum(certainty_b)/n(), sd(certainty_b))
 
 
-
-
-
-
+# certainty
+MANOVA(
+  data=select(df.sw, ix, condition, certainty_a, certainty_b),
+  dvs="certainty_a:certainty_b", 
+  dvs.pattern = "certainty_(.)",
+  between='condition', 
+  within='certainty_'
+) %>%
+  # EMMEANS('match', by='condition') %>%
+  EMMEANS('condition')
 
 
 

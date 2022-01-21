@@ -26,7 +26,7 @@ td <- dbGetQuery(con, "SELECT * from task")
 # td$trialwise
 # Reorder according to id
 td = arrange(td, id)
-td_batch = td[td$id>382,]
+td_batch = td[td$id>493,]
 
 #Un-jsonify it
 inv_fromJSON<-function(js) {
@@ -59,6 +59,6 @@ df.sw %>% filter(prolific_id=='5e8e5058e690d70ebefeb033')
 
 # # Remove prolific ID
 # df.sw<-df.sw%>%select(-prolific_id) 
-save(file='../data/raw/exp_3_raw.rdata', df.sw, df.tw)
+save(file='../data/raw/exp_3_extra_raw.rdata', df.sw, df.tw)
 
 

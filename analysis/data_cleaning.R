@@ -4,14 +4,14 @@ library(googlesheets4)
 rm(list=ls())
 
 
-load('../data/raw/exp_3_raw.rdata')
+load('../data/raw/exp_3_extra_raw.rdata')
 
 # Output to googlesheet to bonus participants
 # When bonus-ing, select prolific_id column
 # When publishing data, remove the prolific_id column
 to_sheet = df.sw %>% 
-  select(ix, condition, task.input.a_input, task.input.b_input, feedback, correct)
-write.csv(to_sheet, file='../data/responses/exp_3_responses.csv')
+  select(ix, prolific_id, task.input.a_input, task.input.b_input, feedback, correct)
+write.csv(to_sheet, file='../data/responses/exp_3_extra_responses.csv')
 
 # Clean up for analysis
 df.sw.raw = df.sw
@@ -30,8 +30,7 @@ df.sw = df.sw.raw %>%
          difficulty=as.numeric(as.character(difficulty)),
          certainty_a=as.numeric(as.character(certainty_a)),
          certainty_b=as.numeric(as.character(certainty_b))) %>%
-  mutate(condition=case_when(condition=='mult'~'combine', 
-                             condition=='sub'~'flip'))
+  mutate(condition='combine')
 
 # df.sw[144,'age'] = 33
 # df.sw[35,'age'] = 31
@@ -74,13 +73,14 @@ trial_data = trial_data %>%
   arrange(ix, condition, batch, trial)
 
 df.tw = trial_data
-save(df.sw, df.tw, file='../data/exp_3_cleaned.rdata')
+save(df.sw, df.tw, file='../data/exp_3_extra_cleaned.rdata')
 
 # Label data
 labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
 labels = labels %>%
   mutate(condition=case_when(condition=='mult'~'combine',
-                             condition=='sub'~'flip')) %>%
+                             condition=='sub'~'flip',
+                             TRUE ~ condition)) %>%
   select(-prolific_id, -bonus) %>% 
   rename(
     input_a=task.input.a_input, match_a=a_correct, rule_a=a_rule,
@@ -109,6 +109,13 @@ labels = labels %>%
     TRUE ~ rule_b
   ))
 save(labels, file='../data/exp_3_coded.Rdata')
+
+
+
+
+
+
+
 
 
 

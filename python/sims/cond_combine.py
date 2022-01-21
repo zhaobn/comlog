@@ -13,11 +13,11 @@ EXCEPTS = 0
 LEARN_ITER = 200
 
 # Prep data
-all_data = pd.read_json('../for_exp/config_2.json')
+all_data = pd.read_json('../for_exp/config.json')
 task_ids = {
-  'learn_a': [7, 10, 13],
-  'learn_b': [27, 47, 67],
-  'gen': [100, 55, 94, 71, 31, 19, 41, 3]
+  'learn_a': [23, 42, 61],
+  'learn_b': [27, 31, 35],
+  'gen': [100, 71, 78, 55, 47, 83, 9, 3]
 }
 task_ids['gen'].sort()
 
