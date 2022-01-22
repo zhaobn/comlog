@@ -37,12 +37,65 @@ df.tw %>%
   group_by(condition) %>%
   summarise(correct=sum(correct), n=n(), acc=round(sum(correct)*100/n(),2))
 
+# Gen acc between con and decon
+df.tw %>%
+  filter(batch=='B', condition!='combine') %>%
+  select(ix, trial, condition, correct)
+t.test(filter(df.tw, condition=='construct') %>% pull(correct),
+       filter(df.tw, condition=='decon') %>% pull(correct))
+# On taskwise??
+task_acc = df.tw %>%
+  filter(batch=='B') %>%
+  select(ix, trial, condition, correct) %>%
+  group_by(condition, trial) %>%
+  summarise(acc=sum(correct)/n())
+t.test(filter(task_acc, condition=='construct') %>% pull(acc),
+       filter(task_acc, condition=='decon') %>% pull(acc), paired = TRUE, alt='greater')
+t.test(filter(task_acc, condition=='construct') %>% pull(acc),
+       filter(task_acc, condition=='combine') %>% pull(acc), paired = TRUE, alt='greater')
+
+# ANOVAs
+aov(acc ~ condition, data=task_acc) %>% summary()
+
+task_acc_manova = df.tw %>%
+  group_by(condition, batch, trial) %>%
+  summarise(acc=round(sum(correct)/n(),2)) %>%
+  spread(batch, acc) %>%
+  select(condition, trial, acc_a=A, acc_b=B)
+
+MANOVA(
+  data=task_acc_manova,
+  dvs="acc_a:acc_b", 
+  dvs.pattern = "acc_(.)",
+  between='condition', 
+  within='acc_'
+) %>%
+  # EMMEANS('match', by='condition') %>%
+  EMMEANS('condition')
+
 # ANOVAs
 self_report_match = labels %>%
   select(ix, condition, match_a, match_b) %>%
   rename(match1=match_a, match2=match_b)
 aov(match2 ~ condition, data=self_report_match) %>% summary()
 aov(correct ~ condition, data=filter(df.tw, batch=='B')) %>% summary()
+
+# Try raw acc data
+task_raw_manova = df.tw %>%
+  select(ix, condition, batch, trial, correct) %>%
+  spread(batch, correct) %>%
+  select(condition, trial, acc_a=A, acc_b=B)
+
+MANOVA(
+  data=task_acc_manova,
+  dvs="acc_a:acc_b", 
+  dvs.pattern = "acc_(.)",
+  between='condition', 
+  within='acc_'
+) %>%
+  # EMMEANS('match', by='condition') %>%
+  EMMEANS('condition')
+
 
 
 # Certainty
@@ -77,6 +130,10 @@ labels %>%
   select(ix, rule_cat_b) %>%
   mutate(is_mult=as.numeric(rule_cat_b=='mult')) %>%
   summarise(is_mult=sum(is_mult), n=n(), rate=round(sum(is_mult)*100/n(),2))
+
+labels %>%
+  filter(condition=='construct') %>%
+  summarise(sum(rule_cat_a=='mult')/n())
 
 
 # Plots
@@ -138,6 +195,7 @@ ggarrange(report_acc_strict, pred_acc, cert, len,
           common.legend = TRUE, legend="bottom")
 
 
+# Jan 22 - new stats
 
 
 
