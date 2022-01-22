@@ -10,12 +10,11 @@ import math
 cond = 'construct'
 phase = 'b'
 
-filtered_programs = pd.read_csv('enum_fd1.csv')
-all_programs = pd.read_csv('all_programs_d1.csv')
+filtered_programs = pd.read_csv('enum_fd2.csv')
 
 cond_programs = filtered_programs[filtered_programs[f'{cond}_{phase}']==True][['terms', 'log_prob']]
 if len(cond_programs.index) < 1:
-  cond_programs = all_programs.copy()
+  cond_programs = filtered_programs[['terms', 'log_prob']]
 
 # %%
 # Prep data
