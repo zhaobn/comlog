@@ -18,13 +18,13 @@
 
 ## Tentative postdoc contact list
 
-Noah Goodman
-Dave Lagnado
-Tobias Gerstenberg
-Tom Griffiths (?)
-Chris Summerfield
-Charles Kemp
-Sid N
+- Noah Goodman
+- Dave Lagnado
+- Tobias Gerstenberg
+- Tom Griffiths (?)
+- Chris Summerfield
+- Charles Kemp
+- Sid N
 
 ## PhD thesis draft project
 
