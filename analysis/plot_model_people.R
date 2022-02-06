@@ -82,7 +82,7 @@ acc_data = acc_data %>%
   
 ggplot(acc_data, aes(x=batch, y=accuracy)) +
   geom_bar(stat='identity', fill='black') +
-  geom_hline(yintercept=0.25, linetype="dashed", color="grey50", size=1) +
+  geom_hline(yintercept=0.06, linetype="dashed", color="grey50", size=1) +
   geom_point(aes(y=ARC), stat="identity", shape=6, color='red', size=3, stroke=1.5)+
   facet_grid(~condition) +
   labs(x='', y='') +
@@ -266,15 +266,15 @@ model_accs = acc_data_sd2_sfed %>%
   gather('model', 'acc', ARC, slice_d1, slice_d2) %>%
   mutate(model=case_when(
     model=='ARC'~'AG',
-    model=='slice_d1'~'CL_d1',
-    model=='slice_d2'~'CL_d2',
+    model=='slice_d1'~'SO_d1',
+    model=='slice_d2'~'SO_d2',
   ))
 
 
 # Final plot for paper
 ggplot(acc_data_sd2_sfed, aes(x=batch, y=accuracy)) +
   geom_bar(stat='identity', fill='black') +
-  geom_hline(yintercept=0.25, linetype="dashed", color="grey50", size=1) +
+  # geom_hline(yintercept=0.25, linetype="dashed", color="grey50", size=1) +
   geom_point(aes(x=batch, y=acc, color=model, shape=model), size=3, stroke=1.5, data=model_accs)+
   scale_shape_manual(values=c(2, 0, 1)) +
   facet_grid(~condition) +

@@ -97,6 +97,27 @@ MANOVA(
   EMMEANS('condition')
 
 
+# Garden-pathing
+gardening = labels %>%
+  mutate(is_mult=if_else(
+    (condition=='decon'&rule_cat_b=='mult')|(condition!='decon'&rule_cat_a=='mult'), 1, 0
+  )) %>%
+  select(ix, condition, rule_cat_a, rule_cat_b, is_mult)
+
+gardening %>%
+  group_by(condition) %>%
+  summarise(sum(is_mult)/n())
+
+aov(is_mult ~ condition, data=gardening) %>% summary()
+t.test(
+  gardening %>% filter(condition=='construct') %>% pull(is_mult),
+  gardening %>% filter(condition=='decon') %>% pull(is_mult), alt='greater'
+)
+t.test(
+  gardening %>% filter(condition=='combine') %>% pull(is_mult),
+  gardening %>% filter(condition=='decon') %>% pull(is_mult)
+)
+
 
 # Certainty
 df.sw %>%
@@ -195,9 +216,11 @@ ggarrange(report_acc_strict, pred_acc, cert, len,
           common.legend = TRUE, legend="bottom")
 
 
-# Jan 22 - new stats
+# Output data
 
-
+labels_output = labels %>%
+  select(ix, condition, input_a, label_a=rule_cat_a, input_b, label_b=rule_cat_b, feedback)
+write.csv(labels_output, file='../data/cogsci.csv')
 
 
 
