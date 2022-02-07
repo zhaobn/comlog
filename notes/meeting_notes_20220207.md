@@ -29,6 +29,7 @@
 - Tom Griffiths (?)
 - Chris Summerfield
 - Charles Kemp
+- Brenden Lake (?)
 - Sid N
 
 ## PhD thesis draft project
