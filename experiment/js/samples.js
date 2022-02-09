@@ -1,7 +1,7 @@
 
 /** Prep data */
-const mode = ''
-const cond = 'sub'
+const mode = 'gen'
+const cond = ''
 const taskIds = prepConfigs(cond)
 
 
