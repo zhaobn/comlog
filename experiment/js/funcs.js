@@ -634,24 +634,46 @@ function download(content, fileName, contentType) {
 //   }
 //   return setups
 // }
-// Experiment 3
+// // Experiment 3
+// function prepConfigs(type) {
+//   let setups = {}
+//   if (type==='sub') {
+//     setups = {
+//       'learnA': [27, 31, 35],
+//       'genA': [100, 71, 78, 55, 47, 83, 9, 3],
+//       'learnB': [23, 42, 61],
+//       'genB': [100, 71, 78, 55, 47, 83, 9, 3],
+//       'genC': [100, 71, 78, 55, 47, 83, 9, 3],
+//     }
+//   } else {
+//     setups = {
+//       'learnA': [23, 42, 61],
+//       'genA': [100, 71, 78, 55, 47, 83, 9, 3],
+//       'learnB': [27, 31, 35],
+//       'genB': [100, 71, 78, 55, 47, 83, 9, 3],
+//       'genC': [100, 71, 78, 55, 47, 83, 9, 3],
+//     }
+//   }
+//   return setups
+// }
+// Experiment 4
 function prepConfigs(type) {
   let setups = {}
   if (type==='sub') {
     setups = {
-      'learnA': [27, 31, 35],
-      'genA': [100, 71, 78, 55, 47, 83, 9, 3],
-      'learnB': [23, 42, 61],
-      'genB': [100, 71, 78, 55, 47, 83, 9, 3],
-      'genC': [100, 71, 78, 55, 47, 83, 9, 3],
+      'learnA': [7, 10, 13],
+      'genA': [100, 55, 94, 71, 31, 19, 41, 3],
+      'learnB': [27, 47, 67],
+      'genB': [100, 55, 94, 71, 31, 19, 41, 3],
+      'genC': [100, 55, 94, 71, 31, 19, 41, 3],
     }
   } else {
     setups = {
-      'learnA': [23, 42, 61],
-      'genA': [100, 71, 78, 55, 47, 83, 9, 3],
-      'learnB': [27, 31, 35],
-      'genB': [100, 71, 78, 55, 47, 83, 9, 3],
-      'genC': [100, 71, 78, 55, 47, 83, 9, 3],
+      'learnA': [27, 47, 67],
+      'genA': [100, 55, 94, 71, 31, 19, 41, 3],
+      'learnB': [7, 10, 13],
+      'genB': [100, 55, 94, 71, 31, 19, 41, 3],
+      'genC': [100, 55, 94, 71, 31, 19, 41, 3],
     }
   }
   return setups
