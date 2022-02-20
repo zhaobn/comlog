@@ -26,7 +26,7 @@ td <- dbGetQuery(con, "SELECT * from task")
 # td$trialwise
 # Reorder according to id
 td = arrange(td, id)
-td_batch = td[td$id>493,]
+td_batch = td[td$id>511,] # Prev until 511
 
 #Un-jsonify it
 inv_fromJSON<-function(js) {
@@ -52,13 +52,22 @@ for (i in (start_index+1):end_index) {
 # And append them to the id and upis
 df.sw<-data.frame(ix=td_batch$id, id=td_batch$participant)
 df.sw<-cbind(df.sw, df.sw.aux)
-df.tw<-cbind(ix=rep(df.sw$ix, each=M), id=rep(df.sw$id, each=M), df.tw.aux)
+
+df.tw.aux = df.tw.aux %>% rename(tid=id)
+df.tw<-cbind(ix=rep(df.sw$ix, each=M), id=rep(df.sw$id, each=M), prolific_id=rep(df.sw$prolific_id, each=M), df.tw.aux)
+
 
 # Check for Prolific
-df.sw %>% filter(prolific_id=='5e8e5058e690d70ebefeb033')
+df.sw %>% filter(prolific_id=='6093e78e30fb90f291b261f9')
+
+# Remove data
+df.sw = df.sw %>% filter(!prolific_id=='5d270f5b1f68140019729a94')
+df.tw = df.tw %>% filter(!prolific_id=='5d270f5b1f68140019729a94')
 
 # # Remove prolific ID
-# df.sw<-df.sw%>%select(-prolific_id) 
-save(file='../data/raw/exp_3_extra_raw.rdata', df.sw, df.tw)
+df.sw<-df.sw%>%select(-prolific_id) 
+df.tw<-df.tw%>%select(-prolific_id) 
+
+save(file='../data/raw/exp_4_raw.rdata', df.sw, df.tw)
 
 

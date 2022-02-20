@@ -4,14 +4,14 @@ library(googlesheets4)
 rm(list=ls())
 
 
-load('../data/raw/exp_3_extra_raw.rdata')
+load('../data/raw/exp_4_raw.rdata')
 
 # Output to googlesheet to bonus participants
 # When bonus-ing, select prolific_id column
 # When publishing data, remove the prolific_id column
 to_sheet = df.sw %>% 
-  select(ix, prolific_id, task.input.a_input, task.input.b_input, feedback, correct)
-write.csv(to_sheet, file='../data/responses/exp_3_extra_responses.csv')
+  select(ix, prolific_id, condition, task.input.a_input, task.input.b_input, feedback, correct)
+write.csv(to_sheet, file='../data/responses/exp_4_responses.csv')
 
 # Clean up for analysis
 df.sw.raw = df.sw
@@ -29,16 +29,13 @@ df.sw = df.sw.raw %>%
          engagement=as.numeric(as.character(engagement)),
          difficulty=as.numeric(as.character(difficulty)),
          certainty_a=as.numeric(as.character(certainty_a)),
-         certainty_b=as.numeric(as.character(certainty_b))) %>%
-  mutate(condition='combine')
+         certainty_b=as.numeric(as.character(certainty_b)))
 
 # df.sw[144,'age'] = 33
 # df.sw[35,'age'] = 31
 # df.sw = df.sw %>% mutate(condition='flip') # for the pilot
 
 #### Transform trial data ####
-colnames(df.tw.raw)<-c('ix', 'id', 'batch', 'phase', 'trial', 'tid', 'agent', 'agent_color', 
-                       'recipient', 'result', 'alter', 'selection', 'correct', 'gt_correct')
 df.tw = df.tw.raw %>%
   mutate(batch=ifelse(batch=='alice', 'A', 'B')) %>%
   filter(phase=='gen') %>%
@@ -73,7 +70,7 @@ trial_data = trial_data %>%
   arrange(ix, condition, batch, trial)
 
 df.tw = trial_data
-save(df.sw, df.tw, file='../data/exp_3_extra_cleaned.rdata')
+save(df.sw, df.tw, file='../data/exp_4_cleaned.rdata')
 
 # Label data
 labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
@@ -91,24 +88,24 @@ labels = labels %>%
     'input_a', 'match_a', 'match_a', 'rule_a',
     'input_b', 'match_b', 'match_b', 'rule_b',
     'local_change', 'feedback')
-save(labels, file='../data/exp_3_coded.Rdata')
+save(labels, file='../data/exp_4_coded.Rdata')
 
 
 # Add coarse rule cat
 labels = labels %>% 
   mutate(rule_cat_a=case_when(
-    rule_a %in% c('incompatible', 'not_sure', 'random', 'no_effect', 'uncertain') ~ 'uncertain',
+    rule_a %in% c('incompatible', 'not_sure', 'random', 'no_effect', 'uncertain', 'NA') ~ 'uncertain',
     rule_a %in% c('relative', 'position', 'parity', 'nominal', 'description', 
                      'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
     TRUE ~ rule_a
   )) %>%
   mutate(rule_cat_b=case_when(
-    rule_b %in% c('incompatible', 'not_sure', 'random', 'no_effect', 'uncertain') ~ 'uncertain',
+    rule_b %in% c('incompatible', 'not_sure', 'random', 'no_effect', 'uncertain', 'NA') ~ 'uncertain',
     rule_b %in% c('relative', 'position', 'parity', 'nominal', 'description', 
                        'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
     TRUE ~ rule_b
   ))
-save(labels, file='../data/exp_3_coded.Rdata')
+save(labels, file='../data/exp_4_coded.Rdata')
 
 
 
