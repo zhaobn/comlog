@@ -22,6 +22,7 @@ library(patchwork)
 library(knitr)
 library(googlesheets4)
 library(ggridges)
+library(networkD3)
 ```
 
 ```{r data, include=FALSE}
@@ -30,7 +31,10 @@ load('../../data/all_coded.Rdata')
 
 ```
 
+
 # Curriculum-order effects
+
+Experiments 1 & 2:
 
 * Condition _construct_: `A*B`; then `A*B-C` (varying `A`)
 * Condition _de-construct_ (decon): `A*B-C`; then `A*B` (flip the two batches in _construct_)
@@ -38,32 +42,124 @@ load('../../data/all_coded.Rdata')
 
 ## Generalization accuracy
 
-```{r gen_acc, echo=FALSE}
-df.tw %>%
+```{r gen_acc, echo=FALSE, message=FALSE}
+cur_acc=df.tw %>%
   filter(exp %in% c('exp_1', 'exp_2'), batch=='B') %>%
   mutate(answer=ifelse(exp=='exp_1', stripe*block-dot, dot*block-stripe)) %>%
   mutate(answer=ifelse(answer<0, 0, answer)) %>%
-  mutate(correct=prediction==answer) %>%
+  mutate(correct=prediction==answer)
+
+cur_acc %>%
   group_by(exp, condition) %>%
   summarise(acc=100*sum(correct)/n(), sd=sd(correct)) %>%
   ggplot(aes(x=exp, y=acc, fill=condition)) +
   geom_bar(stat='identity', position='dodge') +
-  geom_errorbar(aes(ymin=acc-sd, ymax=acc+sd), width=.1, position=position_dodge(.9)) 
+  geom_errorbar(aes(ymin=acc-sd, ymax=acc+sd), width=.1, position=position_dodge(.9)) +
+  theme_bw() +
+  labs(x='', y='accuracy (%)') +
+  scale_fill_manual(values=c('#88CCEE', '#6699CC', '#888888'))
+
+exp1_gen_acc = t.test(
+  cur_acc %>% filter(exp=='exp_1', condition=='construct') %>% pull(correct),
+  cur_acc %>% filter(exp=='exp_1', condition=='decon') %>% pull(correct)
+)
+
+exp2_gen_acc = t.test(
+  cur_acc %>% filter(exp=='exp_2', condition=='construct') %>% pull(correct),
+  cur_acc %>% filter(exp=='exp_2', condition=='decon') %>% pull(correct)
+)
 
 ```
+
+For both experiments, final generalization accuracy for the _construct_ condition is significantly higher than for the _decon_ condition, both p < .001. 
+These two conditions share an identical set of learning stimuli (in each experiment), only differ in the curriculum order. 
+This indicates that learning benefits from an simple-to-complex curriculum, while the reverse direction hampers it.
 
 
 ## Conceptual bootstrapping
 
+We collapsed experiment 1 and 2 coded self-reports, and find that in the _construct_ and _combine_ conditions people can construct compound causal relations in Phase B by reusing learned relations in Phase A.
+In the _decon_ condition, however, people fail to do so (because they didn't get the chance).
+
+![](../figs/overview/labels_12.png)
+
+## Garden-pathing
+
+
+```{r mult_test, echo=FALSE}
+mult_test = t.test(
+  labels %>% filter(exp %in% c('exp_1', 'exp_2'), condition=='construct') %>%
+    mutate(is_mult=rule_cat_a=='mult') %>%
+    pull(is_mult),
+  labels %>% filter(exp %in% c('exp_1', 'exp_2'), condition=='decon') %>%
+    mutate(is_mult=rule_cat_b=='mult') %>%
+    pull(is_mult)
+)
+
+```
+
+It also seems that complex information in Phase A makes it harder for people to generalize a single-operator relation in Phase B (condition _decon_), compared to when this single-operator relation was shown in Phase A directly (conditions _construct_ and _combine_), p=`r round(mult_test$p.value, 2)`.
+
+
 # Subjective difficulty
 
-# Zero-shot priors
+Experiments 3 & 4:
+
+* Condition _combine_: replicate this condition in Exp. 1 & 2, `A*B, B-C`
+* Condition _flip_: reverse batch A and B as in condition _combine_ `B-C, A*B`
+
+There are two compound relations consist with the data: `A*B-C` (rule_1), and `A*(B-C)` (rule_2). 
+If there are no subjective difficulty differences, then in condition _combine_ people should conclude `A*B-C` and in condition _flip_ they should get `A*(B-C)`, following the order of chunking and reuse.
+
+We looked at Phase B generalizations, and if 7 out of 8 predictions match rule_1 we will say this participant is following rule_1, same for rule_2, and otherwise "other". 
+
+```{r sub_gen, echo=FALSE, message=FALSE}
+dif_acc = df.tw %>%
+  filter(exp %in% c('exp_3', 'exp_4'), batch=='B') %>%
+  mutate(
+    rule_1=ifelse(exp=='exp_3', stripe*block-dot, dot*block-stripe),
+    rule_2=ifelse(exp=='exp_3', stripe*(block-dot), dot*(block-stripe)),
+  ) %>%
+  mutate(rule_1=ifelse(rule_1<0, 0, rule_1), rule_2=ifelse(rule_2<0, 0, rule_2)) %>%
+  mutate(acc_1=prediction==rule_1, acc_2=prediction==rule_2) %>%
+  group_by(exp, condition, ix) %>%
+  summarise(n=n(), acc_1=sum(acc_1), acc_2=sum(acc_2)) %>%
+  mutate(pred=ifelse(acc_1>=7, 'rule_1', ifelse(acc_2>=7, 'rule_2', 'other'))) 
 
 
+dif_acc %>%
+  ggplot(aes(x=condition, fill=pred)) +
+  geom_bar(stat='count', position='fill') +
+  theme_bw() +
+  labs(x='', y='proportion') +
+  facet_grid(~exp) +
+  scale_fill_manual(values=c('#888888', '#88CCEE'))
 
+dif_acc_ttest = t.test(
+  dif_acc%>%
+    filter(condition=='combine') %>%
+    mutate(is_rule_1=pred=='rule_1') %>%
+    pull(is_rule_1),
+  dif_acc%>%
+    filter(condition=='flip') %>%
+    mutate(is_rule_1=pred=='rule_1') %>%
+    pull(is_rule_1),
+)
 
+```
 
+Judging from generalization data, there is a predominant preference for rule_1 over rule_2 (no one's generalization prediction strictly lined up with rule_2).
 
+But order still matters - more people in the _combine_ condition learned rule_1 (collapsing both experiments, p=`r round(dif_acc_ttest$p.value, 2)`).
+
+![](../figs/overview/labels_34.png)
+
+From this plot, it is clear that `subtraction` always constitutes a higher proportion than `mult` in either phase.
+
+We can learn two things from these results:
+
+1. People consolidate on the evidence according to subjective difficulty of relevant causal relations. This difficulty measure can override temporal order.
+2. Meanwhile, temporal order also interferes with subjective difficulties, and presenting hard things first works better than the other way around.
 
 
 
