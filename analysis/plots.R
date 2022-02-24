@@ -8,6 +8,43 @@ library(networkD3)
 
 rm(list=ls())
 
+##### Experiment 4 Labels ##################################
+load('../data/exp_4_coded.Rdata')
+
+# Sankey plots
+links=labels %>%
+  filter(condition=='flip') %>%
+  select(ix, rule_a=rule_cat_a, rule_b=rule_cat_b) %>%
+  count(rule_a, rule_b) %>%
+  mutate(rule_a_match=paste0('A:', rule_a), rule_b_match=paste0('B:', rule_b))
+
+# Have a look
+unique(c(links$rule_a_match, links$rule_b_match))
+
+# Order manually
+rules=c(
+  "A:subtraction", "A:complex", "A:uncertain",
+  "B:ground_truth", "B:mult", "B:complex", "B:uncertain", "B:add_2"
+)
+
+# Get nodes
+nodes=data.frame(node=c(0:(length(rules)-1)), match_name=rules)
+nodes$name=substr(nodes$match_name, 3, nchar(nodes$match_name))
+# Add node refs back to links
+links = links %>%
+  left_join(select(nodes, rule_a_match=match_name, node), by='rule_a_match') %>%
+  rename(source=node) %>%
+  left_join(select(nodes, rule_b_match=match_name, node), by='rule_b_match') %>%
+  rename(target=node)
+# Draw Sankey plot
+sankeyNetwork(
+  Links=as.data.frame(links), Nodes=nodes,
+  Source='source', Target='target', Value='n', NodeID='name',
+  fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
+)
+
+##### End of Experiment 3 Labels ###########################
+
 ##### Experiment 3 Labels ##################################
 load('../data/exp_3_coded.Rdata')
 

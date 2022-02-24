@@ -96,24 +96,59 @@ labels = labels %>%
   mutate(rule_cat_a=case_when(
     rule_a %in% c('incompatible', 'not_sure', 'random', 'no_effect', 'uncertain', 'NA') ~ 'uncertain',
     rule_a %in% c('relative', 'position', 'parity', 'nominal', 'description', 
-                     'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
+                     'increase', 'decrease', 'mix', 'reverse', 'double', 'parit') ~ 'complex',
     TRUE ~ rule_a
   )) %>%
   mutate(rule_cat_b=case_when(
     rule_b %in% c('incompatible', 'not_sure', 'random', 'no_effect', 'uncertain', 'NA') ~ 'uncertain',
     rule_b %in% c('relative', 'position', 'parity', 'nominal', 'description', 
-                       'increase', 'decrease', 'mix', 'reverse') ~ 'complex',
+                       'increase', 'decrease', 'mix', 'reverse', 'double', 'parit') ~ 'complex',
     TRUE ~ rule_b
   ))
 save(labels, file='../data/exp_4_coded.Rdata')
 
 
 
+# Pull all experimental data together
+load('../data/exp_1_cleaned.rdata')
+load('../data/exp_1_coded.Rdata')
+
+sw_colnames = all_of(colnames(df.sw))
+tw_colnames = all_of(c('ix', 'condition', 'batch', 'trial', 'stripe', 'dot', 'block', 'prediction'))
+label_colnames = all_of(colnames(labels))
+
+df.sw.exp1 = df.sw %>% mutate(exp='exp_1') %>% select(c('exp', sw_colnames))
+df.tw.exp1 = df.tw %>% mutate(exp='exp_1') %>% select(c('exp', tw_colnames))
+labels.exp1 = labels %>% mutate(exp='exp_1') %>% select(c('exp', label_colnames))
 
 
+load('../data/exp_2_cleaned.rdata')
+load('../data/exp_2_coded.Rdata')
+df.sw.exp2 = df.sw %>% mutate(exp='exp_2') %>% select(c('exp', sw_colnames))
+df.tw.exp2 = df.tw %>% mutate(exp='exp_2') %>% select(c('exp', tw_colnames))
+labels.exp2 = labels %>% mutate(exp='exp_2') %>% select(c('exp', label_colnames))
 
 
+load('../data/exp_3_cleaned.rdata')
+load('../data/exp_3_coded.Rdata')
+df.sw.exp3 = df.sw %>% mutate(exp='exp_3') %>% select(c('exp', sw_colnames))
+df.tw.exp3 = df.tw %>% mutate(exp='exp_3') %>% select(c('exp', tw_colnames))
+labels.exp3 = labels %>% mutate(exp='exp_3') %>% select(c('exp', label_colnames))
 
+
+load('../data/exp_4_cleaned.rdata')
+load('../data/exp_4_coded.Rdata')
+df.sw.exp4 = df.sw %>% mutate(exp='exp_4') %>% select(c('exp', sw_colnames))
+df.tw.exp4 = df.tw %>% mutate(exp='exp_4') %>% select(c('exp', tw_colnames))
+labels.exp4 = labels %>% mutate(exp='exp_4') %>% select(c('exp', label_colnames))
+
+
+df.sw = rbind(df.sw.exp1, df.sw.exp2, df.sw.exp3, df.sw.exp4)
+df.tw = rbind(df.tw.exp1, df.tw.exp2, df.tw.exp3, df.tw.exp4)
+labels = rbind(labels.exp1, labels.exp2, labels.exp3, labels.exp4)
+
+save(df.sw, df.tw, file='../data/all_cleaned.Rdata')
+save(labels, file='../data/all_coded.Rdata')
 
 
 

@@ -1,0 +1,78 @@
+---
+title: "Results overview"
+author: "Bonan Zhao"
+date: "2/24/2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, include=FALSE}
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(patchwork)
+library(knitr)
+library(googlesheets4)
+library(ggridges)
+```
+
+```{r data, include=FALSE}
+load('../../data/all_cleaned.Rdata')
+load('../../data/all_coded.Rdata')
+
+```
+
+# Curriculum-order effects
+
+* Condition _construct_: `A*B`; then `A*B-C` (varying `A`)
+* Condition _de-construct_ (decon): `A*B-C`; then `A*B` (flip the two batches in _construct_)
+* Condition _combine_: `A*B`; then `B-C` (keeping `A=1`)
+
+## Generalization accuracy
+
+```{r gen_acc, echo=FALSE}
+df.tw %>%
+  filter(exp %in% c('exp_1', 'exp_2'), batch=='B') %>%
+  mutate(answer=ifelse(exp=='exp_1', stripe*block-dot, dot*block-stripe)) %>%
+  mutate(answer=ifelse(answer<0, 0, answer)) %>%
+  mutate(correct=prediction==answer) %>%
+  group_by(exp, condition) %>%
+  summarise(acc=100*sum(correct)/n(), sd=sd(correct)) %>%
+  ggplot(aes(x=exp, y=acc, fill=condition)) +
+  geom_bar(stat='identity', position='dodge') +
+  geom_errorbar(aes(ymin=acc-sd, ymax=acc+sd), width=.1, position=position_dodge(.9)) 
+
+```
+
+
+## Conceptual bootstrapping
+
+# Subjective difficulty
+
+# Zero-shot priors
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
