@@ -20,7 +20,6 @@ library(stringr)
 library(ggplot2)
 library(patchwork)
 library(knitr)
-library(googlesheets4)
 library(ggridges)
 library(networkD3)
 ```
@@ -73,7 +72,7 @@ exp2_gen_acc = t.test(
 
 For both experiments, final generalization accuracy for the _construct_ condition is significantly higher than for the _decon_ condition, both p < .001. 
 These two conditions share an identical set of learning stimuli (in each experiment), only differ in the curriculum order. 
-This indicates that learning benefits from an simple-to-complex curriculum, while the reverse direction hampers it.
+This indicates that learning benefits from an simple-to-complex curriculum.
 
 
 ## Conceptual bootstrapping
@@ -111,7 +110,7 @@ Experiments 3 & 4:
 There are two compound relations consist with the data: `A*B-C` (rule_1), and `A*(B-C)` (rule_2). 
 If there are no subjective difficulty differences, then in condition _combine_ people should conclude `A*B-C` and in condition _flip_ they should get `A*(B-C)`, following the order of chunking and reuse.
 
-We looked at Phase B generalizations, and if 7 out of 8 predictions match rule_1 we will say this participant is following rule_1, same for rule_2, and otherwise "other". 
+We looked at Phase B generalizations, and if more than 6 out of 8 predictions match rule_1 we will say this participant is following rule_1, same for rule_2, and otherwise "other". 
 
 ```{r sub_gen, echo=FALSE, message=FALSE}
 dif_acc = df.tw %>%
@@ -124,7 +123,7 @@ dif_acc = df.tw %>%
   mutate(acc_1=prediction==rule_1, acc_2=prediction==rule_2) %>%
   group_by(exp, condition, ix) %>%
   summarise(n=n(), acc_1=sum(acc_1), acc_2=sum(acc_2)) %>%
-  mutate(pred=ifelse(acc_1>=7, 'rule_1', ifelse(acc_2>=7, 'rule_2', 'other'))) 
+  mutate(pred=ifelse(acc_1>=6, 'rule_1', ifelse(acc_2>=6, 'rule_2', 'other'))) 
 
 
 dif_acc %>%
@@ -133,7 +132,7 @@ dif_acc %>%
   theme_bw() +
   labs(x='', y='proportion') +
   facet_grid(~exp) +
-  scale_fill_manual(values=c('#888888', '#88CCEE'))
+  scale_fill_manual(values=c('#888888', '#88CCEE', '#6699CC'))
 
 dif_acc_ttest = t.test(
   dif_acc%>%
@@ -148,9 +147,9 @@ dif_acc_ttest = t.test(
 
 ```
 
-Judging from generalization data, there is a predominant preference for rule_1 over rule_2 (no one's generalization prediction strictly lined up with rule_2).
+Judging from generalization data, there is a predominant preference for rule_1 over rule_2.
 
-But order still matters - more people in the _combine_ condition learned rule_1 (collapsing both experiments, p=`r round(dif_acc_ttest$p.value, 2)`).
+But order still matters - more people in the _combine_ condition learned rule 1 (collapsing both experiments, p=`r round(dif_acc_ttest$p.value, 2)`).
 
 ![](../figs/overview/labels_34.png)
 
@@ -162,6 +161,71 @@ We can learn two things from these results:
 2. Meanwhile, temporal order also interferes with subjective difficulties, and presenting hard things first works better than the other way around.
 
 
+# Order of processing
+
+The four experiments together revealed two types of processing order: 
+a temporal order where previously-learned concepts are chunked and reused,
+and a difficulty order where easy ones are added onto hard ones.
+
+Different processing orders in our experiments appear to be either:
+(1) extend batch A's guess to include batch B, 
+(2) ignore batch A's info and only focus on batch B,
+or (3) extend batch B's guess to also over batch A.
+
+We already have evidence for all three types of processing orders from self-report labels,
+and we can further confirm them by checking participants' generalization decisions (in case someone just reported "subtraction" but actually was thinking about a compound ground truth rule).
+
+Let's inverse phase B generalizations to the underlying causal relations one used to produce those selections (criterion: more than 6 out of 8), collapsing all four experiments together.
+
+
+
+```{r check_processing_orders, echo=FALSE, message=FALSE}
+df.tw %>%
+  filter(batch=='B') %>%
+  mutate(
+    rule_1=ifelse(exp %in% c('exp_1', 'exp_3'), stripe*block-dot, dot*block-stripe),
+    rule_2=ifelse(exp %in% c('exp_1', 'exp_3'), stripe*(block-dot), dot*(block-stripe)),
+    sub=ifelse(exp %in% c('exp_1', 'exp_3'), block-dot, block-stripe),
+    mult=ifelse(exp %in% c('exp_1', 'exp_3'), stripe*block, dot*block)
+  ) %>%
+  mutate(
+    rule_1=ifelse(rule_1<0, 0, rule_1), rule_2=ifelse(rule_2<0, 0, rule_2),
+    sub=ifelse(sub<0, 0, sub), mult=ifelse(mult<0, 0, mult)
+  ) %>%
+  mutate(
+    is_rule_1=prediction==rule_1, is_rule_2=prediction==rule_2, 
+    is_sub=prediction==sub, is_mult=prediction==mult
+  ) %>%
+  group_by(condition, ix) %>%
+  summarise(
+    n=n(), is_rule_1=sum(is_rule_1), is_rule_2=sum(is_rule_2), 
+    is_sub=sum(is_sub), is_mult=sum(is_mult)
+  ) %>%
+  mutate(
+    pred=ifelse(is_rule_1>=6, 'rule_1', 
+                ifelse(is_rule_2>=6, 'rule_2', 
+                       ifelse(is_sub>6, 'subtraction', 
+                              ifelse(is_mult>6, 'mult', 'other'))))
+  ) %>%
+  mutate(
+    pred=factor(pred, levels=c('rule_1', 'rule_2', 'subtraction', 'mult', 'other')),
+    condition=factor(condition, levels=c('decon', 'construct', 'combine', 'flip'))
+  ) %>%
+  # filter(pred!='other') %>%
+  ggplot(aes(x=condition, fill=pred)) +
+  geom_bar(stat='count', position='fill', color='#888888', size=0.2) +
+  theme_bw() +
+  labs(x='', y='proportion') +
+  scale_fill_manual(values=c('#6699CC', '#000000', '#DDCC77', '#CC6677', '#ffffff'))
+
+```
+
+
+In accordance with self-reports, 
+for conditions conditions other than _construct_, we observe non-negligible proportion of people focusing only on batch B's causal relationships.
+This could explain why for the _flip_ condition, rule 1 wins over rule 2:
+
+`mult(sub(x,y),z)` has lower probability than `sub(mult(x,y),z)`, if the wrapped-inside operation share same level of chunked prob. according to our adaptor grammar model.
 
 
 
