@@ -1,7 +1,7 @@
 
 # Notes (2022-02-28)
 
-* Results overview <https://eco.ppls.ed.ac.uk/~s1941626/results_overview.html>; play with processing orders in our model?
+* Results overview: <https://eco.ppls.ed.ac.uk/~s1941626/results_overview.html>
 * Another theorizing perspective: depth=1 search as a feature of our model rather than an implementation choice, "balance between stored units and structure building"
 * Submission plan
   * _PNAS_, then _Cognition_?
