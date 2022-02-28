@@ -8,4 +8,4 @@
   * Will put together a draft based on cogsci materials & new data
   * Hyperparameters for our adaptor grammar model: use Liang et al.'s, or grid-search them?
   * Finish alternative models (will call for help/check when needed)
-* Tobi's lab talk went well; next week in London (Sat-Thur)
+* Talk at Tobi's lab went well; next week in London (Sat-Thur)
