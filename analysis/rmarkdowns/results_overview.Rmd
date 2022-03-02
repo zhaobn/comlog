@@ -86,18 +86,28 @@ In the _decon_ condition, however, people fail to do so (because they didn't get
 
 
 ```{r mult_test, echo=FALSE}
-mult_test = t.test(
+complex_con_decon = t.test(
   labels %>% filter(exp %in% c('exp_1', 'exp_2'), condition=='construct') %>%
-    mutate(is_mult=rule_cat_a=='mult') %>%
+    mutate(is_mult=rule_cat_a=='complex') %>%
     pull(is_mult),
   labels %>% filter(exp %in% c('exp_1', 'exp_2'), condition=='decon') %>%
-    mutate(is_mult=rule_cat_b=='mult') %>%
+    mutate(is_mult=rule_cat_b=='complex') %>%
     pull(is_mult)
 )
 
+complex_com_decon = t.test(
+  labels %>% filter(exp %in% c('exp_1', 'exp_2'), condition=='combine') %>%
+    mutate(is_mult=rule_cat_a=='complex') %>%
+    pull(is_mult),
+  labels %>% filter(exp %in% c('exp_1', 'exp_2'), condition=='decon') %>%
+    mutate(is_mult=rule_cat_b=='complex') %>%
+    pull(is_mult)
+)
+
+
 ```
 
-It also seems that complex information in Phase A makes it harder for people to generalize a single-operator relation in Phase B (condition _decon_), compared to when this single-operator relation was shown in Phase A directly (conditions _construct_ and _combine_), p=`r round(mult_test$p.value, 2)`.
+Overwhelming information in _decon_ batch A leads people to generalize complex causal relations even after seeing a subpart of it in batch B. People in the _decon_ condition reported more complex causal relations in Phase B then both the _construct_ (p=`r round(complex_con_decon$p.value, 2)`) and _combine_ (p=`r round(complex_com_decon$p.value, 3)`) conditions.
 
 
 # Subjective difficulty
@@ -110,7 +120,7 @@ Experiments 3 & 4:
 There are two compound relations consist with the data: `A*B-C` (rule_1), and `A*(B-C)` (rule_2). 
 If there are no subjective difficulty differences, then in condition _combine_ people should conclude `A*B-C` and in condition _flip_ they should get `A*(B-C)`, following the order of chunking and reuse.
 
-We looked at Phase B generalizations, and if more than 6 out of 8 predictions match rule_1 we will say this participant is following rule_1, same for rule_2, and otherwise "other". 
+We looked at Phase B generalizations, and if ≥6 out of 8 predictions match rule_1 we will say this participant is following rule_1, same for rule_2, and otherwise "other". 
 
 ```{r sub_gen, echo=FALSE, message=FALSE}
 dif_acc = df.tw %>%
@@ -163,9 +173,9 @@ We can learn two things from these results:
 
 # Order of processing
 
-The four experiments together revealed two types of processing order: 
-a temporal order where previously-learned concepts are chunked and reused,
-and a difficulty order where easy ones are added onto hard ones.
+The four experiments together revealed two order effects: 
+a temporal order where previously-learned concepts can be chunked and reused to facilitate generalization,
+and a difficulty order where it is preferable to add easy ones onto hard ones.
 
 Different processing orders in our experiments appear to be either:
 (1) extend batch A's guess to include batch B, 
@@ -175,7 +185,7 @@ or (3) extend batch B's guess to also over batch A.
 We already have evidence for all three types of processing orders from self-report labels,
 and we can further confirm them by checking participants' generalization decisions (in case someone just reported "subtraction" but actually was thinking about a compound ground truth rule).
 
-Let's inverse phase B generalizations to the underlying causal relations one used to produce those selections (criterion: more than 6 out of 8), collapsing all four experiments together.
+We can inverse phase B generalizations to the underlying causal relations one used to produce those selections (criterion: for single operators ≥7, compound rules ≥6, both out of 8), collapsing all four experiments together.
 
 
 
@@ -222,10 +232,10 @@ df.tw %>%
 
 
 In accordance with self-reports, 
-for conditions conditions other than _construct_, we observe non-negligible proportion of people focusing only on batch B's causal relationships.
-This could explain why for the _flip_ condition, rule 1 wins over rule 2:
+for conditions other than _construct_, we observe non-negligible proportion of people focusing only on batch B's causal relationships: "mult" in _decon_ and _flip_, and "subtraction" in _combine_.
 
-`mult(sub(x,y),z)` has lower probability than `sub(mult(x,y),z)`, if the wrapped-inside operation share same level of chunked prob. according to our adaptor grammar model.
+This might explain how for the _flip_ condition, rule 1 wins over rule 2:
+`mult(sub(x,y),z)` has lower probability than `sub(mult(x,y),z)`, if the wrapped-inside operation share same level of chunked prob. according to our adaptor grammar model (PCFGs can't).
 
 
 
