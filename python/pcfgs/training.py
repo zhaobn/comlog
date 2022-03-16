@@ -20,7 +20,7 @@ exp_1_ids = {
   'learn_a': [23, 42, 61],
   'learn_b': [35, 50, 65],
   'learn_c': [27, 31, 35],
-  'gen': [82, 8, 20, 4, 98, 48, 71, 40],
+  'gen': [100, 71, 78, 55, 47, 83, 9, 3],
 }
 exp_1_ids_list = exp_1_ids['learn_a'] + exp_1_ids['learn_b'] + exp_1_ids['learn_c']
 
@@ -29,7 +29,7 @@ exp_2_ids = {
   'learn_a': [7, 10, 13],
   'learn_b': [67, 50, 33],
   'learn_c': [27, 47, 67],
-  'gen': [100, 55, 94, 71, 31, 19, 41, 3],
+  'gen': [100, 55, 94, 71, 31, 19, 41, 3]
 }
 exp_2_ids_list = exp_2_ids['learn_a'] + exp_2_ids['learn_b'] + exp_2_ids['learn_c']
 
