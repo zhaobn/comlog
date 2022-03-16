@@ -50,34 +50,86 @@ for (ix, id) in enumerate(exp_1_ids_list+exp_2_ids_list):
 
 
 # %% Learning phase
-N = 100
+N = 100000
 sampled_rules = pd.DataFrame({
   'rule': pd.Series(dtype='str'), 'log_prob': pd.Series(dtype='float'),
 })
+df_A1 = sampled_rules.copy()
+df_B1 = sampled_rules.copy()
+df_C1 = sampled_rules.copy()
+df_cons1 = sampled_rules.copy()
+df_comb1 = sampled_rules.copy()
 
-ld_colnames = pd.DataFrame(columns=list(ld_lookup.keys()))
-ld_colnames.astype('int32')
+df_A2 = sampled_rules.copy()
+df_B2 = sampled_rules.copy()
+df_C2 = sampled_rules.copy()
+df_cons2 = sampled_rules.copy()
+df_comb2 = sampled_rules.copy()
 
-sampled_rules = pd.concat([sampled_rules, ld_colnames], axis=1)
+def save_dfs():
+  df_A1.drop_duplicates(ignore_index=True).to_csv('data/ld_A1.csv')
+  df_B1.drop_duplicates(ignore_index=True).to_csv('data/ld_B1.csv')
+  df_C1.drop_duplicates(ignore_index=True).to_csv('data/ld_C1.csv')
+  df_cons1.drop_duplicates(ignore_index=True).to_csv('data/ld_cons1.csv')
+  df_comb1.drop_duplicates(ignore_index=True).to_csv('data/ld_comb1.csv')
+  df_A2.drop_duplicates(ignore_index=True).to_csv('data/ld_A2.csv')
+  df_B2.drop_duplicates(ignore_index=True).to_csv('data/ld_B2.csv')
+  df_C2.drop_duplicates(ignore_index=True).to_csv('data/ld_C2.csv')
+  df_cons2.drop_duplicates(ignore_index=True).to_csv('data/ld_cons2.csv')
+  df_comb2.drop_duplicates(ignore_index=True).to_csv('data/ld_comb2.csv')
+
 
 # %%
-while len(sampled_rules)<N:
+k = 0
+while k<N:
   generated = rat_rules_model.generate_tree()
   if generated is not None:
     # evaluate on data
     learned = {}
     for dt in ld_all.items():
       dt_name, data = dt
-      learned[dt_name] = [Rational_rules.evaluate(generated, data)[0]] # Just the bool
+      learned[dt_name] = Rational_rules.evaluate(generated, data)[0] # Just the bool
     # add to df
-    if sum(x[0] for x in list(learned.values()))>0:
-      to_append = pd.DataFrame({'rule': [generated[0]], 'log_prob':[generated[1]]})
-      to_append = pd.concat([to_append, pd.DataFrame.from_dict(learned)], axis=1)
-      sampled_rules = pd.concat([sampled_rules, to_append], ignore_index=True)
-    # save df
-    if len(sampled_rules)%100==0:
-      sampled_rules.to_csv('data/test.csv')
+    to_append = pd.DataFrame({'rule': [generated[0]], 'log_prob':[generated[1]]})
+    if learned['exp1_ld1'] and learned['exp1_ld2'] and learned['exp1_ld3']:
+      df_A1 = pd.concat([df_A1, to_append], ignore_index=True)
+    if learned['exp1_ld4'] and learned['exp1_ld5'] and learned['exp1_ld6']:
+      df_B1 = pd.concat([df_B1, to_append], ignore_index=True)
+    if learned['exp1_ld7'] and learned['exp1_ld8'] and learned['exp1_ld9']:
+      df_C1 = pd.concat([df_C1, to_append], ignore_index=True)
+    if (
+      learned['exp1_ld1'] and learned['exp1_ld2'] and learned['exp1_ld3'] and
+      learned['exp1_ld4'] and learned['exp1_ld5'] and learned['exp1_ld6']
+    ):
+      df_cons1 = pd.concat([df_cons1, to_append], ignore_index=True)
+    if (
+      learned['exp1_ld1'] and learned['exp1_ld2'] and learned['exp1_ld3'] and
+      learned['exp1_ld7'] and learned['exp1_ld8'] and learned['exp1_ld9']
+    ):
+      df_comb1 = pd.concat([df_comb1, to_append], ignore_index=True)
 
-sampled_rules.to_csv('data/test.csv')
+    if learned['exp2_ld1'] and learned['exp2_ld2'] and learned['exp2_ld3']:
+      df_A2 = pd.concat([df_A2, to_append], ignore_index=True)
+    if learned['exp2_ld4'] and learned['exp2_ld5'] and learned['exp2_ld6']:
+      df_B2 = pd.concat([df_B2, to_append], ignore_index=True)
+    if learned['exp2_ld7'] and learned['exp2_ld8'] and learned['exp2_ld9']:
+      df_C2 = pd.concat([df_C2, to_append], ignore_index=True)
+    if (
+      learned['exp2_ld1'] and learned['exp2_ld2'] and learned['exp2_ld3'] and
+      learned['exp2_ld4'] and learned['exp2_ld5'] and learned['exp2_ld6']
+    ):
+      df_cons2 = pd.concat([df_cons2, to_append], ignore_index=True)
+    if (
+      learned['exp2_ld1'] and learned['exp2_ld2'] and learned['exp2_ld3'] and
+      learned['exp2_ld7'] and learned['exp2_ld8'] and learned['exp2_ld9']
+    ):
+      df_comb2 = pd.concat([df_comb2, to_append], ignore_index=True)
+
+    # save df
+    if k>10000 and k%500==0:
+      save_dfs()
+  k+=1
+
+save_dfs()
 
 # %%
