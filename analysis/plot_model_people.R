@@ -60,15 +60,17 @@ read_data = function(path_prefix, cond, phase) {
   return(data)
 }
 
-model_preds = read_data('../data/model_preds/exp_1/', 'construct', 'a')
+file_path = '../python/pcfgs/data/exp_1/' #'../data/model_preds/exp_1/'
+model_preds = read_data(file_path, 'construct', 'a') 
 for (cond in c('construct', 'combine', 'decon')) {
   for (phase in c('a', 'b')) {
     if (!(cond=='construct'&phase=='a')) {
-      model_preds = rbind(model_preds, read_data('../data/model_preds/exp_1/', cond, phase))
+      model_preds = rbind(model_preds, read_data(file_path, cond, phase))
     }
   }
 }
-  
+model_preds = model_preds %>% mutate(prob=round(prob, 4)) 
+ 
 model_acc = model_preds %>%
   left_join(tasks, by=c('condition', 'batch', 'trial')) %>%
   mutate(correct=pred==answer) %>%

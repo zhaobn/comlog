@@ -15,11 +15,9 @@ for id in gen_ids:
   converted = (f'Egg(S{agent[1]},O{agent[4]})', recipient[-2], result[-2])
   gen_data.append(converted)
 
-# set up prediction df
-N_TERMS = 17
-predictions = pd.DataFrame({'terms': [str(x) for x in list(range(N_TERMS))]})
 
 # initialize model
+N_TERMS = 17
 productions = [
   ['S', ['add(A,A)', 'sub(A,A)', 'mult(A,A)']],
   ['A', ['S', 'B']],
@@ -31,8 +29,12 @@ rt_model = Rational_rules(productions, cap=40)
 
 # %%
 # read rules
-rules = pd.read_csv('data/ld_comb2.csv', index_col=0)
+rules = pd.read_csv('data/ld_C2.csv', index_col=0)
 
+# Initialize prediction df
+predictions = pd.DataFrame({'terms': [str(x) for x in list(range(N_TERMS))]})
+
+# Get predictions
 for (ix, gd) in enumerate(gen_data):
   probs = [0.]*N_TERMS
   for rix in rules.index:
@@ -44,6 +46,6 @@ for (ix, gd) in enumerate(gen_data):
   predictions = pd.concat([predictions, df_gen], axis=1)
 
 # Save carefully
-predictions.to_csv('data/exp_4/combine_preds_b.csv')
+predictions.to_csv('data/exp_4/flip_preds_a.csv')
 
 # %%

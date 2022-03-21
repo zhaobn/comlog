@@ -43,8 +43,7 @@ sankeyNetwork(
   fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
 )
 
-############################################################
-
+##### End of Experiment 3 & 4 Labels
 
 ##### Experiment 1 & 2 Labels ##############################
 
@@ -79,7 +78,8 @@ sankeyNetwork(
   fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
 )
 
-############################################################
+##### End of Experiment 1 & 2 Labels
+
 
 ##### Experiment 4 Labels ##################################
 load('../data/exp_4_coded.Rdata')
@@ -116,7 +116,8 @@ sankeyNetwork(
   fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
 )
 
-##### End of Experiment 3 Labels ###########################
+##### End of Experiment 4 Labels
+
 
 ##### Experiment 3 Labels ##################################
 load('../data/exp_3_coded.Rdata')
@@ -163,9 +164,7 @@ sankeyNetwork(
   fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
 )
 
-##### End of Experiment 3 Labels ###########################
-
-
+##### End of Experiment 3 Labels
 
 
 ##### Pilot 2 Labels ##################################
@@ -201,7 +200,7 @@ sankeyNetwork(
   fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
 )
 
-##### End of Pilot 2 Labels ###########################
+##### End of Pilot 2 Labels
 
 
 #### Experiment 2 Labels ##############################
@@ -300,7 +299,7 @@ sankeyNetwork(
   fontSize= 15, nodeWidth = 40, fontFamily = 'Helvetica', width=400, height=600
 )
 
-#### End of Experiment 2 Labeles #######################
+#### End of Experiment 2 Labeles
 
 
 #### Experiment 1 Labeles ##############################
@@ -555,7 +554,64 @@ sankeyNetwork(
 
 
 
-#### End of Experiment 1 Labels ##############################
+#### End of Experiment 1 Labels 
+
+
+#### Experiment 1 raw and PCFG preds #######################
+load('../data/exp_1_cleaned.rdata')
+answers = df.tw %>%
+  group_by(trial) %>%
+  summarise(stripe=max(stripe), dot=max(dot), block=max(block)) %>%
+  mutate(gtruth=stripe*block-dot) %>%
+  mutate(prediction=if_else(gtruth<0, 0, gtruth)) %>%
+  mutate(trial=as.factor(as.character(trial)))
+
+answers$batch='A'
+aa = answers
+bb = aa
+bb$batch = 'B'
+answers = rbind(aa, bb)
+
+# Plot PCFG results
+PCFG.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
+for (cond in c('construct', 'combine', 'decon')) {
+  for (ph in c('a', 'b')) {
+    preds = read.csv(paste0('../python/pcfgs/data/exp_1/', cond, '_preds_', ph, '.csv'))
+    preds_fmt = preds %>%
+      select(terms, starts_with('prob')) %>%
+      gather(trial, value, starts_with('prob')) %>%
+      mutate(
+        condition=cond,
+        terms=terms,
+        trial=as.numeric(substr(trial, 6, nchar(trial))),
+        batch=toupper(ph)) %>%
+      select(condition, batch, trial, prediction=terms, value)
+    PCFG.preds = rbind(PCFG.preds, preds_fmt)
+  }
+}
+PCFG.preds = PCFG.preds %>% 
+  mutate(
+    trial=as.factor(as.character(trial)),
+    value=round(as.numeric(value), 4)
+  ) 
+
+
+# Plot together
+df.tw %>%
+  mutate(trial=as.factor(as.character(trial))) %>%
+  ggplot( aes(y=trial, x=prediction, fill=trial)) +
+  geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
+  geom_point(data=answers) +
+  geom_density_ridges(data=PCFG.preds, aes(height=value), stat="identity", alpha=0.4, scale=0.95) +
+  scale_x_discrete(limits=c(0,seq(max(PCFG.preds$prediction)))) +
+  scale_y_discrete(limits=rev) +
+  facet_grid(batch~condition) +
+  theme_bw() +
+  theme(
+    legend.position = 'none',
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)
+  )
+#### End of Experiment 1 raw and model preds #######################
 
 
 #### Experiment 1 raw and model preds #######################
@@ -638,6 +694,8 @@ df.tw %>%
     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)
   )
 #### End of Experiment 1 raw and model preds #######################
+
+
 
 
 #### Pilot data plots #####################################
