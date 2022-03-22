@@ -50,6 +50,7 @@ get_trial_pred <- function(cond, tid, batch) {
 # Get results
 condition='construct'
 batch='A'
+filename=paste0('sim_model_preds/exp_1/', condition, '_preds_', tolower(batch), '.csv')
 
 preds = get_trial_pred(condition, 1, batch)
 for (tid in seq(8)) {
@@ -57,6 +58,8 @@ for (tid in seq(8)) {
     preds = preds %>% left_join(get_trial_pred(condition, tid, batch), by='terms')
   }
 }
+
+write.csv(preds, filename)
 
 # Fit parameters
 
