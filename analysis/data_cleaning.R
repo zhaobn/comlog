@@ -36,6 +36,7 @@ df.sw = df.sw.raw %>%
 # df.sw = df.sw %>% mutate(condition='flip') # for the pilot
 
 #### Transform trial data ####
+colnames(df.tw.raw)<-c('ix', 'id', 'batch', 'phase', 'trial', 'tid', 'agent', 'color', 'recipient', 'result', 'selection', 'correct')
 df.tw = df.tw.raw %>%
   mutate(batch=ifelse(batch=='alice', 'A', 'B')) %>%
   filter(phase=='gen') %>%
@@ -150,9 +151,38 @@ labels = rbind(labels.exp1, labels.exp2, labels.exp3, labels.exp4)
 save(df.sw, df.tw, file='../data/all_cleaned.Rdata')
 save(labels, file='../data/all_coded.Rdata')
 
+# Get learning data as csv
+load('../data/raw/exp_4_raw.rdata')
+#colnames(df.tw)<-c('ix', 'id', 'batch', 'phase', 'trial', 'tid', 'agent', 'color', 'recipient', 'result', 'selection', 'correct')
+colnames(df.tw)<-c('ix', 'id', 'batch', 'phase', 'trial', 'tid', 'agent', 'color', 'recipient', 'result', 'alter', 'selection', 'correct', 'gtCorrect')
+save(df.sw, df.tw, file='../data/raw/exp_4_raw.rdata')
 
+conditions = df.sw %>% select(ix, condition) %>%
+  #mutate(condition=ifelse(condition=='comp_mult', 'construct', ifelse(condition=='comp_mult_reverse', 'decon', 'combine')))
+  mutate(condition=ifelse(condition=='mult', 'combine', 'flip'))
 
+df.tw = df.tw %>% left_join(conditions, by='ix')
+ld = df.tw %>%
+  filter(phase=='learn') %>%
+  select(condition, phase, batch, trial, agent, recipient, result) %>%
+  unique() %>%
+  mutate(
+    batch=ifelse(batch=='alice', 'A', 'B'),
+    stripe=as.numeric(substr(agent, 2, 2)),
+    dot=as.numeric(substr(agent, 4, 4)),
+    block=as.numeric(substr(recipient, 6, 6)),
+    result_block=ifelse(phase=='learn', as.numeric(substr(result, 6, nchar(result)-1)), block)) %>%
+  select(condition, batch, trial, stripe, dot, block, result_block)
 
+load('../data/exp_4_cleaned.rdata')
+gd = df.tw %>% 
+  mutate(batch='gen', result_block=0) %>%
+  select(condition, batch, trial, stripe, dot, block, result_block) %>%
+  unique()
+
+tasks = rbind(ld, gd) %>% arrange(condition, batch, trial)
+rownames(tasks) = NULL
+write.csv(tasks, '../data/tasks/exp_4.csv')
 
 
 
