@@ -49,7 +49,7 @@ get_trial_pred <- function(cond, tid, batch) {
 
 # Get results
 condition='construct'
-batch='A'
+batch='B'
 filename=paste0('sim_model_preds/exp_1/', condition, '_preds_', tolower(batch), '.csv')
 
 preds = get_trial_pred(condition, 1, batch)

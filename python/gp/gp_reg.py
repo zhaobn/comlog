@@ -1,12 +1,11 @@
 # %%
 import GPy
-import numpy as np
 import pandas as pd
 
 
 # %% Read data
 task_data = pd.read_csv('../../data/tasks/exp_1.csv', index_col=0)
-trainings = task_data.query('condition=="combine"&batch!="gen"') #batch=="A"'
+trainings = task_data.query('condition=="combine"&batch!="gen"')
 trX = trainings[['stripe','dot','block']].to_numpy()
 trY = trainings[['result_block']].to_numpy()
 
@@ -20,7 +19,11 @@ m = GPy.models.GPRegression(trX,trY,k)
 
 m.optimize(messages=True)
 
+
 # %% Prediction
 prY, prV = m.predict(prX)
+
+pd.DataFrame({'preds':prY.flatten(), 'variance': prV.flatten()})
+
 
 # %%
