@@ -12,8 +12,9 @@
   ```
   S -> and(S,A)
   A -> +(B,B), A -> -(B,B), A -> x(B,B)
-  B -> stripe, B -> spot, B -> stick
-  B -> 0, B -> 1, B -> 2, B -> 3
+  B -> C, B -> D,
+  C -> stripe, C -> spot, C -> stick
+  D -> 0, D -> 1, D -> 2, D -> 3
   ```
 
   Generation depth cap at 40
