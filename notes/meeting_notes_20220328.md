@@ -25,6 +25,14 @@
 
 * Results replicate the slicing model (no chunking) as in our cogsci sumbission: no order effects between `construct` and `deconstruct`, and `combine` mixed two alternative explanations (while people and AG model strongly favors one of them).
 
+Note that the PCFG productions here already guarantee that they won't produce senseless expressions.
+A more close-to-AG version might extend the `C ->` productions to
+
+```
+C -> stripe(O), C -> spot(O), C -> stick(O),
+O -> agent_obj, O -> recipient_obj
+```
+
 ### 2. Similarity-based
 
 
@@ -68,6 +76,7 @@ m.optimize(messages=True)
 |     5 |     3.299970 | 0.443514 | -0.040645    | 2.651764 |
 |     6 |     3.299987 | 0.443404 | 2.774185     | 2.705330 |
 |     7 |     3.299961 | 0.443579 | -0.112345    | 4.391032 |
+
 
 ## Paper draft
 
