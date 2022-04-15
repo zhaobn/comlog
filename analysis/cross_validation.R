@@ -107,9 +107,17 @@ for (cond in c('construct', 'decon', 'combine')) {
 write.csv(cross_vl, file=paste0('cross_valids/', model, '_', experi, '.csv'))
 
 
-#### Similarity model ####
-
-
+#### Overall cross validation results ####
+cross_vl=read.csv(text='model,expt,condition,phase,trial,params,LL')
+for (mm in c('AG', 'PCFG', 'similarity')) {
+  for (expt in seq(2)) {
+    cross_vl = rbind(cross_vl, read.csv(paste0('cross_valids/', mm, '_exp_', expt, '.csv'))%>%select(-X))
+  }
+}
+cross_vl %>%
+  group_by(model, expt) %>%
+  summarise(LL=sum(LL)) %>%
+  arrange(expt, LL)
 
 
 
