@@ -33,8 +33,9 @@ Random baseline: -7319.634
 
 ## Writing
 
-Framings
+* Framings
+* Experiments 3 and 4 models
 
-## Experiments 3 and 4
+## Other
 
-## Research statement
+* Research Statement for TG's lab
