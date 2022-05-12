@@ -2,7 +2,7 @@ const mode = 'dev' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
 const conds_for_exp = ['sub', 'mult']; //[ 'comp_mult', 'comp_mult_reverse', 'comp_const' ];
-const cond = conds_for_exp[Math.floor(Math.random() * conds_for_exp.length)];
+const cond = 'demo'; // conds_for_exp[Math.floor(Math.random() * conds_for_exp.length)];
 (mode==='dev'|mode==='test')? console.log(`${mode} mode; condition ${cond}.`) : null;
 
 const start_time = Date.now();
@@ -48,7 +48,7 @@ document.getElementById('intro-demo-test-btn-1').onclick = () => {
 }
 
 /** Prep data */
-const taskIds = prepConfigs(cond);
+const taskIds = prepConfigs();
 
 let aliceLearn = fmtConfig(taskIds['learnA'].map(id => config.filter(c => c['trial_id']==id)[0]), 'alice', 'learn');
 let aliceGen = fmtConfig(shuffleArray(config.filter(c => taskIds['genA'].indexOf(c.trial_id) > -1)), 'alice', 'gen');
@@ -58,7 +58,7 @@ bobLearn.map(bl => bl.trial = bl.trial + aliceLearn.length);
 let bobGen = fmtConfig(shuffleArray(config.filter(c => taskIds['genB'].indexOf(c.trial_id) > -1)), 'bob', 'gen');
 bobGen.map(bg => bg.trial = bg.trial + aliceGen.length);
 
-let genConfigs =  config.filter(c => taskIds['genA'].indexOf(c.trial_id) > -1);
+let genConfigs = config.filter(c => taskIds['genA'].indexOf(c.trial_id) > -1);
 genConfigs = fmtConfig(shuffleArray(genConfigs), 'gen', 'gen');
 
 // For page animation

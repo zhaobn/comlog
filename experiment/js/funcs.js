@@ -656,31 +656,30 @@ function download(content, fileName, contentType) {
 //   }
 //   return setups
 // }
-// Experiment 4
-function prepConfigs(type) {
-  let setups = {}
-  if (type==='sub') {
-    setups = {
-      'learnA': [7, 10, 13],
-      'genA': [100, 55, 94, 71, 31, 19, 41, 3],
-      'learnB': [27, 47, 67],
-      'genB': [100, 55, 94, 71, 31, 19, 41, 3],
-      'genC': [100, 55, 94, 71, 31, 19, 41, 3],
-    }
-  } else {
-    setups = {
-      'learnA': [27, 47, 67],
-      'genA': [100, 55, 94, 71, 31, 19, 41, 3],
-      'learnB': [7, 10, 13],
-      'genB': [100, 55, 94, 71, 31, 19, 41, 3],
-      'genC': [100, 55, 94, 71, 31, 19, 41, 3],
-    }
-  }
-  return setups
-}
+// // Experiment 4
+// function prepConfigs(type) {
+//   let setups = {}
+//   if (type==='sub') {
+//     setups = {
+//       'learnA': [7, 10, 13],
+//       'genA': [100, 55, 94, 71, 31, 19, 41, 3],
+//       'learnB': [27, 47, 67],
+//       'genB': [100, 55, 94, 71, 31, 19, 41, 3],
+//       'genC': [100, 55, 94, 71, 31, 19, 41, 3],
+//     }
+//   } else {
+//     setups = {
+//       'learnA': [27, 47, 67],
+//       'genA': [100, 55, 94, 71, 31, 19, 41, 3],
+//       'learnB': [7, 10, 13],
+//       'genB': [100, 55, 94, 71, 31, 19, 41, 3],
+//       'genC': [100, 55, 94, 71, 31, 19, 41, 3],
+//     }
+//   }
+//   return setups
+// }
 // // Experiment 1
 // function prepConfigs(type) {
-//   // console.log(config)
 //   let setups = {
 //     'learnA': [],
 //     'genA': [],
@@ -742,6 +741,17 @@ function prepConfigs(type) {
 //   }
 //   return setups
 // }
+// Demo for paper
+function prepConfigs() {
+  let setups = {
+      'learnA': [23, 42, 61],
+      'genA': [100, 71, 78, 55, 47, 83, 9, 3],
+      'learnB': [35, 50, 65],
+      'genB': [100, 71, 78, 55, 47, 83, 9, 3],
+      'genC': [100, 71, 78, 55, 47, 83, 9, 3],
+  }
+  return setups
+}
 
 function fmtConfig(dataArr, batch, phase, agentColor = 'tomato') {
   let fmtted = []
@@ -754,7 +764,7 @@ function fmtConfig(dataArr, batch, phase, agentColor = 'tomato') {
     dd['agent'] = data['agent'].replace(/\s/g, '');
     dd['recipient'] = data['recipient'].replace(/\s/g, '');
     dd['result'] = data['result'].replace(/\s/g, '');
-    dd['alter'] = data['alter'].replace(/\s/g, '');
+    dd['alter'] = dd['result'];//data['alter'].replace(/\s/g, '');
     dd['color'] = agentColor
     dd['agentSvg'] = getAgentStoneSvg(dd['agent'], agentColor)
     fmtted.push(dd)
