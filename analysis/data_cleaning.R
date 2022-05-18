@@ -4,7 +4,7 @@ library(googlesheets4)
 rm(list=ls())
 
 
-load('../data/raw/exp_4_raw.rdata')
+load('../data/raw/exp_2_raw.rdata')
 
 # Output to googlesheet to bonus participants
 # When bonus-ing, select prolific_id column
@@ -29,7 +29,12 @@ df.sw = df.sw.raw %>%
          engagement=as.numeric(as.character(engagement)),
          difficulty=as.numeric(as.character(difficulty)),
          certainty_a=as.numeric(as.character(certainty_a)),
-         certainty_b=as.numeric(as.character(certainty_b)))
+         certainty_b=as.numeric(as.character(certainty_b))) %>%
+  mutate(condition=case_when(
+    condition=='comp_mult' ~ 'construct',
+    condition=='comp_const' ~ 'combine',
+    condition=='comp_mult_reverse' ~ 'decon',
+  ))
 
 # df.sw[144,'age'] = 33
 # df.sw[35,'age'] = 31
@@ -71,7 +76,7 @@ trial_data = trial_data %>%
   arrange(ix, condition, batch, trial)
 
 df.tw = trial_data
-save(df.sw, df.tw, file='../data/exp_4_cleaned.rdata')
+save(df.sw, df.tw, file='../data/exp_2_cleaned.rdata')
 
 # Label data
 labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
@@ -185,5 +190,65 @@ rownames(tasks) = NULL
 write.csv(tasks, '../data/tasks/exp_4.csv')
 
 
+#### Re-order gen trials ####
+backup = df.tw
+
+exp1 = df.tw %>% filter(exp=='exp_1')
+exp2 = df.tw %>% filter(exp=='exp_2')
+exp3 = df.tw %>% filter(exp=='exp_3')
+exp4 = df.tw %>% filter(exp=='exp_4')
+
+exp1_order = exp1 %>%
+  select(condition, trial, stripe, dot, block) %>%
+  unique() %>%
+  rename(exp1_tid=trial)
+
+exp2_preordered = exp2 %>%
+  select(condition, trial, stripe, dot, block) %>%
+  unique()
+names(exp2_preordered)=c('condition','trial','exp2_stripe','exp2_dot','block')
+exp2_ordered_id = exp2_preordered %>%
+  mutate(stripe=exp2_dot, dot=exp2_stripe) %>%
+  left_join(exp1_order, by=c('condition','stripe','dot','block')) %>%
+  mutate(stripe=exp2_stripe, dot=exp2_dot, new_tid=exp1_tid) %>%
+  select(condition, trial, new_tid)
+
+exp2_data = exp2 %>%
+  left_join(exp2_ordered_id, by=c('condition','trial')) %>%
+  mutate(trial=new_tid) %>%
+  select(-new_tid) %>%
+  arrange(condition, ix, batch, trial)
+exp1 = exp1 %>%
+  arrange(condition, ix, batch, trial)
+
+
+exp3_order = exp3 %>%
+  select(condition, trial, stripe, dot, block) %>%
+  unique() %>%
+  rename(exp3_tid=trial)
+
+exp4_preordered = exp4 %>%
+  select(condition, trial, stripe, dot, block) %>%
+  unique()
+names(exp4_preordered)=c('condition','trial','exp4_stripe','exp4_dot','block')
+exp4_ordered_id = exp4_preordered %>%
+  mutate(stripe=exp4_dot, dot=exp4_stripe) %>%
+  left_join(exp3_order, by=c('condition','stripe','dot','block')) %>%
+  mutate(stripe=exp4_stripe, dot=exp4_dot, new_tid=exp3_tid) %>%
+  select(condition, trial, new_tid)
+
+exp4_data = exp4 %>%
+  left_join(exp4_ordered_id, by=c('condition','trial')) %>%
+  mutate(trial=new_tid) %>%
+  select(-new_tid) %>%
+  arrange(condition, ix, batch, trial)
+exp3 = exp3 %>%
+  arrange(condition, ix, batch, trial)
+
+df.tw = rbind(exp1, exp2_data, exp3, exp4_data)
+df.tw = df.tw %>%
+  mutate(exp_id=as.numeric(substr(exp, 5, 6))) %>%
+  select(exp_id, ix, condition, batch, trial, stripe, dot, block, prediction)
+save(df.sw, df.tw, file='../data/all_cleaned.Rdata')
 
 

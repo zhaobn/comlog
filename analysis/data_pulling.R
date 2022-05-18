@@ -26,7 +26,9 @@ td <- dbGetQuery(con, "SELECT * from task")
 # td$trialwise
 # Reorder according to id
 td = arrange(td, id)
-td_batch = td[td$id>511,] # Prev until 511
+td_batch = td[td$id>194,] # Re-retrieve exp 2 data
+td_batch = td_batch[td_batch$id<360,]
+
 
 #Un-jsonify it
 inv_fromJSON<-function(js) {
@@ -64,10 +66,10 @@ df.sw %>% filter(prolific_id=='6093e78e30fb90f291b261f9')
 df.sw = df.sw %>% filter(!prolific_id=='5d270f5b1f68140019729a94')
 df.tw = df.tw %>% filter(!prolific_id=='5d270f5b1f68140019729a94')
 
-# # Remove prolific ID
+# Remove prolific ID
 df.sw<-df.sw%>%select(-prolific_id) 
 df.tw<-df.tw%>%select(-prolific_id) 
 
-save(file='../data/raw/exp_4_raw.rdata', df.sw, df.tw)
+save(file='../data/raw/exp_2_raw.rdata', df.sw, df.tw)
 
 
