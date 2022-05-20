@@ -1,5 +1,6 @@
 
 library(dplyr)
+library(tidyr)
 
 load('../data/all_cleaned.Rdata')
 
@@ -56,13 +57,96 @@ for (i in seq(4)) {
 
 
 #### Re-order model preds ####
+# Read python run orders
+py_gen_s = read.csv('../python/for_exp/s_gen.csv') %>% select(-c('condition', 'batch', 'X'))
+py_gen_d = read.csv('../python/for_exp/d_gen.csv') %>% select(-c('condition', 'batch', 'X'))
 
+# Read mturk orders
+mturk_gen_s = read.csv('../data/tasks/exp_1.csv') %>%
+  filter(condition=='construct', batch=='gen') %>%
+  select(trial, stripe, dot, block) %>%
+  unique()
+mturk_gen_d = read.csv('../data/tasks/exp_2.csv') %>%
+  filter(condition=='construct', batch=='gen') %>%
+  select(trial, stripe, dot, block) %>%
+  unique()
 
+# Use mturk trial id for python runs
+py_gen_s_extra = py_gen_s %>% left_join(mturk_gen_s, by=c('stripe','dot','block')) 
+py_gen_d_extra = py_gen_d %>% left_join(mturk_gen_d, by=c('stripe','dot','block')) 
 
+# Re-order python run results 
+reorder_preds = function(read_path, mname, exp_id, cond, batch) {
+  
+  # Read model input
+  mruns = read.csv(read_path) %>% select(-X)
+  mruns = mruns %>%
+    select(terms, starts_with('prob_')) %>%
+    gather('tid', 'prob', -terms) %>%
+    mutate(tid=as.numeric(substr(tid,6,nchar(tid))))
+  
+  # Prep ordering
+  if (exp_id%%2==1) {
+    ordering = py_gen_s_extra %>%
+      mutate(tid=pyid+1) %>%
+      select(tid, trial)
+  } else {
+    ordering = py_gen_d_extra %>%
+      mutate(tid=pyid+1) %>%
+      select(tid, trial) 
+  }
+  
+  # Get ordered preds
+  mruns_ordered = mruns %>%
+    left_join(ordering, by='tid') %>%
+    select(terms, trial, prob) %>%
+    spread(trial, prob)
+  colnames(mruns_ordered) = c('terms', paste0('prob_',seq(8)))
+  
+  # save
+  write.csv(mruns_ordered, 
+            file=paste0('../model_data/',mname,'/exp_',as.character(exp_id),'/',cond,'_preds_',tolower(batch),'.csv'))
+}
 
+# Reorder AG model preds
+reorder_preds('../data/model_preds/stripes/construct_preds_a.csv', 'ag', 1, 'construct', 'a')
+reorder_preds('../data/model_preds/stripes/construct_preds_b.csv', 'ag', 1, 'construct', 'b')
+reorder_preds('../data/model_preds/stripes/combine_preds_a.csv', 'ag', 1, 'combine', 'a')
+reorder_preds('../data/model_preds/stripes/combine_preds_b.csv', 'ag', 1, 'combine', 'b')
+reorder_preds('../data/model_preds/stripes/preds.csv', 'ag', 1, 'decon', 'a')
+reorder_preds('../data/model_preds/stripes/preds.csv', 'ag', 1, 'decon', 'b')
 
+reorder_preds('../data/model_preds/spots/construct_preds_a.csv', 'ag', 2, 'construct', 'a')
+reorder_preds('../data/model_preds/spots/construct_preds_b.csv', 'ag', 2, 'construct', 'b')
+reorder_preds('../data/model_preds/spots/combine_preds_a.csv', 'ag', 2, 'combine', 'a')
+reorder_preds('../data/model_preds/spots/combine_preds_b.csv', 'ag', 2, 'combine', 'b')
+reorder_preds('../data/model_preds/spots/preds.csv', 'ag', 2, 'decon', 'a')
+reorder_preds('../data/model_preds/spots/preds.csv', 'ag', 2, 'decon', 'b')
 
+reorder_preds('../data/model_preds/stripes/combine_preds_a.csv', 'ag', 3, 'combine', 'a')
+reorder_preds('../data/model_preds/stripes/combine_preds_b.csv', 'ag', 3, 'combine', 'b')
+reorder_preds('../data/model_preds/stripes/flip_preds_a.csv', 'ag', 3, 'flip', 'a')
+reorder_preds('../data/model_preds/stripes/flip_preds_b.csv', 'ag', 3, 'flip', 'b')
 
+reorder_preds('../data/model_preds/spots/combine_preds_a.csv', 'ag', 4, 'combine', 'a')
+reorder_preds('../data/model_preds/spots/combine_preds_b.csv', 'ag', 4, 'combine', 'b')
+reorder_preds('../data/model_preds/spots/flip_preds_a.csv', 'ag', 4, 'flip', 'a')
+reorder_preds('../data/model_preds/spots/flip_preds_b.csv', 'ag', 4, 'flip', 'b')
+
+# Reorder PCFG model preds
+for (eid in seq(4)) {
+  if (eid<3) {
+    conds = c('combine', 'construct', 'decon')
+  } else {
+    conds = c('combine', 'flip')
+  }
+  for (cond in conds) {
+    for (batch in c('a', 'b')) {
+      data_path=paste0('../python/pcfgs/data/exp_',as.character(eid),'/',cond,'_preds_',batch,'.csv')
+      reorder_preds(data_path, 'pcfg', eid, cond, batch)
+    }
+  }
+}
 
 
 

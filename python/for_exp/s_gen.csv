@@ -1,0 +1,9 @@
+,condition,batch,pyid,stripe,dot,block
+0,construct,gen,0,0,0,3
+1,construct,gen,1,0,2,1
+2,construct,gen,2,2,1,3
+3,construct,gen,3,2,3,3
+4,construct,gen,4,3,2,3
+5,construct,gen,5,3,4,2
+6,construct,gen,6,4,0,3
+7,construct,gen,7,4,4,4

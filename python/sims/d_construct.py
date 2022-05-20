@@ -59,5 +59,23 @@ b_gen = sim_for_all(task_data['gen'],  Program_lib(b_learned), 1000)
 b_gen.to_csv(f'{DVAR}/{COND}_preds_b.csv')
 
 
+# %% TEMP: get list of tasks, for reordering to align mturk data
+pytask = []
+for idx, ti in enumerate(task_ids['gen']):
+  d_entry = {}
+  data = all_data[all_data.trial_id==ti]
+  agent_vals = data['agent'].values[0][1:-1]
+
+  d_entry['condition'] = 'construct'
+  d_entry['batch'] = 'gen'
+  d_entry['pyid'] = idx
+  d_entry['stripe'] = int(agent_vals.split()[0][0])
+  d_entry['dot'] = int(agent_vals.split()[1][0])
+  d_entry['block'] = int(data['recipient'].values[0][1:-1].split()[-1])
+
+  pytask.append(d_entry)
+
+pd.DataFrame(pytask).to_csv('../for_exp/d_gen.csv')
+
 
 # %%
