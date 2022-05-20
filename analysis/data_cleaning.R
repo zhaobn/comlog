@@ -4,7 +4,7 @@ library(googlesheets4)
 rm(list=ls())
 
 
-load('../data/raw/exp_2_raw.rdata')
+load('../data/raw/exp_4_raw.rdata')
 
 # Output to googlesheet to bonus participants
 # When bonus-ing, select prolific_id column
@@ -30,11 +30,12 @@ df.sw = df.sw.raw %>%
          difficulty=as.numeric(as.character(difficulty)),
          certainty_a=as.numeric(as.character(certainty_a)),
          certainty_b=as.numeric(as.character(certainty_b))) %>%
-  mutate(condition=case_when(
-    condition=='comp_mult' ~ 'construct',
-    condition=='comp_const' ~ 'combine',
-    condition=='comp_mult_reverse' ~ 'decon',
-  ))
+  mutate(condition=ifelse(condition=='mult', 'combine', 'flip'))
+  # mutate(condition=case_when(
+  #   condition=='comp_mult' ~ 'construct',
+  #   condition=='comp_const' ~ 'combine',
+  #   condition=='comp_mult_reverse' ~ 'decon',
+  # ))
 
 # df.sw[144,'age'] = 33
 # df.sw[35,'age'] = 31
@@ -54,6 +55,7 @@ df.tw = df.tw %>%
 
 # Extract key feature values
 trial_data = df.tw %>%
+  filter(phase=='gen') %>%
   mutate(exp_trial=trial,
          tid=as.character(tid),
          tid=as.numeric(substr(tid,2, nchar(tid))),
@@ -76,7 +78,7 @@ trial_data = trial_data %>%
   arrange(ix, condition, batch, trial)
 
 df.tw = trial_data
-save(df.sw, df.tw, file='../data/exp_2_cleaned.rdata')
+save(df.sw, df.tw, file='../data/exp_4_cleaned.rdata')
 
 # Label data
 labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
@@ -191,12 +193,13 @@ write.csv(tasks, '../data/tasks/exp_4.csv')
 
 
 #### Re-order gen trials ####
+load('../data/all_cleaned.Rdata')
 backup = df.tw
 
-exp1 = df.tw %>% filter(exp=='exp_1')
-exp2 = df.tw %>% filter(exp=='exp_2')
-exp3 = df.tw %>% filter(exp=='exp_3')
-exp4 = df.tw %>% filter(exp=='exp_4')
+exp1 = df.tw %>% filter(exp=='exp_1') #filter(exp_id==1)
+exp2 = df.tw %>% filter(exp=='exp_2')#filter(exp_id==2)
+exp3 = df.tw %>% filter(exp=='exp_3')#filter(exp_id==3)
+exp4 = df.tw %>% filter(exp=='exp_4')#filter(exp_id==4)
 
 exp1_order = exp1 %>%
   select(condition, trial, stripe, dot, block) %>%
@@ -250,5 +253,48 @@ df.tw = df.tw %>%
   mutate(exp_id=as.numeric(substr(exp, 5, 6))) %>%
   select(exp_id, ix, condition, batch, trial, stripe, dot, block, prediction)
 save(df.sw, df.tw, file='../data/all_cleaned.Rdata')
+
+
+# Rename Experiment 4 conditions
+exp4 = exp4 %>%
+  mutate(condition=ifelse(condition=='mult','combine','flip'))
+df.tw = rbind(exp1, exp2, exp3, exp4)
+
+# Rename df.sw exp_id, 
+cols = names(df.sw) # for later colname selection
+df.sw = df.sw %>%
+  mutate(exp_id=as.numeric(substr(exp, 5, 6)))
+    
+# Fix Experiment 4 condition name in df.sw
+exp4_sw = df.sw %>%
+  filter(exp_id==4) %>%
+  mutate(condition=ifelse(condition=='mult','combine','flip')) %>%
+  select(c('exp_id',cols[2:length(cols)]))
+other_sw = df.sw %>%
+  filter(exp_id!=4) %>%
+  select(c('exp_id',cols[2:length(cols)]))
+df.sw = rbind(other_sw, exp4_sw)
+
+save(df.sw, df.tw, file='../data/all_cleaned.Rdata')
+
+# Rename exp to exp_id
+cols = colnames(df.sw)
+df.sw = df.sw %>%
+  mutate(exp_id=as.numeric(substr(exp, 5, 6))) %>%
+  select(c('exp_id',cols[2:length(cols)]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

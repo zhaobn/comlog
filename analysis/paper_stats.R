@@ -3,8 +3,8 @@ library(dplyr)
 library(tidyr)
 
 #### Curriculum-order effects ####
-cur_accs = test %>% 
-  filter(exp<3, condition %in% c('construct', 'decon'), batch=='B') %>%
+cur_accs = df.tw %>% 
+  filter(exp_id<3, condition %in% c('construct', 'decon'), batch=='B') %>%
   mutate(acc=(prediction==gt))
 
 cur_accs %>% 
