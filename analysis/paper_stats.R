@@ -2,6 +2,17 @@
 library(dplyr)
 library(tidyr)
 
+load('../data/all_cleaned.Rdata')
+load('../data/all_coded.Rdata')
+
+#### Pre-processing #####
+## add ground truth (gt) and alternative truths (alt) to data 
+answers = read.csv('../data/tasks/answers.csv') %>% select(-X)
+df.tw = df.tw %>%
+  left_join(select(answers, exp_id, condition, trial, gt, alt), 
+            by=c('exp_id', 'condition','trial'))
+
+
 #### Curriculum-order effects ####
 cur_accs = df.tw %>% 
   filter(exp_id<3, condition %in% c('construct', 'decon'), batch=='B') %>%
@@ -19,7 +30,7 @@ t.test(
 
 cur_labs = labels %>%
   filter(exp %in% c('exp_1', 'exp_2'), condition %in% c('construct', 'decon')) %>%
-  mutate(got_gt=(rule_b=='ground_truth')) 
+  mutate(got_gt=(rule_cat_b=='ground_truth')) 
 
 cur_labs %>%
   group_by(condition) %>%
@@ -38,8 +49,8 @@ cur_labs %>%
 
 
 #### Compositions ####
-comp_accs = test %>% 
-  filter(exp<3, condition %in% c('construct', 'combine'), batch=='B') %>%
+comp_accs = df.tw %>% 
+  filter(exp_id<3, condition %in% c('construct', 'combine'), batch=='B') %>%
   mutate(acc=(prediction==gt))
 
 comp_accs %>% 
@@ -54,7 +65,7 @@ t.test(
 
 comp_labs = labels %>%
   filter(exp %in% c('exp_1', 'exp_2'), condition %in% c('construct', 'combine')) %>%
-  mutate(got_gt=(rule_b=='ground_truth')) 
+  mutate(got_gt=(rule_cat_b=='ground_truth')) 
 
 comp_labs %>%
   group_by(condition) %>%
@@ -78,8 +89,8 @@ labels %>%
 
 #### Compositions ####
 # Code the rules according to generalization predictions
-forms_data = test %>%
-  filter(exp>2, batch=='B') %>%
+forms_data = df.tw %>%
+  filter(exp_id>2, batch=='B') %>%
   group_by(condition, ix) %>%
   summarise(n=n(), gt=sum(prediction==gt), alt=sum(prediction==alt)) %>%
   mutate(is_gt=(gt>6), is_alt=(alt>6))

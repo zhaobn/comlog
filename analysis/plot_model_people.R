@@ -290,31 +290,6 @@ ggplot(acc_data_sd2_sfed, aes(x=batch, y=accuracy)) +
 
 #### End of Plots for Experiment 1
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #### Plots for Experiment 2 ####
 load('../data/exp_2_cleaned.rdata')
 tasks = df.tw %>%
@@ -581,6 +556,14 @@ ggplot(acc_data_sd2_sfed, aes(x=batch, y=accuracy)) +
   )
 
 #### End of Plots for Experiment 2
+
+
+
+
+
+
+
+
 
 
 

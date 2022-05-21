@@ -54,6 +54,29 @@ for (i in seq(4)) {
   save_task(i)
 }
 
+#### Fix exp 4 names ####
+exp4 = filter(df.tw, exp_id==4)
+others = filter(df.tw, exp_id!=4)
+exp4 = exp4 %>%
+  mutate(batch=ifelse(batch=='alice','A','B'))
+df.tw = rbind(others, exp4)
+save(df.sw, df.tw, file = '../data/all_cleaned.Rdata')
+
+#### Get all task answers into a single csv ####
+answer_cols = c('exp_id','condition','trial','stripe','dot','block','gt','alt')
+answer_df = data.frame(matrix(ncol=length(answer_cols), nrow = 0))
+colnames(answer_df) <- answer_cols
+
+for (eid in seq(4)) {
+  expdata=read.csv(paste0('../data/tasks/exp_',eid,'.csv')) %>%
+    filter(batch=='gen') %>%
+    mutate(exp_id=eid) %>%
+    select(exp_id,condition,trial,stripe,dot,block,gt,alt)
+  answer_df = rbind(answer_df, expdata)
+}
+
+write.csv(answer_df, file='../data/tasks/answers.csv')
+
 
 
 #### Re-order model preds ####

@@ -696,8 +696,6 @@ df.tw %>%
 #### End of Experiment 1 raw and model preds #######################
 
 
-
-
 #### Pilot data plots #####################################
 load('../data/pilot_1_cleaned.rdata')
 
@@ -777,6 +775,121 @@ df.tw %>%
 
 
 #### End of Pilot data plots ###################
+
+
+#### Lollipop accuracy plots###################
+
+## Prep accuracy data
+# participant data
+answers = read.csv('../data/tasks/answers.csv')
+df.tw = df.tw %>%
+  left_join(select(answers, exp_id, condition, trial, gt, alt), 
+            by=c('exp_id', 'condition','trial'))
+
+accs_ppt = df.tw %>%
+  mutate(acc=(prediction==gt)) %>%
+  group_by(condition, batch) %>%
+  summarise(acc=round(sum(acc)/n(),2)) %>%
+  spread(batch, acc) %>%
+  mutate(condition=factor(condition, levels=c('construct','combine','decon','flip')))
+
+
+## Plot
+ggplot(accs_ppt) +
+  geom_segment(aes(x=condition, xend=condition, y=A, yend=B), color="grey") +
+  geom_point(aes(x=condition, y=A), color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+  geom_point(aes(x=condition, y=B), color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+  coord_flip()+
+  scale_x_discrete(limits = rev(levels(accs_ppt$condition))) +
+  theme_bw() +
+  theme(
+    legend.position = "none",
+  ) +
+  xlab("") +
+  ylab("Accuracy")
+
+
+
+#### End of Lollipop accuracy plots###################
+
+
+
+#### Ridge plots collapsed data ###################
+
+load('../data/all_cleaned.rdata')
+answers = df.tw %>%
+  group_by(trial) %>%
+  summarise(stripe=max(stripe), dot=max(dot), block=max(block)) %>%
+  mutate(gtruth=stripe*block-dot) %>%
+  mutate(prediction=if_else(gtruth<0, 0, gtruth)) %>%
+  mutate(trial=as.factor(as.character(trial)))
+answers$batch='A'
+aa = answers
+bb = aa
+bb$batch = 'B'
+answers = rbind(aa, bb)
+
+
+AG.preds = data.frame(exp_id=numeric(0), condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
+for (eid in seq(4)) {
+  if (eid<3) {
+    conditions = c('construct', 'combine', 'decon')
+  } else {
+    conditions = c('combine', 'flip')
+  }
+  for (cond in conditions) {
+    for (ph in c('a', 'b')) {
+      preds = read.csv(paste0(
+        '../model_data/ag/exp_',as.character(eid),'/', 
+        cond, '_preds_', ph, '.csv'))
+      preds_fmt = preds %>%
+        select(terms, starts_with('prob')) %>%
+        gather(trial, value, starts_with('prob')) %>%
+        mutate(
+          exp_id=eid,
+          condition=cond,
+          terms=terms,
+          trial=as.numeric(substr(trial, 6, nchar(trial))),
+          batch=toupper(ph)) %>%
+        select(exp_id, condition, batch, trial, prediction=terms, value)
+      AG.preds = rbind(AG.preds, preds_fmt)
+    }
+  }
+}
+
+AG.grouped = AG.preds %>% 
+  group_by(condition, batch, trial, prediction) %>%
+  summarise(value=sum(value)/n()) %>%
+  mutate(
+    trial=as.factor(as.character(trial)),
+    value=round(as.numeric(value), 4)
+  ) 
+
+
+# Plot together
+df.tw %>%
+  mutate(trial=as.factor(as.character(trial))) %>%
+  ggplot( aes(y=trial, x=prediction, fill=trial)) +
+  geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
+  geom_point(data=answers) +
+  geom_density_ridges(data=AG.grouped, aes(height=value), stat="identity", alpha=0.4, scale=0.95) +
+  scale_x_discrete(limits=c(0,seq(max(AG.grouped$prediction)))) +
+  scale_y_discrete(limits=rev) +
+  facet_grid(batch~condition) +
+  theme_bw() +
+  theme(
+    legend.position = 'none',
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)
+  )
+
+#### End of Ridge plots collapsed data ###################
+
+
+
+
+
+
+
 
 
 
