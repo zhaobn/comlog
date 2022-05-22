@@ -56,7 +56,7 @@ sftmx_trial = function(data, par) {
 
 
 #### AG & PCFG model ########
-model = 'AG'
+model = 'PCFG'
 
 cross_vl=read.csv(text='model,exp_id,condition,phase,trial,params,LL')
 for (eid in seq(4)) {
@@ -83,7 +83,7 @@ for (eid in seq(4)) {
       for (tid in seq(8)) {
         training = model_raw_ppt %>% filter(trial!=tid)
         out = optim(par=0, hazfit, method="L-BFGS-B", data=training)
-        out = optim(par=0, sftmx_trial, method="L-BFGS-B", data=training)
+        #out = optim(par=0, sftmx_trial, method="L-BFGS-B", data=training)
         cross_vl = rbind(cross_vl, data.frame(
           model=model, exp_id=eid, condition=cond, phase=toupper(phase), trial=tid, params=out$par, LL=-out$value
         ))

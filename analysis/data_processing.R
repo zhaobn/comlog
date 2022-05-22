@@ -165,7 +165,7 @@ for (eid in seq(4)) {
   }
   for (cond in conds) {
     for (batch in c('a', 'b')) {
-      data_path=paste0('../python/pcfgs/data/exp_',as.character(eid),'/',cond,'_preds_',batch,'.csv')
+      data_path=paste0('../python/pcfgs/data_perbatch/exp_',as.character(eid),'/',cond,'_preds_',batch,'.csv')
       reorder_preds(data_path, 'pcfg', eid, cond, batch)
     }
   }

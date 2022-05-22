@@ -798,7 +798,7 @@ accs_ppt = df.tw %>%
   )
 
 # AG pred
-ag_params = read.csv('cross_valids/AG_haz.csv')
+ag_params = read.csv('cross_valids/AG.csv')
 
 sigmoid = function(x) return(1/(1+exp(-x)))
 normalize = function(vec) return(vec/sum(vec))
@@ -856,7 +856,7 @@ accs_ag = AG.preds %>%
 
 
 # PCFG pred
-pcfg_params = read.csv('cross_valids/PCFG_haz.csv')
+pcfg_params = read.csv('cross_valids/PCFG.csv')
 PCFG.preds = data.frame(exp_id=numeric(0), condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
 for (eid in seq(4)) {
   conditions = if (eid<3) c('construct', 'combine', 'decon') else c('combine', 'flip')
@@ -950,7 +950,7 @@ for (eid in seq(4)) {
   for (cond in conditions) {
     for (ph in c('a', 'b')) {
       preds = read.csv(paste0(
-        '../model_data/pcfg/exp_',as.character(eid),'/', 
+        '../model_data/ag/exp_',as.character(eid),'/', 
         cond, '_preds_', ph, '.csv'))
       preds_fmt = preds %>%
         select(terms, starts_with('prob')) %>%
