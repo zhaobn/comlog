@@ -5,8 +5,8 @@ from Rational_rules import *
 
 # %%
 # read data
-exp_data = pd.read_json('../for_exp/config_2.json')
-gen_ids = [100, 55, 94, 71, 31, 19, 41, 3]
+exp_data = pd.read_json('../for_exp/config.json')
+gen_ids = [100, 71, 78, 55, 47, 83, 9, 3]
 gen_ids.sort()
 gen_data = []
 for id in gen_ids:
@@ -29,7 +29,7 @@ rt_model = Rational_rules(productions, cap=40)
 
 # %%
 # read rules
-rules = pd.read_csv('data/ld_C2.csv', index_col=0)
+rules = pd.read_csv('data_perbatch/ld_C2.csv', index_col=0)
 
 # Initialize prediction df
 predictions = pd.DataFrame({'terms': [str(x) for x in list(range(N_TERMS))]})
@@ -46,6 +46,6 @@ for (ix, gd) in enumerate(gen_data):
   predictions = pd.concat([predictions, df_gen], axis=1)
 
 # Save carefully
-predictions.to_csv('data/exp_4/flip_preds_a.csv')
+predictions.to_csv('data_perbatch/exp_2/combine_preds_b.csv')
 
 # %%

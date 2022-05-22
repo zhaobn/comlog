@@ -50,7 +50,7 @@ a_gen.to_csv(f'{DVAR}/{COND}_preds_a.csv')
 pl2 = Program_lib(pd.read_csv(f'samples/{COND}a_post_samples.csv', index_col=0, na_filter=False))
 pl2.update_lp_adaptor()
 pl2.update_overall_lp()
-g2 = Gibbs_sampler(pl2, all_frames,  task_data['learn_a']+task_data['learn_b'], iteration=LEARN_ITER, lib_is_post=True)
+g2 = Gibbs_sampler(pl2, all_frames, task_data['learn_b'], iteration=LEARN_ITER, lib_is_post=True)
 g2.run(top_n=TOP_N, save_prefix=f'samples/{COND}b_', save_intermediate=False)
 
 # Gen predictions B
