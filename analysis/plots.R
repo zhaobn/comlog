@@ -794,7 +794,8 @@ accs_ppt = df.tw %>%
   spread(batch, acc) %>%
   mutate(
     model='mturk',
-    condition=factor(condition, levels=c('construct','combine','decon','flip'))
+    condition=factor(condition, levels=c('construct','combine','decon','flip')),
+    type='mturk'
   )
 
 # AG pred
@@ -850,7 +851,8 @@ accs_ag = AG.preds %>%
   spread(batch, acc) %>%
   mutate(
     model='AG',
-    condition=factor(condition, levels=c('construct','combine','decon','flip'))
+    condition=factor(condition, levels=c('construct','combine','decon','flip')),
+    type='batch'
   )
 
 
@@ -863,7 +865,7 @@ for (eid in seq(4)) {
   for (cond in conditions) {
     for (ph in c('a', 'b')) {
       preds = read.csv(paste0(
-        '../model_data/pcfg/exp_',as.character(eid),'/', 
+        '../model_data/pcfg_all/exp_',as.character(eid),'/', 
         cond, '_preds_', ph, '.csv'))
       preds_fmt = preds %>%
         select(terms, starts_with('prob')) %>%
@@ -888,7 +890,7 @@ for (eid in seq(4)) {
   }
 }
 
-accs_pfcg = PCFG.preds %>%
+accs_pfcg_inc = PCFG.preds %>%
   left_join(answers, by=c('exp_id','condition','trial')) %>%
   mutate(acc=(prediction==gt)) %>%
   group_by(condition, batch) %>%
@@ -896,15 +898,38 @@ accs_pfcg = PCFG.preds %>%
   spread(batch, acc) %>%
   mutate(
     model='PCFG',
-    condition=factor(condition, levels=c('construct','combine','decon','flip'))
+    condition=factor(condition, levels=c('construct','combine','decon','flip')),
+    type='inc'
   )
 
 
+## Put together
+
+accs_ag_avg = accs_ag %>% 
+  left_join(accs_ag_inc, by='condition') %>%
+  mutate(A=(A.x+A.y)/2, B=(B.x+B.y)/2, model='AG', type='avg') %>%
+  select(condition, A, B, model, type)
+
+accs_pcfg_avg = accs_pfcg %>% 
+  left_join(accs_pfcg_inc, by='condition') %>%
+  mutate(A=(A.x+A.y)/2, B=(B.x+B.y)/2, model='PCFG', type='avg') %>%
+  select(condition, A, B, model, type)
+
+accs_ppt_inc = accs_ppt %>% mutate(type='inc')
+accs_ppt_batch = accs_ppt %>% mutate(type='batch')
+accs_ppt_avg = accs_ppt %>% mutate(type='avg')
+
+accs_data = rbind(
+  accs_ag, accs_pfcg, accs_ppt_batch,
+  accs_ag_inc, accs_pfcg_inc, accs_ppt_inc,
+  accs_ag_avg,accs_pcfg_avg, accs_ppt_avg
+)
 
 
 ## Plot
-accs_data = rbind(accs_ppt, accs_ag, accs_pfcg) %>%
-  mutate(model=factor(model, levels=c('mturk','AG', 'PCFG')))
+accs_data = accs_data %>%
+  mutate(model=factor(model, levels=c('mturk','AG', 'PCFG')),
+         type=factor(type,levels=c('batch','inc','avg')))
 ggplot(accs_data) +
   geom_segment(aes(x=model, xend=model, y=A, yend=B), color="grey") +
   geom_point(aes(x=model, y=A), color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
@@ -917,7 +942,7 @@ ggplot(accs_data) +
   ) +
   xlab("") +
   ylab("Accuracy") +
-  facet_grid(~condition)
+  facet_grid(type~condition)
 
 
 #### End of Lollipop accuracy plots###################
