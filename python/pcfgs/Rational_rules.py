@@ -64,16 +64,17 @@ def spot(d): return d[0][4:-1].split(',')[1][1:]
 def stick(d): return d[1]
 
 
-# %% Debug
-productions = [
-  ['S', ['add(A,A)', 'sub(A,A)', 'mult(A,A)']],
-  ['A', ['S', 'B']],
-  ['B', ['C', 'D']],
-  ['C', ['stripe(d)', 'spot(d)', 'stick(d)']],
-  ['D', ['0', '1', '2', '3']]
-]
-test = Rational_rules(productions, cap=100)
-test.generate_tree()
+# # %% Debug
+# productions = [
+#   ['S', ['add(A,A)', 'sub(A,A)', 'mult(A,A)']],
+#   ['A', ['S', 'B']],
+#   ['B', ['C', 'D']],
+#   ['C', ['stripe(d)', 'spot(d)', 'stick(d)']],
+#   ['D', ['0', '1', '2', '3']]
+# ]
+# test = Rational_rules(productions, cap=100)
+# test.generate_tree()
+
 
 # # x = test.generate_tree()
 # # x = test.generate_tree(logging=False)
