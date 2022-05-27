@@ -4,18 +4,6 @@ import pandas as pd
 from Rational_rules import *
 
 # %%
-# read data
-exp_data = pd.read_json('../for_exp/config.json')
-gen_ids = [100, 71, 78, 55, 47, 83, 9, 3]
-gen_ids.sort()
-gen_data = []
-for id in gen_ids:
-  data = exp_data[exp_data.trial_id==id]
-  _, agent, recipient, result = list(data.iloc[0])
-  converted = (f'Egg(S{agent[1]},O{agent[4]})', recipient[-2], result[-2])
-  gen_data.append(converted)
-
-
 # initialize model
 N_TERMS = 17
 productions = [
@@ -28,8 +16,18 @@ productions = [
 rt_model = Rational_rules(productions, cap=40)
 
 # %%
+# read data
+gen_data = []
+tasks = pd.read_csv('../../data/tasks/exp_2.csv', index_col=0)
+tasks = tasks[tasks['condition']=='construct']
+gen_tasks = tasks[tasks['batch']=='gen'].reset_index()
+for i in gen_tasks.index:
+  task_dt = gen_tasks.iloc[i]
+  task_obj = (f"Egg(S{task_dt['stripe']},O{task_dt['dot']})", str(task_dt['block']), str( task_dt['result_block']))
+  gen_data.append(task_obj)
+
 # read rules
-rules = pd.read_csv('data_perbatch/ld_C2.csv', index_col=0)
+rules = pd.read_csv('data/d13.csv', index_col=0)
 
 # Initialize prediction df
 predictions = pd.DataFrame({'terms': [str(x) for x in list(range(N_TERMS))]})
@@ -45,7 +43,7 @@ for (ix, gd) in enumerate(gen_data):
   df_gen = pd.DataFrame({f'prob_{ix+1}': normed_probs})
   predictions = pd.concat([predictions, df_gen], axis=1)
 
-# Save carefully
-predictions.to_csv('data_perbatch/exp_2/combine_preds_b.csv')
+# Save
+predictions.to_csv('data/exp_2/combine_preds_b.csv')
 
 # %%

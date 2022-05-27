@@ -54,15 +54,6 @@ class Rational_rules:
 
 
 # %%
-# #### Definitions
-# productions = [
-#   ['S', ['add(A,A)', 'sub(A,A)', 'mult(A,A)']],
-#   ['A', ['S', 'B']],
-#   ['B', ['C', 'D']],
-#   ['C', ['stripe(d)', 'spot(d)', 'stick(d)']],
-#   ['D', ['0', '1', '2', '3']]
-# ]
-
 # #### For evaluation
 def add(x, y): return int(x)+int(y)
 def sub(x, y): return int(x)-int(y)
@@ -73,13 +64,22 @@ def spot(d): return d[0][4:-1].split(',')[1][1:]
 def stick(d): return d[1]
 
 
-# # %% Debug
-# test = Rational_rules(productions, cap=40)
-# x = test.generate_tree()
-# x = test.generate_tree(logging=False)
+# %% Debug
+productions = [
+  ['S', ['add(A,A)', 'sub(A,A)', 'mult(A,A)']],
+  ['A', ['S', 'B']],
+  ['B', ['C', 'D']],
+  ['C', ['stripe(d)', 'spot(d)', 'stick(d)']],
+  ['D', ['0', '1', '2', '3']]
+]
+test = Rational_rules(productions, cap=100)
+test.generate_tree()
 
-# demo_data = ('Egg(S3,O0)', '4', '3')
-# demo_rule = ('mult(stripe(d),stick(d))', -6.068425588244111)
+# # x = test.generate_tree()
+# # x = test.generate_tree(logging=False)
+
+# demo_rule = ('mult(stick(d),add(spot(d),add(stripe(d),spot(d))))',-14.62)
+# demo_data = ('Egg(S1,O4)', '3', '0')
 
 # y = test.evaluate(demo_rule, demo_data)
 # test.predict(demo_rule, demo_data)

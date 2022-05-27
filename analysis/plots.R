@@ -964,14 +964,9 @@ bb = aa
 bb$batch = 'B'
 answers = rbind(aa, bb)
 
-
-AG.preds = data.frame(exp_id=numeric(0), condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
+model.preds = data.frame(exp_id=numeric(0), condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
 for (eid in seq(4)) {
-  if (eid<3) {
-    conditions = c('construct', 'combine', 'decon')
-  } else {
-    conditions = c('combine', 'flip')
-  }
+  conditions =  if (eid<3) c('construct', 'combine', 'decon') else c('combine', 'flip')
   for (cond in conditions) {
     for (ph in c('a', 'b')) {
       preds = read.csv(paste0(
@@ -987,12 +982,12 @@ for (eid in seq(4)) {
           trial=as.numeric(substr(trial, 6, nchar(trial))),
           batch=toupper(ph)) %>%
         select(exp_id, condition, batch, trial, prediction=terms, value)
-      AG.preds = rbind(AG.preds, preds_fmt)
+      model.preds = rbind(model.preds, preds_fmt)
     }
   }
 }
 
-AG.grouped = AG.preds %>% 
+model.preds = model.preds %>% 
   group_by(condition, batch, trial, prediction) %>%
   summarise(value=sum(value)/n()) %>%
   mutate(
@@ -1000,7 +995,7 @@ AG.grouped = AG.preds %>%
     value=round(as.numeric(value), 4)
   ) 
 
-AG.grouped = AG.preds %>%
+model.grouped = model.preds %>%
   group_by(condition, batch, trial, prediction) %>%
   summarise(value=sum(normalized)/n()) %>%
   mutate(
@@ -1008,15 +1003,13 @@ AG.grouped = AG.preds %>%
     value=round(as.numeric(value), 4)
   ) 
 
-
-# Plot together
 df.tw %>%
   mutate(trial=as.factor(as.character(trial))) %>%
   ggplot( aes(y=trial, x=prediction, fill=trial)) +
   geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
   geom_point(data=answers) +
-  geom_density_ridges(data=AG.grouped, aes(height=value), stat="identity", alpha=0.4, scale=0.95) +
-  scale_x_discrete(limits=c(0,seq(max(AG.grouped$prediction)))) +
+  geom_density_ridges(data=model.preds, aes(height=value), stat="identity", alpha=0.4, scale=0.95) +
+  scale_x_discrete(limits=c(0,seq(max(model.preds$prediction)))) +
   scale_y_discrete(limits=rev) +
   facet_grid(batch~condition) +
   theme_bw() +

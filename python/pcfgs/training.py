@@ -13,8 +13,6 @@ productions = [
 rat_rules_model = Rational_rules(productions, cap=40)
 
 # %% Prep data
-ld_lookup = {}
-
 exp_1_data = pd.read_json('../for_exp/config.json')
 exp_1_ids = {
   'learn_a': [23, 42, 61],
@@ -44,8 +42,6 @@ for (ix, id) in enumerate(exp_1_ids_list+exp_2_ids_list):
 
   _, agent, recipient, result = list(data.iloc[0])
   converted = (f'Egg(S{agent[1]},O{agent[4]})', recipient[-2], result[-2])
-
-  ld_lookup[dt_name] = id
   ld_all[dt_name] = converted
 
 
@@ -54,29 +50,29 @@ N = 100000
 sampled_rules = pd.DataFrame({
   'rule': pd.Series(dtype='str'), 'log_prob': pd.Series(dtype='float'),
 })
-df_A1 = sampled_rules.copy()
-df_B1 = sampled_rules.copy()
-df_C1 = sampled_rules.copy()
-df_cons1 = sampled_rules.copy()
-df_comb1 = sampled_rules.copy()
+s1 = sampled_rules.copy()
+s2 = sampled_rules.copy()
+s3 = sampled_rules.copy()
+s12 = sampled_rules.copy()
+s13 = sampled_rules.copy()
 
-df_A2 = sampled_rules.copy()
-df_B2 = sampled_rules.copy()
-df_C2 = sampled_rules.copy()
-df_cons2 = sampled_rules.copy()
-df_comb2 = sampled_rules.copy()
+d1 = sampled_rules.copy()
+d2 = sampled_rules.copy()
+d3 = sampled_rules.copy()
+d12= sampled_rules.copy()
+d13 = sampled_rules.copy()
 
 def save_dfs():
-  df_A1.drop_duplicates(ignore_index=True).to_csv('data/ld_A1.csv')
-  df_B1.drop_duplicates(ignore_index=True).to_csv('data/ld_B1.csv')
-  df_C1.drop_duplicates(ignore_index=True).to_csv('data/ld_C1.csv')
-  df_cons1.drop_duplicates(ignore_index=True).to_csv('data/ld_cons1.csv')
-  df_comb1.drop_duplicates(ignore_index=True).to_csv('data/ld_comb1.csv')
-  df_A2.drop_duplicates(ignore_index=True).to_csv('data/ld_A2.csv')
-  df_B2.drop_duplicates(ignore_index=True).to_csv('data/ld_B2.csv')
-  df_C2.drop_duplicates(ignore_index=True).to_csv('data/ld_C2.csv')
-  df_cons2.drop_duplicates(ignore_index=True).to_csv('data/ld_cons2.csv')
-  df_comb2.drop_duplicates(ignore_index=True).to_csv('data/ld_comb2.csv')
+  s1.drop_duplicates(ignore_index=True).to_csv('data/s1.csv')
+  s2.drop_duplicates(ignore_index=True).to_csv('data/s2.csv')
+  s3.drop_duplicates(ignore_index=True).to_csv('data/s3.csv')
+  s12.drop_duplicates(ignore_index=True).to_csv('data/s12.csv')
+  s13.drop_duplicates(ignore_index=True).to_csv('data/s13.csv')
+  d1.drop_duplicates(ignore_index=True).to_csv('data/d1.csv')
+  d2.drop_duplicates(ignore_index=True).to_csv('data/d2.csv')
+  d3.drop_duplicates(ignore_index=True).to_csv('data/d3.csv')
+  d12.drop_duplicates(ignore_index=True).to_csv('data/d12.csv')
+  d13.drop_duplicates(ignore_index=True).to_csv('data/d13.csv')
 
 
 # %%
@@ -91,39 +87,39 @@ while k<N:
       learned[dt_name] = Rational_rules.evaluate(generated, data)[0] # Just the bool
     # add to df
     to_append = pd.DataFrame({'rule': [generated[0]], 'log_prob':[generated[1]]})
-    if learned['exp1_ld1'] and learned['exp1_ld2'] and learned['exp1_ld3']:
-      df_A1 = pd.concat([df_A1, to_append], ignore_index=True)
-    if learned['exp1_ld4'] and learned['exp1_ld5'] and learned['exp1_ld6']:
-      df_B1 = pd.concat([df_B1, to_append], ignore_index=True)
-    if learned['exp1_ld7'] and learned['exp1_ld8'] and learned['exp1_ld9']:
-      df_C1 = pd.concat([df_C1, to_append], ignore_index=True)
+    if (learned['exp1_ld1'] and learned['exp1_ld2'] and learned['exp1_ld3']):
+      s1 = pd.concat([s1, to_append], ignore_index=True)
+    if (learned['exp1_ld4'] and learned['exp1_ld5'] and learned['exp1_ld6']):
+      s2 = pd.concat([s2, to_append], ignore_index=True)
+    if (learned['exp1_ld7'] and learned['exp1_ld8'] and learned['exp1_ld9']):
+      s3 = pd.concat([s3, to_append], ignore_index=True)
     if (
       learned['exp1_ld1'] and learned['exp1_ld2'] and learned['exp1_ld3'] and
       learned['exp1_ld4'] and learned['exp1_ld5'] and learned['exp1_ld6']
     ):
-      df_cons1 = pd.concat([df_cons1, to_append], ignore_index=True)
+      s12 = pd.concat([s12, to_append], ignore_index=True)
     if (
       learned['exp1_ld1'] and learned['exp1_ld2'] and learned['exp1_ld3'] and
       learned['exp1_ld7'] and learned['exp1_ld8'] and learned['exp1_ld9']
     ):
-      df_comb1 = pd.concat([df_comb1, to_append], ignore_index=True)
+      s13 = pd.concat([s13, to_append], ignore_index=True)
 
-    if learned['exp2_ld1'] and learned['exp2_ld2'] and learned['exp2_ld3']:
-      df_A2 = pd.concat([df_A2, to_append], ignore_index=True)
-    if learned['exp2_ld4'] and learned['exp2_ld5'] and learned['exp2_ld6']:
-      df_B2 = pd.concat([df_B2, to_append], ignore_index=True)
-    if learned['exp2_ld7'] and learned['exp2_ld8'] and learned['exp2_ld9']:
-      df_C2 = pd.concat([df_C2, to_append], ignore_index=True)
+    if (learned['exp2_ld1'] and learned['exp2_ld2'] and learned['exp2_ld3']):
+      d1 = pd.concat([d1, to_append], ignore_index=True)
+    if (learned['exp2_ld4'] and learned['exp2_ld5'] and learned['exp2_ld6']):
+      d2 = pd.concat([d2, to_append], ignore_index=True)
+    if (learned['exp2_ld7'] and learned['exp2_ld8'] and learned['exp2_ld9']):
+      d3 = pd.concat([d3, to_append], ignore_index=True)
     if (
       learned['exp2_ld1'] and learned['exp2_ld2'] and learned['exp2_ld3'] and
       learned['exp2_ld4'] and learned['exp2_ld5'] and learned['exp2_ld6']
     ):
-      df_cons2 = pd.concat([df_cons2, to_append], ignore_index=True)
+      d12 = pd.concat([d12, to_append], ignore_index=True)
     if (
       learned['exp2_ld1'] and learned['exp2_ld2'] and learned['exp2_ld3'] and
       learned['exp2_ld7'] and learned['exp2_ld8'] and learned['exp2_ld9']
     ):
-      df_comb2 = pd.concat([df_comb2, to_append], ignore_index=True)
+      d13 = pd.concat([d13, to_append], ignore_index=True)
 
     # save df
     if k>10000 and k%500==0:
