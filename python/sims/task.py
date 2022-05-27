@@ -7,16 +7,17 @@ from task_terms import *
 from program_inf import *
 
 # Setting up
-COND = 'decon'
+COND = 'combine'
+DVAR = 'stripes'
 TOP_N = 3
 EXCEPTS = 0
-LEARN_ITER = 10000
+LEARN_ITER = 1000
 
 # Prep data
 all_data = pd.read_json('../for_exp/config.json')
 task_ids = {
-  'learn_a': [35, 50, 65],
-  'learn_b': [23, 42, 61],
+  'learn_a': [23, 42, 61],
+  'learn_b': [27, 31, 35],
   'gen': [100, 71, 78, 55, 47, 83, 9, 3]
 }
 task_ids['gen'].sort()
@@ -40,27 +41,22 @@ pl = Program_lib(pd.read_csv('../data/task_pm.csv', index_col=0, na_filter=False
 g1 = Gibbs_sampler(pl, all_frames, task_data['learn_a'], iteration=LEARN_ITER)
 g1.run(top_n=TOP_N, save_prefix=f'samples/{COND}a_', save_intermediate=False)
 
-# Direct preds
-gen = sim_for_all(task_data['gen'],  pl, 1000)
-gen.to_csv(f'preds/preds.csv')
-
-
 # Gen predictions A
 a_learned = pd.read_csv(f'samples/{COND}a_post_samples.csv', index_col=0, na_filter=False)
 a_gen = sim_for_all(task_data['gen'],  Program_lib(a_learned), 1000)
-a_gen.to_csv(f'preds/{COND}_preds_a.csv')
+a_gen.to_csv(f'{DVAR}/{COND}_preds_a.csv')
 
 # Learning phase B
-pl2 = Program_lib(pd.read_csv('../data/task_pm.csv', index_col=0, na_filter=False))
-# pl2.update_lp_adaptor()
-# pl2.update_overall_lp()
-g2 = Gibbs_sampler(pl2, all_frames, task_data['learn_b'], iteration=LEARN_ITER)
+pl2 = Program_lib(pd.read_csv(f'samples/{COND}a_post_samples.csv', index_col=0, na_filter=False))
+pl2.update_lp_adaptor()
+pl2.update_overall_lp()
+g2 = Gibbs_sampler(pl2, all_frames, task_data['learn_b'], iteration=LEARN_ITER, lib_is_post=True)
 g2.run(top_n=TOP_N, save_prefix=f'samples/{COND}b_', save_intermediate=False)
 
 # Gen predictions B
 b_learned = pd.read_csv(f'samples/{COND}b_post_samples.csv', index_col=0, na_filter=False)
-b_gen = sim_for_all(task_data['gen'],  Program_lib(b_learned), 1000)
-b_gen.to_csv(f'preds/{COND}_preds_b.csv')
+b_gen = sim_for_all(task_data['gen'],  Program_lib(b_learned), 10000)
+b_gen.to_csv(f'{DVAR}/{COND}_preds_b.csv')
 
 
 # %%

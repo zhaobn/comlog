@@ -171,6 +171,21 @@ for (eid in seq(4)) {
   }
 }
 
+#### Check prolific data ####
+load('../data/all_cleaned.Rdata')
+
+count(df.sw, exp_id, condition)
+count(df.tw, exp_id, condition)
+
+
+
+
+
+
+
+
+
+
 
 
 
