@@ -15,6 +15,8 @@ rat_rules_model = Rational_rules(productions, cap=40)
 # %% Prep data
 ld_lookup = {}
 
+
+
 exp_1_data = pd.read_json('../for_exp/config.json')
 exp_1_ids = {
   'learn_a': [23, 42, 61],
@@ -97,9 +99,15 @@ while k<N:
       df_B1 = pd.concat([df_B1, to_append], ignore_index=True)
     if learned['exp1_ld7'] and learned['exp1_ld8'] and learned['exp1_ld9']:
       df_C1 = pd.concat([df_C1, to_append], ignore_index=True)
-    if learned['exp1_ld4'] and learned['exp1_ld5'] and learned['exp1_ld6']:
+    if (
+      learned['exp1_ld1'] and learned['exp1_ld2'] and learned['exp1_ld3'] and
+      learned['exp1_ld4'] and learned['exp1_ld5'] and learned['exp1_ld6']
+    ):
       df_cons1 = pd.concat([df_cons1, to_append], ignore_index=True)
-    if learned['exp1_ld7'] and learned['exp1_ld8'] and learned['exp1_ld9']:
+    if (
+      learned['exp1_ld1'] and learned['exp1_ld2'] and learned['exp1_ld3'] and
+      learned['exp1_ld7'] and learned['exp1_ld8'] and learned['exp1_ld9']
+    ):
       df_comb1 = pd.concat([df_comb1, to_append], ignore_index=True)
 
     if learned['exp2_ld1'] and learned['exp2_ld2'] and learned['exp2_ld3']:
@@ -108,9 +116,15 @@ while k<N:
       df_B2 = pd.concat([df_B2, to_append], ignore_index=True)
     if learned['exp2_ld7'] and learned['exp2_ld8'] and learned['exp2_ld9']:
       df_C2 = pd.concat([df_C2, to_append], ignore_index=True)
-    if learned['exp2_ld4'] and learned['exp2_ld5'] and learned['exp2_ld6']:
+    if (
+      learned['exp2_ld1'] and learned['exp2_ld2'] and learned['exp2_ld3'] and
+      learned['exp2_ld4'] and learned['exp2_ld5'] and learned['exp2_ld6']
+    ):
       df_cons2 = pd.concat([df_cons2, to_append], ignore_index=True)
-    if learned['exp2_ld7'] and learned['exp2_ld8'] and learned['exp2_ld9']:
+    if (
+      learned['exp2_ld1'] and learned['exp2_ld2'] and learned['exp2_ld3'] and
+      learned['exp2_ld7'] and learned['exp2_ld8'] and learned['exp2_ld9']
+    ):
       df_comb2 = pd.concat([df_comb2, to_append], ignore_index=True)
 
     # save df
