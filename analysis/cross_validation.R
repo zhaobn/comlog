@@ -21,7 +21,7 @@ ppt_data = df.tw %>% count(exp_id, condition, batch, trial, prediction)
 ## Read raw model predictions
 get_filepath = function(model, eid, cond, phase) {
   return(paste0(
-    '../model_data/', tolower(model), '/exp_', as.character(eid), '/',
+    '../model_data/', tolower(model), '/',
     cond, '_preds_', tolower(phase), '.csv'
   ))
 }
@@ -57,7 +57,7 @@ sftmx_trial = function(data, par) {
 #### AG & PCFG model ########
 
 ## Get all model data
-model = 'AG'
+model = 'PCFG'
 model_data = read.csv(text='exp_id,condition,batch,trial,prediction,prob')
 for (eid in seq(4)) {
   conditions = if (eid<3) c('construct', 'decon', 'combine') else c('combine', 'flip')
@@ -88,7 +88,7 @@ model_ppt_conds = model_ppt %>%
   summarise(n=sum(n), prob=sum(prob)/n())
 
 ## Cross-validation on conditions
-#cross_vl = read.csv(text='model,condition,params,LL')
+cross_vl = read.csv(text='model,condition,params,LL')
 conditions = c('construct', 'decon', 'combine', 'flip')
 for (cond in conditions) {
   ## Train on other three conditions

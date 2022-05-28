@@ -965,47 +965,32 @@ bb = aa
 bb$batch = 'B'
 answers = rbind(aa, bb)
 
-model.preds = data.frame(exp_id=numeric(0), condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
-for (eid in seq(4)) {
-  conditions =  if (eid<3) c('construct', 'combine', 'decon') else c('combine', 'flip')
-  for (cond in conditions) {
-    for (ph in c('a', 'b')) {
-      preds = read.csv(paste0(
-        '../model_data/pcfg/exp_',as.character(eid),'/', 
-        cond, '_preds_', ph, '.csv'))
-      preds_fmt = preds %>%
-        select(terms, starts_with('prob')) %>%
-        gather(trial, value, starts_with('prob')) %>%
-        mutate(
-          exp_id=eid,
-          condition=cond,
-          terms=terms,
-          trial=as.numeric(substr(trial, 6, nchar(trial))),
-          batch=toupper(ph)) %>%
-        select(exp_id, condition, batch, trial, prediction=terms, value)
-      model.preds = rbind(model.preds, preds_fmt)
-    }
-  }
+model.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
+for (cond in c('construct', 'combine', 'decon', 'flip')) {
+  for (ph in c('a', 'b')) {
+    preds = read.csv(paste0(
+      '../model_data/pcfg/', cond, '_preds_', ph, '.csv'))
+    preds_fmt = preds %>%
+      select(terms, starts_with('prob')) %>%
+      gather(trial, value, starts_with('prob')) %>%
+      mutate(
+        condition=cond,
+        terms=terms,
+        trial=as.numeric(substr(trial, 6, nchar(trial))),
+        batch=toupper(ph)) %>%
+      select(condition, batch, trial, prediction=terms, value)
+    model.preds = rbind(model.preds, preds_fmt)
+  }  
 }
 
-model.preds = model.preds %>% 
-  group_by(condition, batch, trial, prediction) %>%
-  summarise(value=sum(value)/n()) %>%
-  mutate(
-    trial=as.factor(as.character(trial)),
-    value=round(as.numeric(value), 4)
-  ) 
 
-model.grouped = model.preds %>%
-  group_by(condition, batch, trial, prediction) %>%
-  summarise(value=sum(normalized)/n()) %>%
+model.preds = model.preds %>% 
   mutate(
     trial=as.factor(as.character(trial)),
     value=round(as.numeric(value), 4)
   ) 
 
 df.tw %>%
-  filter(exp_id%%2==0) %>%
   mutate(trial=as.factor(as.character(trial))) %>%
   ggplot( aes(y=trial, x=prediction, fill=trial)) +
   geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
@@ -1024,10 +1009,11 @@ df.tw %>%
 
 
 df.tw %>%
-  filter(exp_id==4, condition=='flip', batch=='B') %>%
+  filter(exp_id==1, condition=='combine', batch=='B') %>%
   mutate(trial=as.factor(as.character(trial))) %>%
   ggplot( aes(y=trial, x=prediction, fill=trial)) +
-  geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) 
+  geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
+  scale_y_discrete(limits=rev)
   
 
 

@@ -1,2 +1,0 @@
-,rule,log_prob
-0,"sub(add(sub(sub(mult(spot(d),stick(d)),stick(d)),1),0),sub(add(add(sub(spot(d),1),mult(stick(d),1)),sub(add(spot(d),stripe(d)),2)),mult(sub(3,0),2)))",-63.96654171506707
