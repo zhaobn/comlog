@@ -10,7 +10,7 @@ productions = [
   ['C', ['stripe(d)', 'spot(d)', 'stick(d)']],
   ['D', ['0', '1', '2', '3']]
 ]
-rat_rules_model = Rational_rules(productions, cap=40)
+rat_rules_model = Rational_rules(productions, cap=100)
 
 # %% Prep data
 exp_1_data = pd.read_json('../for_exp/config.json')
@@ -46,7 +46,7 @@ for (ix, id) in enumerate(exp_1_ids_list+exp_2_ids_list):
 
 
 # %% Learning phase
-N = 100000
+N = 10000
 sampled_rules = pd.DataFrame({
   'rule': pd.Series(dtype='str'), 'log_prob': pd.Series(dtype='float'),
 })

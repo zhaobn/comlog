@@ -953,10 +953,11 @@ ggplot(accs_data) +
 
 load('../data/all_cleaned.rdata')
 answers = df.tw %>%
+  filter(exp_id==1) %>%
   group_by(trial) %>%
   summarise(stripe=max(stripe), dot=max(dot), block=max(block)) %>%
   mutate(gtruth=stripe*block-dot) %>%
-  mutate(prediction=if_else(gtruth<0, 0, gtruth)) %>%
+  mutate(prediction=ifelse(gtruth<0, 0, gtruth)) %>%
   mutate(trial=as.factor(as.character(trial)))
 answers$batch='A'
 aa = answers
@@ -970,7 +971,7 @@ for (eid in seq(4)) {
   for (cond in conditions) {
     for (ph in c('a', 'b')) {
       preds = read.csv(paste0(
-        '../model_data/ag/exp_',as.character(eid),'/', 
+        '../model_data/pcfg/exp_',as.character(eid),'/', 
         cond, '_preds_', ph, '.csv'))
       preds_fmt = preds %>%
         select(terms, starts_with('prob')) %>%
@@ -1004,6 +1005,7 @@ model.grouped = model.preds %>%
   ) 
 
 df.tw %>%
+  filter(exp_id%%2==0) %>%
   mutate(trial=as.factor(as.character(trial))) %>%
   ggplot( aes(y=trial, x=prediction, fill=trial)) +
   geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
@@ -1021,7 +1023,12 @@ df.tw %>%
 #### End of Ridge plots collapsed data ###################
 
 
-
+df.tw %>%
+  filter(exp_id==4, condition=='flip', batch=='B') %>%
+  mutate(trial=as.factor(as.character(trial))) %>%
+  ggplot( aes(y=trial, x=prediction, fill=trial)) +
+  geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) 
+  
 
 
 
