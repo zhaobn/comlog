@@ -783,6 +783,11 @@ df.tw %>%
 # participant data
 load('../data/all_cleaned.Rdata')
 answers = read.csv('../data/tasks/answers.csv')
+task_answers = answers %>%
+  filter(exp_id%%2==1) %>%
+  select(condition, trial, gt) %>%
+  unique()
+
 df.tw = df.tw %>%
   left_join(select(answers, exp_id, condition, trial, gt, alt), 
             by=c('exp_id', 'condition','trial'))
@@ -793,156 +798,126 @@ accs_ppt = df.tw %>%
   summarise(acc=round(sum(acc)/n(),2)) %>%
   spread(batch, acc) %>%
   mutate(
-    model='mturk',
+    model='people',
     condition=factor(condition, levels=c('construct','combine','decon','flip')),
-    type='mturk'
   )
 
 # AG pred
-ag_params = read.csv('cross_valids/AG.csv')
+ag_params = read.csv('cross_valids.csv') %>%
+  select(-X) %>%
+  filter(model=='AG')
 
 sigmoid = function(x) return(1/(1+exp(-x)))
-normalize = function(vec) return(vec/sum(vec))
 NCHUNK=17
 
-haztrial = function(data, par) {
-  data$transformed = sigmoid(par)+(1-sigmoid(par))*data$value
-  raws = data$transformed
-  data$normalized = normalize(data$transformed)
-  return(data)
-}
-
-AG.preds = data.frame(exp_id=numeric(0), condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
-for (eid in seq(4)) {
-  conditions = if (eid<3) c('construct', 'combine', 'decon') else c('combine', 'flip')
-  for (cond in conditions) {
-    for (ph in c('a', 'b')) {
-      preds = read.csv(paste0(
-        '../model_data/ag/exp_',as.character(eid),'/', 
-        cond, '_preds_', ph, '.csv'))
-      preds_fmt = preds %>%
-        select(terms, starts_with('prob')) %>%
-        gather(trial, value, starts_with('prob')) %>%
-        mutate(
-          exp_id=eid,
-          condition=cond,
-          terms=terms,
-          trial=as.numeric(substr(trial, 6, nchar(trial))),
-          batch=toupper(ph)) %>%
-        select(exp_id, condition, batch, trial, prediction=terms, value)
-      # treak with fitting
-      trial_para = ag_params %>%
-        filter(exp_id==eid,condition==cond,phase==toupper(ph)) %>%
-        select(trial, params)
-      for (tid in seq(8)) {
-        preds_trial=preds_fmt %>% filter(trial==tid)
-        preds_trial=haztrial(preds_trial, trial_para$params[trial_para$trial==tid])
-        AG.preds = rbind(AG.preds, preds_trial)
-      }
-    }
+AG.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
+for (cond in c('construct', 'combine', 'decon', 'flip')) {
+  for (ph in c('a', 'b')) {
+    preds = read.csv(paste0('../model_data/ag/', cond, '_preds_', ph, '.csv'))
+    preds_fmt = preds %>%
+      select(terms, starts_with('prob')) %>%
+      gather(trial, value, starts_with('prob')) %>%
+      mutate(
+        condition=cond,
+        terms=terms,
+        trial=as.numeric(substr(trial, 6, nchar(trial))),
+        batch=toupper(ph)) %>%
+      select(condition, batch, trial, prediction=terms, value)
+    # treak with fitting
+    param = ag_params[ag_params$condition==cond,'params']
+    preds_fmt$value=sigmoid(param)/NCHUNK+(1-sigmoid(param))*preds_fmt$value
+    AG.preds = rbind(AG.preds, preds_fmt)
   }
 }
 
+
 accs_ag = AG.preds %>%
-  left_join(answers, by=c('exp_id','condition','trial')) %>%
+  left_join(task_answers, by=c('condition','trial')) %>%
   mutate(acc=(prediction==gt)) %>%
   group_by(condition, batch) %>%
-  summarise(acc=round(sum(acc*normalized)/sum(normalized),2)) %>%
+  summarise(acc=round(sum(acc*value)/sum(value),2)) %>%
   spread(batch, acc) %>%
   mutate(
     model='AG',
-    condition=factor(condition, levels=c('construct','combine','decon','flip')),
-    type='batch'
+    condition=factor(condition, levels=c('construct','decon','combine','flip')),
   )
 
 
 
 # PCFG pred
-pcfg_params = read.csv('cross_valids/PCFG.csv')
-PCFG.preds = data.frame(exp_id=numeric(0), condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
-for (eid in seq(4)) {
-  conditions = if (eid<3) c('construct', 'combine', 'decon') else c('combine', 'flip')
-  for (cond in conditions) {
-    for (ph in c('a', 'b')) {
-      preds = read.csv(paste0(
-        '../model_data/pcfg_all/exp_',as.character(eid),'/', 
-        cond, '_preds_', ph, '.csv'))
-      preds_fmt = preds %>%
-        select(terms, starts_with('prob')) %>%
-        gather(trial, value, starts_with('prob')) %>%
-        mutate(
-          exp_id=eid,
-          condition=cond,
-          terms=terms,
-          trial=as.numeric(substr(trial, 6, nchar(trial))),
-          batch=toupper(ph)) %>%
-        select(exp_id, condition, batch, trial, prediction=terms, value)
-      # treak with fitting
-      trial_para = pcfg_params %>%
-        filter(exp_id==eid,condition==cond,phase==toupper(ph)) %>%
-        select(trial, params)
-      for (tid in seq(8)) {
-        preds_trial=preds_fmt %>% filter(trial==tid)
-        preds_trial=haztrial(preds_trial, trial_para$params[trial_para$trial==tid])
-        PCFG.preds = rbind(PCFG.preds, preds_trial)
-      }
-    }
+pcfg_params = read.csv('cross_valids.csv') %>%
+  select(-X) %>%
+  filter(model=='PCFG')
+PCFG.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
+for (cond in c('construct', 'combine', 'decon', 'flip')) {
+  for (ph in c('a', 'b')) {
+    preds = read.csv(paste0('../model_data/pcfg/', cond, '_preds_', ph, '.csv'))
+    preds_fmt = preds %>%
+      select(terms, starts_with('prob')) %>%
+      gather(trial, value, starts_with('prob')) %>%
+      mutate(
+        condition=cond,
+        terms=terms,
+        trial=as.numeric(substr(trial, 6, nchar(trial))),
+        batch=toupper(ph)) %>%
+      select(condition, batch, trial, prediction=terms, value)
+    # treak with fitting
+    param = pcfg_params[pcfg_params$condition==cond,'params']
+    preds_fmt$value=sigmoid(param)/NCHUNK+(1-sigmoid(param))*preds_fmt$value
+    PCFG.preds = rbind(PCFG.preds, preds_fmt)
   }
 }
 
-accs_pfcg_inc = PCFG.preds %>%
-  left_join(answers, by=c('exp_id','condition','trial')) %>%
+accs_pfcg = PCFG.preds %>%
+  left_join(task_answers, by=c('condition','trial')) %>%
   mutate(acc=(prediction==gt)) %>%
   group_by(condition, batch) %>%
-  summarise(acc=round(sum(acc*normalized)/sum(normalized),2)) %>%
+  summarise(acc=round(sum(acc*value)/sum(value),2)) %>%
   spread(batch, acc) %>%
   mutate(
     model='PCFG',
-    condition=factor(condition, levels=c('construct','combine','decon','flip')),
-    type='inc'
+    condition=factor(condition, levels=c('construct','decon','combine','flip')),
   )
 
 
 ## Put together
+accs_data = rbind(accs_ppt, accs_ag, accs_pfcg) %>%
+  mutate(model=factor(model, levels=c('people','AG', 'PCFG')))
 
-accs_ag_avg = accs_ag %>% 
-  left_join(accs_ag_inc, by='condition') %>%
-  mutate(A=(A.x+A.y)/2, B=(B.x+B.y)/2, model='AG', type='avg') %>%
-  select(condition, A, B, model, type)
-
-accs_pcfg_avg = accs_pfcg %>% 
-  left_join(accs_pfcg_inc, by='condition') %>%
-  mutate(A=(A.x+A.y)/2, B=(B.x+B.y)/2, model='PCFG', type='avg') %>%
-  select(condition, A, B, model, type)
-
-accs_ppt_inc = accs_ppt %>% mutate(type='inc')
-accs_ppt_batch = accs_ppt %>% mutate(type='batch')
-accs_ppt_avg = accs_ppt %>% mutate(type='avg')
-
-accs_data = rbind(
-  accs_ag, accs_pfcg, accs_ppt_batch,
-  accs_ag_inc, accs_pfcg_inc, accs_ppt_inc,
-  accs_ag_avg,accs_pcfg_avg, accs_ppt_avg
-)
-
+accs_model_long = accs_data %>%
+  filter(model %in% c('AG', 'PCFG')) %>%
+  gather(phase, acc, A, B) %>%
+  arrange(condition, model, phase)
 
 ## Plot
-accs_data = accs_data %>%
-  mutate(model=factor(model, levels=c('mturk','AG', 'PCFG')),
-         type=factor(type,levels=c('batch','inc','avg')))
-ggplot(accs_data) +
-  geom_segment(aes(x=model, xend=model, y=A, yend=B), color="grey") +
-  geom_point(aes(x=model, y=A), color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
-  geom_point(aes(x=model, y=B), color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
-  coord_flip()+
-  scale_x_discrete(limits = rev(levels(accs_data$model))) +
+accs_ppt %>%
+  select(-model) %>%
+  gather(phase, acc, -condition) %>%
+  mutate(condition=factor(condition, levels=c('construct','decon','combine','flip'))) %>%
+  ggplot(aes(x=condition, y=acc, fill=phase)) +
+  geom_bar(stat = 'identity', position='dodge') +
+  scale_fill_manual(values=c('grey','black')) +
+  geom_point(data=accs_model_long, 
+             aes(x=condition,y=acc,group=phase,shape=model,color=model),
+             position = position_dodge(width=.9),
+             size=4) +
+  scale_color_manual(values=c("red", "royalblue"))+
   theme_bw() +
-  theme(
-    legend.position = "none",
-  ) +
-  xlab("") +
-  ylab("Accuracy") +
-  facet_grid(type~condition)
+  labs(x='', y='accuracy')
+
+# ggplot(accs_data) +
+#   geom_segment(aes(x=model, xend=model, y=A, yend=B), color="grey") +
+#   geom_point(aes(x=model, y=A), color=rgb(0.2,0.7,0.1,0.5), size=3 ) +
+#   geom_point(aes(x=model, y=B), color=rgb(0.7,0.2,0.1,0.5), size=3 ) +
+#   coord_flip()+
+#   scale_x_discrete(limits = rev(levels(accs_data$model))) +
+#   theme_bw() +
+#   theme(
+#     legend.position = "none",
+#   ) +
+#   xlab("") +
+#   ylab("Accuracy") +
+#   facet_grid(~condition)
 
 
 #### End of Lollipop accuracy plots###################
@@ -969,7 +944,7 @@ model.preds = data.frame(condition=character(0), phase=character(0), trial=numer
 for (cond in c('construct', 'combine', 'decon', 'flip')) {
   for (ph in c('a', 'b')) {
     preds = read.csv(paste0(
-      '../model_data/pcfg/', cond, '_preds_', ph, '.csv'))
+      '../model_data/AG/', cond, '_preds_', ph, '.csv'))
     preds_fmt = preds %>%
       select(terms, starts_with('prob')) %>%
       gather(trial, value, starts_with('prob')) %>%
@@ -984,7 +959,7 @@ for (cond in c('construct', 'combine', 'decon', 'flip')) {
 }
 
 
-model.preds = model.preds %>% 
+model.preds = AG.preds %>% 
   mutate(
     trial=as.factor(as.character(trial)),
     value=round(as.numeric(value), 4)
