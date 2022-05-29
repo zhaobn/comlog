@@ -18,23 +18,23 @@ rt_model = Rational_rules(productions, cap=100)
 # %%
 # get preds per condition
 configs = [
-  ('s1', 'construct_preds_a'),
-  ('s12', 'construct_preds_b'),
+  ('d1', 'construct_preds_a'),
+  ('d12', 'construct_preds_b'),
 
-  ('s2', 'decon_preds_a'),
-  ('s12', 'decon_preds_b'),
+  ('d2', 'decon_preds_a'),
+  ('d12', 'decon_preds_b'),
 
-  ('s1', 'combine_preds_a'),
-  ('s13', 'combine_preds_b'),
+  ('d1', 'combine_preds_a'),
+  ('d13', 'combine_preds_b'),
 
-  ('s3', 'flip_preds_a'),
-  ('s13', 'flip_preds_b'),
+  ('d3', 'flip_preds_a'),
+  ('d13', 'flip_preds_b'),
 ]
 
 for df, cond in configs:
   # read data
   gen_data = []
-  tasks = pd.read_csv('../../data/tasks/exp_1.csv', index_col=0)
+  tasks = pd.read_csv('../../data/tasks/exp_2.csv', index_col=0)
   tasks = tasks[tasks['condition']=='construct']
   gen_tasks = tasks[tasks['batch']=='gen'].reset_index()
   for i in gen_tasks.index:
