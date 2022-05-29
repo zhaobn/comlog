@@ -16,12 +16,12 @@ library(tidyr)
 
 ## Load mturk data and aggregate per trial
 load('../data/all_cleaned.Rdata')
-ppt_data = df.tw %>% count(condition, batch, trial, prediction)
+ppt_data = df.tw %>% count(exp_id, condition, batch, trial, prediction)
 
 ## Read raw model predictions
-get_filepath = function(model, cond, phase) {
+get_filepath = function(model, exp_id, cond, phase) {
   return(paste0(
-    '../model_data/', tolower(model), '/', 
+    '../model_data/', tolower(model), '/exp_', exp_id, '/',
     cond, '_preds_', tolower(phase), '.csv'
   ))
 }
@@ -50,44 +50,50 @@ hazfit = function(data, par) {
 ## Get all model data
 model = 'PCFG'
 model_data = read.csv(text='condition,batch,trial,prediction,prob')
-for (cond in c('construct', 'decon', 'combine', 'flip')) {
-  for (phase in c('a', 'b')) {
-    model_raw=read.csv(get_filepath(model,cond,phase)) %>%
-      select(term=terms, starts_with('prob')) %>%
-      gather('trial', 'prob', -term) %>%
-      mutate(trial=as.numeric(substr(trial, 6, nchar(trial))), 
-            prediction=term, condition=cond, batch=toupper(phase)) %>%
-      select(condition, batch, trial, prediction, prob)
+for (eid in seq(4)) {
+  conditions = if (eid<3) c('construct', 'decon', 'combine') else c('combine', 'flip')
+  for (cond in conditions) {
+    for (phase in c('a', 'b')) {
+      model_raw=read.csv(get_filepath(model,eid,cond,phase)) %>%
+        select(term=terms, starts_with('prob')) %>%
+        gather('trial', 'prob', -term) %>%
+        mutate(trial=as.numeric(substr(trial, 6, nchar(trial))), 
+               prediction=term, condition=cond, batch=toupper(phase), exp_id=eid) %>%
+        select(exp_id, condition, batch, trial, prediction, prob)
+      
+      model_data = rbind(model_data, model_raw)
+    }
+  } 
+}
 
-    model_data = rbind(model_data, model_raw)
-  }
-} 
 
 ## Add mturk data
 model_ppt=model_data %>%
-  left_join(ppt_data, by=c('condition', 'batch', 'trial', 'prediction')) %>%
+  left_join(ppt_data, by=c('exp_id', 'condition', 'batch', 'trial', 'prediction')) %>%
   mutate(n=ifelse(is.na(n),0, n)) %>%
-  arrange(condition, batch, trial, prediction)
+  arrange(exp_id, condition, batch, trial, prediction)
 
 ## Cross-validation on conditions
-#cross_vl = read.csv(text='model,condition,params,LL')
+cross_vl = read.csv(text='model,exp_id,params,LL')
 conditions = c('construct', 'decon', 'combine', 'flip')
-for (cond in conditions) {
+
+for (eid in seq(4)) {
+#for (cond in conditions) {
   ## Train on other three conditions
-  training = model_ppt[model_ppt$condition!=cond,]
+  training = model_ppt[model_ppt$exp_id!=eid,]
   out = optim(par=0, hazfit, method="L-BFGS-B", data=training)
   
   ## Test on held-out set
-  test = model_ppt[model_ppt$condition==cond,]
+  test = model_ppt[model_ppt$exp_id==eid,]
   fitted = hazdata(test, out$par)
   
   ## Save
   cross_vl = rbind(cross_vl, data.frame(
-    model=model, condition=cond, params=out$par, LL=sum(fitted$ll)
+    model=model, exp_id=eid, params=out$par, LL=sum(fitted$ll)
   ))
 }
 
-write.csv(cross_vl, file=paste0('cross_valids.csv'))
+write.csv(cross_vl, file=paste0('cross_valids/cross_valids_per_exp.csv'))
 
 cross_vl %>%
   filter(condition!='flip') %>%
@@ -95,8 +101,8 @@ cross_vl %>%
   summarise(sum(LL))
 
 cross_vl %>%
-  select(model, condition, LL) %>%
-  spread(condition, LL)
+  select(model, exp_id, LL) %>%
+  spread(exp_id, LL)
 
 #############################
 
