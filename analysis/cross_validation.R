@@ -48,7 +48,7 @@ hazfit = function(data, par) {
 #### AG & PCFG model ########
 
 ## Get all model data
-model = 'PCFG'
+model = 'PCFG_rj'
 model_data = read.csv(text='condition,batch,trial,prediction,prob')
 for (eid in seq(4)) {
   conditions = if (eid<3) c('construct', 'decon', 'combine') else c('combine', 'flip')
@@ -74,7 +74,8 @@ model_ppt=model_data %>%
   arrange(exp_id, condition, batch, trial, prediction)
 
 ## Cross-validation on conditions
-cross_vl = read.csv(text='model,exp_id,params,LL')
+#cross_vl = read.csv(text='model,exp_id,params,LL')
+cross_vl = read.csv('cross_valids/cross_valids_per_exp.csv') %>% select(-X)
 conditions = c('construct', 'decon', 'combine', 'flip')
 
 for (eid in seq(4)) {
@@ -96,7 +97,6 @@ for (eid in seq(4)) {
 write.csv(cross_vl, file=paste0('cross_valids/cross_valids_per_exp.csv'))
 
 cross_vl %>%
-  filter(condition!='flip') %>%
   group_by(model) %>%
   summarise(sum(LL))
 

@@ -940,11 +940,13 @@ bb = aa
 bb$batch = 'B'
 answers = rbind(aa, bb)
 
+
+
 model.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
 for (cond in c('construct', 'combine', 'decon', 'flip')) {
   for (ph in c('a', 'b')) {
     preds = read.csv(paste0(
-      '../model_data/AG/', cond, '_preds_', ph, '.csv'))
+      '../model_data/ag_rj/', cond, '_preds_', ph, '.csv'))
     preds_fmt = preds %>%
       select(terms, starts_with('prob')) %>%
       gather(trial, value, starts_with('prob')) %>%
@@ -959,7 +961,7 @@ for (cond in c('construct', 'combine', 'decon', 'flip')) {
 }
 
 
-model.preds = AG.preds %>% 
+model.preds = model.preds %>% 
   mutate(
     trial=as.factor(as.character(trial)),
     value=round(as.numeric(value), 4)
