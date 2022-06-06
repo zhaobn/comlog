@@ -1,0 +1,12 @@
+,rule,log_prob
+0,"add(mult(stick(d),sub(stripe(d),2)),spot(d))",-14.909439898728001
+1,"sub(mult(stick(d),stripe(d)),stick(d))",-10.345091707260165
+2,"add(stick(d),mult(stick(d),sub(2,spot(d))))",-14.909439898728001
+3,"mult(sub(3,stick(d)),mult(stick(d),1))",-15.197121971179783
+4,"mult(spot(d),sub(stripe(d),1))",-10.632773779711947
+5,"mult(add(0,sub(mult(mult(1,stripe(d)),spot(d)),spot(d))),1)",-24.038136281663668
+6,"add(stick(d),mult(stick(d),sub(2,stick(d))))",-14.909439898728001
+7,"sub(mult(spot(d),stripe(d)),spot(d))",-10.345091707260165
+8,"sub(add(sub(mult(stick(d),stripe(d)),stick(d)),stripe(d)),stripe(d))",-18.89842394529228
+9,"sub(mult(mult(1,stick(d)),stripe(d)),spot(d))",-14.909439898728001
+10,"mult(sub(stripe(d),1),spot(d))",-10.632773779711947
