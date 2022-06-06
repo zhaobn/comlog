@@ -106,7 +106,7 @@ class Gibbs_sampler:
   # Main sampling procedure
   def run(
     self, top_n=1, sample=True, frame_sample=20, fs_cap=100, exceptions_allowed=0, base=0,
-    logging=True, save_prefix='', save_intermediate=False
+    logging=True, save_prefix='', save_intermediate=False, save_iters=[],
   ):
     for i in range(self.iter):
       iter_log = f'Iter {i+1}/{self.iter}' if logging else ''
@@ -146,6 +146,9 @@ class Gibbs_sampler:
           if save_intermediate:
             padding = len(str(self.iter))
             filtered.to_csv(f'{save_prefix}filtered_{str(i+1).zfill(padding)}.csv')
+          if len(save_iters) > 0 and i in save_iters:
+            self.post_samples.to_csv(f'{save_prefix}post_samples_{i}.csv')
+
             # extracted.to_csv(f'{save_prefix}extracted_{str(i+1).zfill(padding)}.csv')
             # cur_pm.to_csv(f'{save_prefix}curpm_{str(i+1).zfill(padding)}.csv')
             # self.post_samples.to_csv(f'{save_prefix}post_{str(i+1).zfill(padding)}.csv')
