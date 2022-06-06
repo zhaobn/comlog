@@ -3,10 +3,10 @@ library(dplyr)
 library(tidyr)
 
 model='pcfg'
-eid=3
-cond = 'flip'
+eid=1
+cond = 'construct'
 rj_eid = 1
-rj_cond = 'combine'
+rj_cond = 'decon'
 
 
 forward_preds = read.csv(file = paste0(
@@ -25,7 +25,7 @@ backward_preds = read.csv(file = paste0(
 
 rj_preds = forward_preds %>%
   left_join(backward_preds, by=c('terms', 'trial')) %>%
-  mutate(rprob=0.67*prob+0.33*bprob) 
+  mutate(rprob=0.714*prob+0.286*bprob) 
 rj_preds_fmt = rj_preds %>%
   select(terms, trial, rprob) %>%
   spread(trial, rprob)

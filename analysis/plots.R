@@ -302,7 +302,7 @@ sankeyNetwork(
 #### End of Experiment 2 Labeles
 
 
-#### Experiment 1 Labeles ##############################
+#### Experiment 1 Labels ##############################
 
 load('../data/exp_1_cleaned.rdata')
 load('../data/exp_1_coded.Rdata')

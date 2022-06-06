@@ -61,7 +61,7 @@ read_data = function(path_prefix, cond, phase) {
   return(data)
 }
 
-file_path = '../python/pcfgs/data/exp_1/' #'../data/model_preds/exp_1/'
+file_path = '../data/model_preds/exp_1/' #'../data/model_preds/exp_1/'
 model_preds = read_data(file_path, 'construct', 'a') 
 for (cond in c('construct', 'combine', 'decon')) {
   for (phase in c('a', 'b')) {
@@ -157,9 +157,11 @@ model_acc_sfed = model_preds_sfed %>%
 acc_data_sfed = acc_data %>%
   left_join(model_acc_sfed, by=c('condition', 'batch'))
 
-ggplot(acc_data_sfed, aes(x=batch, y=accuracy)) +
+acc_data_sfed %>%
+  mutate(condition=factor(condition, levels=c('construct','combine','decon'))) %>%
+  ggplot(aes(x=batch, y=accuracy)) +
   geom_bar(stat='identity', fill='black') +
-  geom_hline(yintercept=0.25, linetype="dashed", color="grey50", size=1) +
+  #geom_hline(yintercept=0.25, linetype="dashed", color="grey50", size=1) +
   geom_point(aes(y=ARC), stat="identity", shape=2, color='red', size=3, stroke=1.5)+
   facet_grid(~condition) +
   labs(x='', y='') +
@@ -213,11 +215,13 @@ model_accs = acc_data_sd1_sfed %>%
   select(condition, batch, ARC, slice_d1) %>%
   gather('model', 'acc', ARC, slice_d1)
   
-  
-ggplot(acc_data_sd1_sfed, aes(x=batch, y=accuracy)) +
+acc_data_sd1_sfed %>%
+  mutate(condition=factor(condition, levels=c('construct','combine','decon'))) %>%
+  ggplot(aes(x=batch, y=accuracy)) +
   geom_bar(stat='identity', fill='black') +
-  geom_hline(yintercept=0.25, linetype="dashed", color="grey50", size=1) +
+  #geom_hline(yintercept=0.25, linetype="dashed", color="grey50", size=1) +
   geom_point(aes(x=batch, y=acc, color=model, shape=model), size=3, stroke=1.5, data=model_accs)+
+  scale_shape_manual(values=c(2, 0)) +
   facet_grid(~condition) +
   labs(x='', y='') +
   theme_bw() +
@@ -275,7 +279,9 @@ model_accs = acc_data_sd2_sfed %>%
 
 
 # Final plot for paper
-ggplot(acc_data_sd2_sfed, aes(x=batch, y=accuracy)) +
+acc_data_sd2_sfed %>%
+  mutate(condition=factor(condition, levels=c('construct','combine','decon'))) %>%
+  ggplot(aes(x=batch, y=accuracy)) +
   geom_bar(stat='identity', fill='black') +
   # geom_hline(yintercept=0.25, linetype="dashed", color="grey50", size=1) +
   geom_point(aes(x=batch, y=acc, color=model, shape=model), size=3, stroke=1.5, data=model_accs)+
@@ -473,7 +479,7 @@ model_acc_sd1_sfed = model_preds_sd1_sfed %>%
   summarise(n=sum(soft), n_acc=sum(total_correct), acc=sum(total_correct)/sum(soft)) %>%
   select(condition, batch, slice_d1=acc)
 
-acc_data_sd1_sfed = acc_data_sfed %>%
+acc_data_sd1_sfed = model_acc_sd1_sfed %>%
   left_join(model_acc_sd1_sfed, by=c('condition', 'batch'))
 
 model_accs = acc_data_sd1_sfed %>%
