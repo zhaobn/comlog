@@ -20,3 +20,11 @@ for i in LEARN_ITERS:
     print(f'cp pcfg/process_{str(i)}/{c}_preds_a.csv pcfg_rj/process_{str(i)}/{c}_preds_a.csv')
 
 # %%
+LEARN_ITERS = list(range(100, 1001, 150))
+for i in LEARN_ITERS:
+  print(f'mkdir process_{str(i)}')
+
+# %%
+LEARN_ITERS = list(range(100, 1001, 150)) + list(range(2000, 10001, 1000))
+for i in LEARN_ITERS:
+  print(f'mkdir process_{str(i)}')

@@ -1,2 +1,0 @@
-,rule,log_prob
-0,"mult(sub(3,spot(d)),sub(spot(d),0))",-15.197121971179783

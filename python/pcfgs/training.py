@@ -85,7 +85,8 @@ def trainings (n):
   save_dfs(f'data/process_{n}/batch')
 
 # %%
-LEARN_ITERS = [10,50,100] + list(range(200, 1001, 200)) + list(range(2000, 10001, 2000)) + list(range(20000, 100001, 20000))
+# LEARN_ITERS = [10,50,100] + list(range(200, 1001, 200)) + list(range(2000, 10001, 2000)) + list(range(20000, 100001, 20000))
+LEARN_ITERS = list(range(100, 1001, 150)) + list(range(2000, 10001, 1000))
 if __name__ == '__main__':
   with Pool(3) as p:
     p.map(trainings, [n for n in LEARN_ITERS])
