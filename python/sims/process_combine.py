@@ -14,8 +14,7 @@ COND = 'combine'
 DVAR = 'stripes'
 TOP_N = 3
 EXCEPTS = 0
-# LEARN_ITERS = [10,50,100] + list(range(200, 1001, 200)) + list(range(2000, 10001, 2000)) + list(range(20000, 100001, 20000))
-LEARN_ITERS = list(range(2000, 5001, 500))
+LEARN_ITERS = list(range(100, 1501, 100)) + list(range(2000, 5001, 500))
 
 # %% Prep data
 task_data = {
@@ -74,17 +73,17 @@ def getResults (iter):
   pl2 = Program_lib(pd.read_csv(f'data/process_{iter}/{COND}_a_post_samples.csv', index_col=0, na_filter=False))
   pl2.update_lp_adaptor()
   pl2.update_overall_lp()
-  g2 = Gibbs_sampler(pl2, all_frames, task_data['learn_b'], iteration=iter, lib_is_post=True)
+  g2 = Gibbs_sampler(pl2, all_frames, task_data['learn_a']+task_data['learn_b'], iteration=iter, lib_is_post=True)
   g2.run(top_n=TOP_N, save_prefix=f'data/process_{iter}/{COND}_b_', save_intermediate=False)
 
   # Gen predictions B
   b_learned = pd.read_csv(f'data/process_{iter}/{COND}_b_post_samples.csv', index_col=0, na_filter=False)
-  b_gen = sim_for_all(task_data['gen'],  Program_lib(b_learned), 10000)
+  b_gen = sim_for_all(task_data['gen'],  Program_lib(b_learned), 1000)
   b_gen.to_csv(f'data/process_{iter}/{COND}_preds_b.csv')
 
 # %%
 if __name__ == '__main__':
-  with Pool(4) as p:
+  with Pool(5) as p:
     p.map(getResults, [iter for iter in LEARN_ITERS])
 
 
