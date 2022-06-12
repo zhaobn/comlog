@@ -647,7 +647,7 @@ df.tw %>%
 model.preds = data.frame(condition=character(0), phase=character(0), trial=numeric(0), prediction=numeric(0), value=numeric(0))
 for (cond in c('construct', 'combine', 'decon')) {
   for (ph in c('a', 'b')) {
-    preds = read.csv(paste0('../data/model_preds/exp_1/', cond, '_preds_', ph, '.csv'))
+    preds = read.csv(paste0('../model_data/ag/test/', cond, '_preds_', ph, '.csv'))
     preds_fmt = preds %>%
       select(terms, starts_with('prob')) %>%
       gather(trial, value, starts_with('prob')) %>%
@@ -667,15 +667,15 @@ model.preds = model.preds %>%
   ) 
 
 
-model.preds %>%
-  ggplot(aes(y=trial, x=prediction, height=value, fill=trial)) +
-  geom_density_ridges(stat="identity", alpha=0.6) +
-  geom_point(data=model.answers) +
-  scale_x_discrete(limits=factor(c(0,seq(9)))) +
-  scale_y_discrete(limits=rev) +
-  theme_bw() +
-  theme(legend.position = 'none') +
-  facet_wrap(batch~condition)
+# model.preds %>%
+#   ggplot(aes(y=trial, x=prediction, height=value, fill=trial)) +
+#   geom_density_ridges(stat="identity", alpha=0.6) +
+#   geom_point(data=model.answers) +
+#   scale_x_discrete(limits=factor(c(0,seq(9)))) +
+#   scale_y_discrete(limits=rev) +
+#   theme_bw() +
+#   theme(legend.position = 'none') +
+#   facet_wrap(batch~condition)
 
 
 # Plot together
@@ -693,6 +693,7 @@ df.tw %>%
     legend.position = 'none',
     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)
   )
+
 #### End of Experiment 1 raw and model preds #######################
 
 

@@ -2,7 +2,7 @@
 library(dplyr)
 library(tidyr)
 
-iters = seq(100,1500,100)
+iters = c(seq(100,1500,100),seq(2000,5000,500))
 options(scipen=999)
 
 setups = list(

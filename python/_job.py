@@ -2,7 +2,7 @@
 # %%
 #LEARN_ITERS = [10,50,100] + list(range(200, 1001, 200)) + list(range(2000, 10001, 2000)) + list(range(20000, 100001, 20000))
 #LEARN_ITERS = list(range(100, 1001, 100)) + list(range(2000, 10001, 1000))
-LEARN_ITERS = list(range(2000, 5001, 500))
+LEARN_ITERS = list(range(100, 1501, 100)) + list(range(2000, 5001, 500))
 
 # %%
 for i in LEARN_ITERS:

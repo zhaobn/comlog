@@ -61,7 +61,7 @@ read_data = function(path_prefix, cond, phase) {
   return(data)
 }
 
-file_path = '../data/model_preds/exp_1/' #'../data/model_preds/exp_1/'
+file_path = '../model_data/agr/process_1500/' #'../data/model_preds/exp_1/'
 model_preds = read_data(file_path, 'construct', 'a') 
 for (cond in c('construct', 'combine', 'decon')) {
   for (phase in c('a', 'b')) {

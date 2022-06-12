@@ -1,6 +1,8 @@
 
 test
 model_data/
+model_processes/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

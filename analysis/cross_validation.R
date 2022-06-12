@@ -29,7 +29,6 @@ hazfit = function(data, par) {
 
 
 ## Setup
-iters = seq(100,1500,100)
 
 ## Fit
 conditions = c('construct','combine','decon','flip')
@@ -66,12 +65,23 @@ fit_pred = function(model, iter) {
 
 
 ## Fit all
-fit_results = read.csv(file='cross_valids/processes.csv') %>% select(-X)
-for (i in iters) {
-  fit_results = rbind(fit_results,data.frame(fit_pred('ag',i)))
-  fit_results = rbind(fit_results,data.frame(fit_pred('agr',i)))
-}
+# fit_results = read.csv(file='cross_valids/processes.csv') %>% select(-X)
+# for (i in iters) {
+#   fit_results = rbind(fit_results,data.frame(fit_pred('ag',i)))
+#   fit_results = rbind(fit_results,data.frame(fit_pred('agr',i)))
+# }
 #write.csv(fit_results, file='cross_valids/processes.csv')
+
+
+iters = c(10,50, 100, seq(200, 1000, 200), seq(2000, 10000, 2000), seq(20000, 100000, 20000))
+options(scipen=999)
+#c(seq(100,1000, 100), seq(2000, 10000, 1000)) #c(seq(100,1500,100),seq(2000,5000,500))
+
+fit_results = read.csv(file='cross_valids/processes_ag.csv') %>% select(-X)
+for (i in iters) {
+  fit_results = rbind(fit_results,data.frame(fit_pred('pcfg',i)))
+}
+
 
 
 ## Quick plot
@@ -81,6 +91,47 @@ fit_results %>%
   geom_line()
 
 
+## Plot for reasoning workshop
+full_iters = fit_results %>%
+  filter(model=='PCFG') %>%
+  pull(iter) %>%
+  unique()
+ag_iters = fit_results %>%
+  filter(model=='AG') %>%
+  pull(iter) %>%
+  unique()
+ag_batch_iters = setdiff(full_iters, ag_iters)
+
+ag_last_fit = fit_results %>%
+  filter(model=='AG', iter==max(ag_iters))
+agr_last_fit = fit_results %>%
+  filter(model=='AGR', iter==max(ag_iters))
+
+ag_batches = do.call("rbind", replicate(length(ag_batch_iters), ag_last_fit, simplify = FALSE))
+ag_batches$iter = ag_batch_iters
+
+agr_batches = do.call("rbind", replicate(length(ag_batch_iters), agr_last_fit, simplify = FALSE))
+agr_batches$iter = ag_batch_iters
+
+all_fits = rbind(
+  fit_results, ag_batches, agr_batches
+)
+# Save just in case
+# write.csv(all_fits, file='cross_valids/processes_0612.csv')
+
+
+all_fits %>%
+  #filter(iter>101, iter<80001) %>%
+  ggplot(aes(x=iter, y=-fit, color=model)) +
+  geom_line() +
+  theme_classic() +
+  labs(y='Log Likelihood', x='Iteration')
+
+# Save AG & AGR
+
+ag_fits = fit_results %>%
+  filter(model!='PCFG')
+#write.csv(ag_fits, file='cross_valids/processes_ag.csv')
 
 #### Play with pcfg data ####
 load('../data/all_cleaned.Rdata')
