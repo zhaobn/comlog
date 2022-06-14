@@ -6,9 +6,9 @@ iters = c(seq(100,1500,100),seq(2000,5000,500))
 options(scipen=999)
 
 setups = list(
-  list(cond = 'construct', rj_cond = 'decon'),
+  #list(cond = 'construct', rj_cond = 'decon'),
   list(cond = 'decon', rj_cond = 'construct'),
-  list(cond = 'combine', rj_cond = 'flip'),
+  #list(cond = 'combine', rj_cond = 'flip'),
   list(cond = 'flip', rj_cond = 'combine')
 ) 
 
@@ -42,7 +42,7 @@ get_reju_mix = function(model, iter, weight=0.5) {
     colnames(rj_preds_fmt) = c('terms', paste0('prob_', seq(8)))
     
     write.csv(rj_preds_fmt, file = paste0(
-      '../model_data/', tolower(model), 'r/process_', iter, '/', pair[['rj_cond']], '_preds_b.csv' 
+      '../model_data/', tolower(model), 'r/process_', iter, '/', pair[['cond']], '_preds_b.csv' 
     )) 
   }
 }

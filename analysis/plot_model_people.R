@@ -4,6 +4,7 @@ library(tidyr)
 library(ggplot2)
 library(ggpubr)
 
+
 #### Plots for Experiment 1 ####
 load('../data/exp_1_cleaned.rdata')
 tasks = df.tw %>%

@@ -5,6 +5,61 @@ library(tidyr)
 library(ggplot2)
 
 
+
+
+#### Prep fitted model data ####
+
+sigmoid = function(x) return(1/(1+exp(-x)))
+NCHUNK=17
+hazdata = function(data, par) {
+  # data$transformed = sigmoid(par)/NCHUNK+(1-sigmoid(par))*data$prob
+  # data$ll = log(data$transformed)*data$n
+  data$fitted = sigmoid(par)/NCHUNK+(1-sigmoid(par))*data$prob
+  return(data)
+}
+
+
+conditions = c('construct','combine','decon','flip')
+batches = c('a','b')
+get_pred = function(model, iter, par) {
+  # Get model data
+  model_data = read.csv(text='condition,batch,trial,prediction,prob')
+  for (cond in conditions) {
+    for (batch in batches) {
+      model_raw=read.csv(paste0('../model_data/',tolower(model),'/process_', iter, '/', cond,'_preds_',tolower(batch),'.csv'))
+      model_raw = model_raw %>%
+        select(term=terms, starts_with('prob')) %>%
+        gather('trial', 'prob', -term) %>%
+        mutate(trial=as.numeric(substr(trial, 6, nchar(trial))), 
+               prediction=term, condition=cond, batch=toupper(batch)) %>%
+        select(condition, batch, trial, prediction, prob)
+      
+      model_data = rbind(model_data, model_raw)
+    }
+  }
+  
+  # Add fitted probs
+  model_fitted=hazdata(model_data, par)
+  
+  # Return
+  return (model_fitted)
+}
+
+
+## Get fitted model data
+options(scipen = 999)
+fit_results = read.csv(file='cross_valids/processes.csv') %>% select(-X)
+max_iters = list('ag'=5000, 'agr'=5000, 'pcfg'=100000)
+
+df.ag=get_pred('ag', max_iters[['ag']], 
+               filter(fit_results, model==toupper('ag'), iter==max_iters[['ag']])$param)
+df.agr=get_pred('agr', max_iters[['agr']], 
+               filter(fit_results, model==toupper('agr'), iter==max_iters[['agr']])$param)
+df.pcfg=get_pred('pcfg', max_iters[['pcfg']], 
+               filter(fit_results, model==toupper('pcfg'), iter==max_iters[['pcfg']])$param)
+save(df.ag, df.agr, df.pcfg, file='../data/fitted_models.Rdata')
+
+
 #### Play with ag data ####
 load('../data/all_cleaned.Rdata')
 ppt_data = df.tw %>% count(exp_id, condition, batch, trial, prediction)
@@ -73,13 +128,16 @@ fit_pred = function(model, iter) {
 #write.csv(fit_results, file='cross_valids/processes.csv')
 
 
-iters = c(10,50, 100, seq(200, 1000, 200), seq(2000, 10000, 2000), seq(20000, 100000, 20000))
-options(scipen=999)
-#c(seq(100,1000, 100), seq(2000, 10000, 1000)) #c(seq(100,1500,100),seq(2000,5000,500))
+#iters = c(10,50, 100, seq(200, 1000, 200), seq(2000, 10000, 2000), seq(20000, 100000, 20000))
+#options(scipen=999)
+iters= c(seq(100,1500,100),seq(2000,5000,500)) #c(seq(100,1000, 100), seq(2000, 10000, 1000))
 
-fit_results = read.csv(file='cross_valids/processes_ag.csv') %>% select(-X)
+fit_results = read.csv(file='cross_valids/processes.csv') %>% 
+  filter(X<63, model!='AGR') %>%
+  select(-X) 
+
 for (i in iters) {
-  fit_results = rbind(fit_results,data.frame(fit_pred('pcfg',i)))
+  fit_results = rbind(fit_results,data.frame(fit_pred('agr',i)))
 }
 
 
@@ -132,6 +190,7 @@ all_fits %>%
 ag_fits = fit_results %>%
   filter(model!='PCFG')
 #write.csv(ag_fits, file='cross_valids/processes_ag.csv')
+
 
 #### Play with pcfg data ####
 load('../data/all_cleaned.Rdata')

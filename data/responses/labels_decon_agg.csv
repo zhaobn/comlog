@@ -1,0 +1,10 @@
+"","rule_cat_a","rule_cat_b","n"
+"1","add_2","complex",1
+"2","complex","add_2",9
+"3","complex","complex",46
+"4","complex","ground_truth",1
+"5","complex","mult",29
+"6","complex","uncertain",13
+"7","uncertain","complex",6
+"8","uncertain","mult",7
+"9","uncertain","uncertain",5

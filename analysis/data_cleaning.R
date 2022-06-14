@@ -285,13 +285,28 @@ df.sw = df.sw %>%
 
 
 
+# clean up labels
+load('../data/all_coded.Rdata')
 
+labels_fixed = labels %>%
+  mutate(rule_cat_b=
+    case_when(
+      exp=='exp_3' & condition=='combine' & rule_cat_b=='model' ~ 'ground_truth',
+      exp=='exp_3' & condition=='flip' & rule_cat_b=='model' ~ 'alt',
+      exp=='exp_3' & condition=='flip' & rule_cat_b=='alt' ~ 'ground_truth',
+      exp=='exp_4' & condition=='combine' & rule_cat_b=='model' ~ 'ground_truth',
+      exp=='exp_4' & condition=='flip' & rule_cat_b=='model' ~ 'alt',
+      exp=='exp_4' & condition=='flip' & rule_cat_b=='alt' ~ 'ground_truth',
+      TRUE ~ rule_cat_b
+    )
+  )
 
+labels_fixed %>%
+  filter(condition=='flip') %>%
+  count(rule_cat_b)
 
-
-
-
-
+labels = labels_fixed
+save(labels, file='../data/all_coded.Rdata')
 
 
 

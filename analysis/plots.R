@@ -8,6 +8,23 @@ library(networkD3)
 
 rm(list=ls())
 
+##### Per cond labels #####
+
+
+get_labels = function(cond) {
+  df = labels %>%
+    filter(condition==cond) %>%
+    select(rule_cat_a, rule_cat_b)
+  write.csv(df, file=paste0('../data/responses/labels_', cond, '.csv'))
+}
+
+for (c in c('construct', 'combine', 'decon', 'flip')) {
+  get_labels(c)
+}
+
+
+
+
 ##### Experiment 3 & 4 Labels ##############################
 links=labels %>%
   filter(exp %in% c('exp_3', 'exp_4'), condition=='flip') %>%
@@ -46,7 +63,6 @@ sankeyNetwork(
 ##### End of Experiment 3 & 4 Labels
 
 ##### Experiment 1 & 2 Labels ##############################
-
 links=labels %>%
   filter(exp %in% c('exp_1', 'exp_2'), condition=='decon') %>%
   select(ix, rule_a=rule_cat_a, rule_b=rule_cat_b) %>%
