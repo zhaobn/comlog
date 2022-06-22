@@ -170,6 +170,51 @@ df.tw %>%
 
 
 
+#### Rule match plot #### 
+
+ppt_pred = df.tw %>%
+  filter(batch=='B') %>%
+  mutate(
+    ground_truth=ifelse(exp_id%%2==1, stripe*block-dot, dot*block-stripe),
+    alt=ifelse(exp_id%%2==1, stripe*(block-dot), dot*(block-stripe)),
+    subtraction=ifelse(exp_id%%2==1, block-dot, block-stripe),
+    mult=ifelse(exp_id%%2==1, stripe*block, dot*block)
+  ) %>%
+  mutate(
+    ground_truth=ifelse(ground_truth<0, 0, ground_truth), 
+    alt=ifelse(alt<0, 0, alt),
+    subtraction=ifelse(subtraction<0, 0, subtraction), 
+    mult=ifelse(mult<0, 0, mult)
+  ) %>%
+  mutate(
+    is_ground_truth=prediction==ground_truth, is_alt=prediction==alt, 
+    is_subtraction=prediction==subtraction, is_mult=prediction==mult
+  ) %>%
+  group_by(condition, ix) %>%
+  summarise(
+    n=n(), is_ground_truth=sum(is_ground_truth), is_alt=sum(is_alt), 
+    is_subtraction=sum(is_subtraction), is_mult=sum(is_mult)
+  ) %>%
+  mutate(
+    pred=ifelse(is_ground_truth>=6, 'ground_truth', 
+                ifelse(is_alt>=6, 'alt', 
+                       ifelse(is_subtraction>6, 'subtraction', 
+                              ifelse(is_mult>6, 'mult', 'other'))))
+  ) %>%
+  mutate(
+    pred=factor(pred, levels=c('ground_truth', 'alt', 'subtraction', 'mult', 'other')),
+    condition=factor(condition, levels=c('construct', 'decon', 'combine', 'flip'))
+  )
+
+ggplot(ppt_pred, aes(x=condition, fill=pred)) +
+  geom_bar(position='fill', color='#888888', size=0.2) +
+  theme_bw() +
+  labs(x='', y = 'proportion', fill='concept') +
+  scale_fill_manual(values=c('#577590', '#277DA1', '#43AA8B', '#90BE6D', '#F9C74F')) +
+  theme(
+    text=element_text(size = 20),
+  )
+  
 
 
 

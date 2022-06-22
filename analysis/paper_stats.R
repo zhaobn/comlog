@@ -48,9 +48,19 @@ cur_labs %>%
 
 
 
+#### Local construction ####
+labels %>%
+  filter(condition=='combine') %>%
+  count(rule_cat_b) %>%
+  mutate(perc=100*n/sum(n))
+
+chisq.test(c(0,7,59),p=rep(1/3, 3))
+
+
 #### Compositions ####
+# use last two experiments because of size balance
 comp_accs = df.tw %>% 
-  filter(exp_id<3, condition %in% c('construct', 'combine'), batch=='B') %>%
+  filter(exp_id>2, condition %in% c('combine', 'flip'), batch=='B') %>%
   mutate(acc=(prediction==gt))
 
 comp_accs %>% 
@@ -58,39 +68,39 @@ comp_accs %>%
   summarise(acc=sum(acc), n=n(), acc_perc=round(100*(sum(acc)/n()),2))
 
 t.test(
-  comp_accs %>% filter(condition=='construct') %>% pull(acc),
-  comp_accs %>% filter(condition=='combine') %>% pull(acc)
+  comp_accs %>% filter(condition=='combine') %>% pull(acc),
+  comp_accs %>% filter(condition=='flip') %>% pull(acc)
 )
 
-
 comp_labs = labels %>%
-  filter(exp %in% c('exp_1', 'exp_2'), condition %in% c('construct', 'combine')) %>%
+  filter(condition %in% c('combine', 'flip')) %>%
   mutate(got_gt=(rule_cat_b=='ground_truth')) 
 
 comp_labs %>%
   group_by(condition) %>%
   summarise(got_gt=sum(got_gt), n=n(), gt_perc=round(100*(sum(got_gt)/n()),2))
 
+
 t.test(
-  comp_labs %>% filter(condition=='construct') %>% pull(got_gt),
-  comp_labs %>% filter(condition=='combine') %>% pull(got_gt)
+  comp_labs %>% filter(condition=='combine') %>% pull(got_gt),
+  comp_labs %>% filter(condition=='flip') %>% pull(got_gt)
 )
 
-comp_labs %>%
+
+cur_labs %>%
   filter(rule_a=='mult') %>%
   summarise(got_gt=sum(got_gt), n=n(), gt_perc=round(100*(sum(got_gt)/n()),2))
 
+
 labels %>%
-  filter(exp %in% c('exp_1', 'exp_2'), condition %in% c('construct', 'combine')) %>%
-  mutate(got_gt=(rule_b=='alt')) %>%
-  group_by(condition) %>%
-  summarise(got_gt=sum(got_gt), n=n(), gt_perc=round(100*(sum(got_gt)/n()),2))
+  filter(condition=='flip') %>%
+  count(rule_cat_b) %>%
+  mutate(perc=100*n/sum(n))
 
 
-#### Compositions ####
 # Code the rules according to generalization predictions
 forms_data = df.tw %>%
-  filter(exp_id>2, batch=='B') %>%
+  filter(batch=='B') %>%
   group_by(condition, ix) %>%
   summarise(n=n(), gt=sum(prediction==gt), alt=sum(prediction==alt)) %>%
   mutate(is_gt=(gt>6), is_alt=(alt>6))
@@ -106,6 +116,17 @@ t.test(
 )
 
 #### Garden path ####
+labels %>%
+  filter(condition=='decon', rule_cat_a=='complex') %>%
+  count(rule_cat_b) %>%
+  mutate(perc=100*n/sum(n))
+
+
+labels %>%
+  filter(condition=='decon') %>%
+  count(rule_cat_b) %>%
+  mutate(perc=100*n/sum(n))
+
 labels = labels %>%
   mutate(rule_cat_b=ifelse(rule_cat_b=='comp', 'complex', rule_cat_b))
 

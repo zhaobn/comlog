@@ -179,11 +179,13 @@ count(df.tw, exp_id, condition)
 
 
 
-
-
-
-
-
+#### Prep task file ####
+main = read.csv('../data/tasks/exp_1.csv')
+more = read.csv('../data/tasks/exp_3.csv')
+flip = more %>%
+  filter(condition=='flip')
+total = rbind(main, flip) %>% select(-X)
+write.csv(total, file='../data/tasks/tasks.csv')
 
 
 
