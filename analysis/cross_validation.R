@@ -3,14 +3,19 @@
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(nnet) # for multinom
 
 
 #### Global prep #####
+options(scipen = 999999)
+
 load('../data/all_cleaned.Rdata')
 ppt_data <- df.tw %>% count(condition, batch, trial, prediction)
 
 conditions <- c('construct', 'decon', 'combine', 'flip')
 save_path = function(model) return(paste0('cross_valids/', tolower(model), '_cl.csv'))
+
+tasks = read.csv('../data/tasks/tasks.csv')
 
 sigmoid = function(x) return(1/(1+exp(-x)))
 NCHUNK=17
@@ -134,9 +139,7 @@ get_sim_pred = function(data, par) {
 
 
 ## Fit per condition
-tasks = read.csv('../data/tasks/tasks.csv') %>% select(-X)
 cross_vl = read.csv(text='model,condition,params,LL,a,b,c')
-
 
 test_cond = 'flip'
 trainings = expand.grid(condition=conditions[conditions!=test_cond],
@@ -163,19 +166,179 @@ write.csv(cross_vl, file=save_path('similarity'))
 
 
 #### Linear regression ####
+## Get linear regression model preds
+lm_preds = read.csv(text='condition,batch,trial,prediction,prob')
+for (cond in conditions) {
+  for (batch in c('A','B')) {
+    # Prep data for lm
+    if (batch=='A') {
+      obs = tasks %>% filter(condition==cond,batch=='A')
+    } else {
+      obs = tasks %>% filter(condition==cond,batch!='gen')
+    }
+    m = lm(result_block~stripe+dot+block, data = obs)
+    
+    # Get predictions
+    for (tid in seq(8)) {
+      gen_task = tasks %>% filter(condition==cond,batch=='gen', trial==tid)
+      pred = round(predict(m, gen_task)[[1]])
+      pred_df = data.frame(condition=rep(cond,NCHUNK),batch=rep(batch,NCHUNK),
+                           trial=rep(tid,NCHUNK),prediction=seq(0,16),prob=rep(0,NCHUNK))
+      pred_df[pred_df$prediction==pred,'prob']=1
+      
+      lm_preds=rbind(lm_preds, pred_df)
+    }
+  }
+}
+
+## Fit hazard noise parameter & cross validate
+lm_ppt=lm_preds %>%
+  left_join(ppt_data, by=c('condition', 'batch', 'trial', 'prediction')) %>%
+  mutate(n=ifelse(is.na(n),0, n)) %>%
+  arrange(condition, batch, trial, prediction)
+
+cross_vl = read.csv(text='model,condition,params,LL')
+model='lm'
+for (cond in conditions) {
+  ## Train on other three conditions
+  training = lm_ppt[lm_ppt$condition!=cond,]
+  out = optim(par=0, hazfit, method="L-BFGS-B", data=training)
+  
+  ## Test on held-out set
+  test = lm_ppt[lm_ppt$condition==cond,]
+  fitted = hazdata(test, out$par)
+  
+  ## Save
+  cross_vl = rbind(cross_vl, data.frame(
+    model=model, condition=cond, params=out$par, LL=sum(fitted$ll)
+  ))
+}
+
+write.csv(cross_vl, file=save_path(model))
+
+
+#### Multinomial logistic regression ####
+## Get logistic regression model preds
+multinom_preds = read.csv(text='condition,batch,trial,prediction,prob')
+for (cond in conditions) {
+  for (batch in c('A','B')) {
+    # Prep data for multinom
+    if (batch=='A') {
+      obs = tasks %>% filter(condition==cond,batch=='A')
+    } else {
+      obs = tasks %>% filter(condition==cond,batch!='gen')
+    }
+    obs = obs %>% mutate(result_block=as.factor(as.character(result_block)))
+    m = multinom(result_block~stripe+dot+block, data = obs)
+    
+    # Get predictions
+    for (tid in seq(8)) {
+      gen_task = tasks %>% filter(condition==cond,batch=='gen', trial==tid)
+      pred = predict(m, gen_task, 'probs')
+      pred_df=data.frame(prediction=names(pred),prob=pred) %>% 
+        mutate(prediction=as.numeric(prediction))
+      
+      ret_df = data.frame(condition=rep(cond,NCHUNK),batch=rep(batch,NCHUNK),
+                          trial=rep(tid,NCHUNK),prediction=seq(0,16))
+      ret_df = ret_df %>%
+        left_join(pred_df, by='prediction') %>%
+        mutate(prob=ifelse(is.na(prob), 0, prob))
+      
+      multinom_preds=rbind(multinom_preds, ret_df)
+    }
+  }
+}
+
+## Fit hazard noise parameter & cross validate
+multinom_preds=multinom_preds %>%
+  left_join(ppt_data, by=c('condition', 'batch', 'trial', 'prediction')) %>%
+  mutate(n=ifelse(is.na(n),0, n)) %>%
+  arrange(condition, batch, trial, prediction)
+
+cross_vl = read.csv(text='model,condition,params,LL')
+model='multinom'
+for (cond in conditions) {
+  ## Train on other three conditions
+  training = multinom_preds[multinom_preds$condition!=cond,]
+  out = optim(par=0, hazfit, method="L-BFGS-B", data=training)
+  
+  ## Test on held-out set
+  test = multinom_preds[multinom_preds$condition==cond,]
+  fitted = hazdata(test, out$par)
+  
+  ## Save
+  cross_vl = rbind(cross_vl, data.frame(
+    model=model, condition=cond, params=out$par, LL=sum(fitted$ll)
+  ))
+}
+
+write.csv(cross_vl, file=save_path(model))
+
+
+#### Gaussian Process regression #####
+model='GPR'
+
+gp_pars=read.csv('../python/gp/gp_reg_results.csv') %>% select(-X)
+gp_preds = read.csv(text='condition,batch,trial,prediction,prob')
+for (cond in conditions) {
+  for (bat in c('A','B')) {
+    for (tid in seq(8)) {
+      # Bin predictions to match task output
+      gen_task = tasks %>% filter(condition==cond,batch=='gen', trial==tid)
+      gp_task_par = gp_pars %>% filter(condition==cond,batch==bat, trial==tid)
+      bins = seq(0,16)
+      preds = dnorm(bins, mean=gp_task_par$mean, sd=sqrt(gp_task_par$variance)) 
+
+      pred_df=data.frame(
+        condition=rep(cond, NCHUNK),
+        batch=rep(bat, NCHUNK),
+        trial=rep(tid, NCHUNK),
+        prediction=bins,
+        prob=normalize(preds))
+      
+      gp_preds=rbind(gp_preds, pred_df)
+    }
+  }
+}
+
+
+gp_ppt=gp_preds %>%
+  left_join(ppt_data, by=c('condition', 'batch', 'trial', 'prediction')) %>%
+  mutate(n=ifelse(is.na(n),0, n)) %>%
+  arrange(condition, batch, trial, prediction)
+
+cross_vl = read.csv(text='model,condition,params,LL')
+for (cond in conditions) {
+  ## Train on other three conditions
+  training = gp_ppt[gp_ppt$condition!=cond,]
+  out = optim(par=0, hazfit, method="L-BFGS-B", data=training)
+  
+  ## Test on held-out set
+  test = gp_ppt[gp_ppt$condition==cond,]
+  fitted = hazdata(test, out$par)
+  
+  ## Save
+  cross_vl = rbind(cross_vl, data.frame(
+    model=model, condition=cond, params=out$par, LL=sum(fitted$ll)
+  ))
+}
+
+write.csv(cross_vl, file=save_path(model))
 
 
 
-#### Play with Gaussian ####
-x=seq(0,16)
-y=dnorm(x, mean=5, sd=1/3)
 
-
+#### Random baseline ####
+rand_baseline = df.tw %>%
+  count(condition) %>%
+  mutate(LL=log(1/NCHUNK)*n, model='random', params='') %>%
+  select(model,condition, params,LL)
+write.csv(rand_baseline, file=save_path('random'))
 
 
 #### Overall results ####
 cross_vl = read.csv(text='model,condition,params,LL')
-for (model in c('ag', 'agr', 'pcfg', 'similarity')) {
+for (model in c('ag', 'agr', 'pcfg', 'similarity', 'lm', 'gpr', 'multinom', 'random')) {
   if (model=='similarity') {
     model_cl = read.csv(save_path(model)) %>% select(-c(X,a,b,c))
   } else {
@@ -184,16 +347,20 @@ for (model in c('ag', 'agr', 'pcfg', 'similarity')) {
   cross_vl = rbind(cross_vl, model_cl)
 }
 
-
 cross_vl %>%
   group_by(model) %>%
-  summarise(sum(LL))
+  summarise(LL=sum(LL)) %>%
+  arrange(desc(LL))
 
 cross_vl %>%
+  mutate(LL=round(-LL)) %>%
   select(model, condition, LL) %>%
   spread(condition, LL) %>%
   mutate(overall=combine+construct+decon+flip) %>%
-  select(model, construct, decon, combine, flip, overall)
+  select(model, construct, decon, combine, flip, overall) %>%
+  arrange(overall) %>%
+  write.csv('cross_valids/sum.csv')
+
 
 
 

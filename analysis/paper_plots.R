@@ -145,6 +145,12 @@ df.agr = df.agr %>% mutate(
   batch=ifelse(batch=='A','I','II')
 )
 
+# df.gpr = gp_preds %>% mutate(
+#   trial=as.factor(as.character(trial)),
+#   condition=factor(condition, level=cond_levels),
+#   batch=ifelse(batch=='A','I','II')
+# )
+
 
 df.tw %>%
   mutate(
@@ -156,6 +162,7 @@ df.tw %>%
   geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
   geom_point(data=answers_rb) +
   geom_density_ridges(data=df.agr, aes(height=fitted), stat="identity", alpha=0.4, scale=0.95) +
+  #geom_density_ridges(data=df.gpr, aes(height=prob), stat="identity", alpha=0.4, scale=0.95) +
   #scale_x_discrete(limits=c(0,seq(max(df.agr$prediction)))) +
   scale_y_discrete(limits=rev) +
   facet_grid(batch~condition) +
