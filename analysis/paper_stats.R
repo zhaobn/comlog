@@ -72,6 +72,23 @@ t.test(
   comp_accs %>% filter(condition=='flip') %>% pull(acc)
 )
 
+# Compare flip with decon
+comp_accs = df.tw %>% 
+  filter(condition %in% c('decon', 'flip'), batch=='B') %>%
+  mutate(acc=(prediction==gt))
+
+comp_accs %>% 
+  group_by(condition) %>%
+  summarise(acc=sum(acc), n=n(), acc_perc=round(100*(sum(acc)/n()),2))
+
+t.test(
+  comp_accs %>% filter(condition=='decon') %>% pull(acc),
+  comp_accs %>% filter(condition=='flip') %>% pull(acc)
+)
+
+
+
+
 comp_labs = labels %>%
   filter(condition %in% c('combine', 'flip')) %>%
   mutate(got_gt=(rule_cat_b=='ground_truth')) 

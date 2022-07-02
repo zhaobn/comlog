@@ -91,6 +91,79 @@ ggplot(ppt_accs, aes(x=batch, y=accuracy)) +
 
 
 
+
+#### Accuracy plot with alternative models #### 
+load('../data/alter_fitted.Rdata')
+
+
+sim_accs = df.sim %>%
+  left_join(answers, by=c('condition', 'batch', 'trial')) %>%
+  mutate(acc=(gt==prediction)) %>%
+  group_by(condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*fitted)/sum(fitted),2))
+
+lm_accs = df.lm %>%
+  left_join(answers, by=c('condition', 'batch', 'trial')) %>%
+  mutate(acc=(gt==prediction)) %>%
+  group_by(condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*fitted)/sum(fitted),2))
+
+mm_accs = df.mm %>%
+  left_join(answers, by=c('condition', 'batch', 'trial')) %>%
+  mutate(acc=(gt==prediction)) %>%
+  group_by(condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*fitted)/sum(fitted),2))
+
+gp_accs = df.gpr %>%
+  left_join(answers, by=c('condition', 'batch', 'trial')) %>%
+  mutate(acc=(gt==prediction)) %>%
+  group_by(condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*fitted)/sum(fitted),2))
+
+rand_accs = df.gpr %>%
+  mutate(fitted=1/17) %>%
+  left_join(answers, by=c('condition', 'batch', 'trial')) %>%
+  mutate(acc=(gt==prediction)) %>%
+  group_by(condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*fitted)/sum(fitted),2))
+
+
+all_models = c('AG', 'AGR', 'Standard', 'Similarity', 'GPR', 'LinReg', 'Multimon')
+
+model_accs = rbind(
+  mutate(ag_accs, model='AG'),
+  mutate(agr_accs, model='AGR'),
+  mutate(pcfg_accs, model='Standard'),
+  mutate(sim_accs, model='Similarity'),
+  mutate(lm_accs, model='LinReg'),
+  mutate(mm_accs, model='Multimon'),
+  mutate(gp_accs, model='GPR'),
+  #mutate(rand_accs, model='Random'),
+) %>%
+  mutate(condition=factor(condition, levels=cond_levels),
+         model=factor(model, levels=all_models),
+         batch=ifelse(batch=='A','I','II'))
+
+ggplot(ppt_accs, aes(x=batch, y=accuracy)) +
+  geom_bar(stat='identity', fill='black') +
+  facet_grid(~condition) +
+  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.2, position=position_dodge(.9)) +
+  geom_hline(yintercept=1/17*100, linetype='dashed', color='green', size=2) +
+  geom_point(
+    aes(x=batch, y=accuracy, shape=model, color=model), 
+    position = position_jitterdodge(jitter.width = 0.1, jitter.height = 0.5, dodge.width = 0.4),
+    size=5, stroke=1.5, data=model_accs) +
+  scale_shape_manual(values=c(16, 17, 15, rep(20,length(all_models)-3))) +
+  scale_color_manual(values=c("#cc0000", "#f1c232", "#63ace5", rep('#808080',length(all_models)-3))) +
+  labs(x='', y='accuracy') +
+  scale_y_continuous(labels=function(x) paste0(x, '%')) +
+  theme_bw() +
+  theme(
+    text=element_text(size = 35),
+    strip.background =element_rect(fill="white", colour='white'),
+  )
+
+
 #### Process plot #### 
 # patch up
 full_iters = fit_results %>%

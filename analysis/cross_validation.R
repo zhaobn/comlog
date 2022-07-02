@@ -26,7 +26,6 @@ hazfit = function(data, par) {
 }
 hazdata = function(data, par) {
   data$transformed = sigmoid(par)/NCHUNK+(1-sigmoid(par))*data$prob
-  data$ll = log(data$transformed)*data$n
   return(data)
 }
 normalize=function(vec) return(vec/sum(vec))
@@ -130,10 +129,11 @@ get_sim_pred = function(data, par) {
     
   }
   
+  # return(hazdata(model_data, par[['t']]))
   model_ppt = model_data %>%
     left_join(ppt_data, by=c('condition', 'batch', 'trial', 'prediction')) %>%
     mutate(n=ifelse(is.na(n), 0, n))
-  
+
   return(hazfit(model_ppt, par[['t']]))
 }
 
@@ -141,12 +141,14 @@ get_sim_pred = function(data, par) {
 ## Fit per condition
 cross_vl = read.csv(text='model,condition,params,LL,a,b,c')
 
-test_cond = 'flip'
+test_cond = 'construct'
 trainings = expand.grid(condition=conditions[conditions!=test_cond],
                         batch=c('A', 'B'),trial=seq(8)) %>%
   arrange(condition, batch, trial)
 
 out = optim(par=default_param, get_sim_pred, data=trainings)
+
+
 
 
 ## Save
@@ -164,6 +166,29 @@ cross_vl = rbind(cross_vl, test_result_df)
 write.csv(cross_vl, file=save_path('similarity'))
 
 
+## Get fitted preds
+sim_pars = read.csv('cross_valids/similarity_cl.csv')
+
+get_sim_fitted = function(test_cond) {
+  trainings = expand.grid(condition=conditions[conditions==test_cond],
+                          batch=c('A', 'B'),trial=seq(8)) %>%
+    arrange(condition, batch, trial)
+  fitted = sim_pars %>% filter(condition==test_cond) %>%
+    select(a, b, c, t=params) %>%
+    as.list()
+  
+  df = get_sim_pred(trainings, fitted) %>% 
+    mutate(model='similarity') %>%
+    select(model, condition, batch, trial, prediction, fitted=transformed)
+  
+  return(df)
+}
+
+
+df.sim = get_sim_fitted('construct')
+for (c in c('decon', 'combine', 'flip')) {
+  df.sim = rbind(df.sim, get_sim_fitted(c))
+}
 
 #### Linear regression ####
 ## Get linear regression model preds
@@ -215,6 +240,26 @@ for (cond in conditions) {
 }
 
 write.csv(cross_vl, file=save_path(model))
+
+## Get fitted preds
+lm_pars = read.csv('cross_valids/lm_cl.csv')
+
+get_lm_fitted = function(test_cond) {
+  
+  fitted = lm_pars %>% filter(condition==test_cond) %>% pull(params)
+  
+  df = hazdata(filter(lm_preds,condition==test_cond), fitted) %>%
+    mutate(model='lm') %>%
+    select(model, condition, batch, trial, prediction, fitted=transformed)
+  
+  return(df)
+}
+
+
+df.lm = get_sim_fitted('construct')
+for (c in c('decon', 'combine', 'flip')) {
+  df.lm = rbind(df.lm, get_lm_fitted(c))
+}
 
 
 #### Multinomial logistic regression ####
@@ -275,6 +320,27 @@ for (cond in conditions) {
 write.csv(cross_vl, file=save_path(model))
 
 
+## Get fitted preds
+mm_pars = read.csv('cross_valids/multinom_cl.csv')
+
+get_mm_fitted = function(test_cond) {
+
+  fitted = mm_pars %>% filter(condition==test_cond) %>% pull(params)
+  
+  df = hazdata(filter(multinom_preds,condition==test_cond), fitted) %>%
+    mutate(model='multinom') %>%
+    select(model, condition, batch, trial, prediction, fitted=transformed)
+  
+  return(df)
+}
+
+
+df.mm = get_mm_fitted('construct')
+for (c in c('decon', 'combine', 'flip')) {
+  df.mm = rbind(df.mm, get_mm_fitted(c))
+}
+
+
 #### Gaussian Process regression #####
 model='GPR'
 
@@ -326,6 +392,26 @@ for (cond in conditions) {
 write.csv(cross_vl, file=save_path(model))
 
 
+## Get fitted preds
+gp_pars = read.csv('cross_valids/gpr_cl.csv')
+
+get_gp_fitted = function(test_cond) {
+  
+  fitted = mm_pars %>% filter(condition==test_cond) %>% pull(params)
+  
+  df = hazdata(filter(gp_preds,condition==test_cond), fitted) %>%
+    mutate(model='GPR') %>%
+    select(model, condition, batch, trial, prediction, fitted=transformed)
+  
+  return(df)
+}
+
+
+df.gpr = get_gp_fitted('construct')
+for (c in c('decon', 'combine', 'flip')) {
+  df.gpr = rbind(df.gpr, get_gp_fitted(c))
+}
+
 
 
 #### Random baseline ####
@@ -334,6 +420,8 @@ rand_baseline = df.tw %>%
   mutate(LL=log(1/NCHUNK)*n, model='random', params='') %>%
   select(model,condition, params,LL)
 write.csv(rand_baseline, file=save_path('random'))
+
+
 
 
 #### Overall results ####
@@ -362,7 +450,7 @@ cross_vl %>%
   write.csv('cross_valids/sum.csv')
 
 
-
+save(df.sim, df.lm, df.mm, df.gpr, file='../data/alter_fitted.Rdata')
 
 
 
