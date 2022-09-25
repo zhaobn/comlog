@@ -188,5 +188,19 @@ total = rbind(main, flip) %>% select(-X)
 write.csv(total, file='../data/tasks/tasks.csv')
 
 
+#### Sample for second coder ####
+load('../data/all_coded.Rdata')
+
+sampled_ix = sample(labels$ix, round(nrow(labels)*.15), replace = F)
+sampled = labels %>% 
+  filter(ix %in% sampled_ix) %>%
+  select(ix, exp, condition, input_a, rule_a=rule_cat_a, input_b, rule_b=rule_cat_b)
+sampled = apply(sampled, 2, as.character)
+write.csv(sampled, file='../data/2_coder.csv')
+
+
+
+
+
 
 

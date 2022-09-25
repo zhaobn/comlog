@@ -2,8 +2,24 @@
 library(dplyr)
 library(tidyr)
 
+setwd("~/bramleylab/comlog/analysis")
+
 load('../data/all_cleaned.Rdata')
 load('../data/all_coded.Rdata')
+
+
+#### Demographics #####
+df.sw %>% filter(exp_id==2) %>%
+  summarise(sd(age), mean(age), sd(task_duration)/60000, mean(task_duration)/60000)
+
+df.sw %>% filter(exp_id==3) %>%
+  summarise(sd(age), mean(age), sd(task_duration)/60000, mean(task_duration)/60000)
+
+df.sw %>% filter(exp_id==3) %>%
+  count(condition)
+
+df.sw %>% filter(exp_id==4) %>%
+  summarise(sd(age), mean(age), sd(task_duration)/60000, mean(task_duration)/60000)
 
 #### Pre-processing #####
 ## add ground truth (gt) and alternative truths (alt) to data 
@@ -22,10 +38,21 @@ cur_accs %>%
   group_by(condition) %>%
   summarise(acc=sum(acc), n=n(), acc_perc=round(100*(sum(acc)/n()),2))
 
+cur_accs %>% 
+  group_by(condition, ix) %>%
+  summarise(acc=sum(acc)/n()) %>%
+  group_by(condition) %>%
+  summarise(sd(acc))
+
 t.test(
   cur_accs %>% filter(condition=='construct') %>% pull(acc),
   cur_accs %>% filter(condition=='decon') %>% pull(acc)
 )
+
+sd(c(cur_accs %>% filter(condition=='construct') %>% pull(acc),
+     cur_accs %>% filter(condition=='decon') %>% pull(acc)))
+
+(0.4474299-0.2660256)/0.4779371
 
 
 cur_labs = labels %>%
@@ -46,6 +73,27 @@ cur_labs %>%
   filter(rule_a=='mult') %>%
   summarise(got_gt=sum(got_gt), n=n(), gt_perc=round(100*(sum(got_gt)/n()),2))
 
+# combine vs construct
+cur_accs = df.tw %>% 
+  filter(exp_id<3, condition %in% c('construct', 'combine'), batch=='B') %>%
+  mutate(acc=(prediction==gt))
+
+cur_accs %>% 
+  group_by(condition) %>%
+  summarise(acc_perc=round(100*(sum(acc)/n()),2))
+
+t.test(
+  cur_accs %>% filter(condition=='construct') %>% pull(acc),
+  cur_accs %>% filter(condition=='combine') %>% pull(acc)
+)
+
+df.tw %>% 
+  filter(exp_id<3, condition %in% c('construct', 'combine'), batch=='B') %>%
+  mutate(acc=(prediction==gt)) %>%
+  group_by(condition, ix) %>%
+  summarise(acc=sum(acc)/n()) %>%
+  group_by(condition) %>%
+  summarise(sd=round(sd(acc), 4), round(sum(acc)/n(), 4))
 
 
 #### Local construction ####
@@ -57,8 +105,29 @@ labels %>%
 chisq.test(c(0,7,59),p=rep(1/3, 3))
 
 
+p1_length = labels %>%
+  filter(exp %in% c('exp_1', 'exp_2'), condition %in% c('construct', 'decon')) %>%
+  mutate(nchar_a=nchar(input_a), nchar_b=nchar(input_b)) %>%
+  select(condition, ix, nchar_a, nchar_b)
+  
+p1_length %>%
+  group_by(condition) %>%
+  summarise(sd_a=sd(nchar_a), mean_a=round(sum(nchar_a)/n(),2),
+            sd_b=sd(nchar_b), mean_b=round(sum(nchar_b)/n(),2))
+
+t.test(
+  p1_length %>% filter(condition=='construct') %>% pull(nchar_a),
+  p1_length %>% filter(condition=='decon') %>% pull(nchar_a),
+)
+
+t.test(
+  p1_length %>% filter(condition=='construct') %>% pull(nchar_b),
+  p1_length %>% filter(condition=='decon') %>% pull(nchar_b)
+)
+
+
 #### Compositions ####
-# use last two experiments because of size balance
+# use last two experiments
 comp_accs = df.tw %>% 
   filter(exp_id>2, condition %in% c('combine', 'flip'), batch=='B') %>%
   mutate(acc=(prediction==gt))
@@ -188,6 +257,55 @@ labels %>%
   mutate(is_add=rule_cat_a=='add_2') %>%
   group_by(condition) %>%
   summarise(n=n(), is_add=sum(is_add), is_add_perc=round(100*sum(is_add)/n(),2))
+
+
+
+#### Alternatives ####
+
+df.tw %>%
+  filter(exp_id>2, batch=='B') %>%
+  mutate(alt_acc=prediction==alt) %>%
+  group_by(condition, ix) %>%
+  summarise(alt_acc=sum(alt_acc)/n()) %>%
+  group_by(condition) %>%
+  summarise(sd=sd(alt_acc), mean=sum(alt_acc)/n())
+
+
+df.tw %>%
+  filter(exp_id>2, batch=='B') %>%
+  group_by(condition) %>%
+  summarise(n()/16)
+
+chisq.test(c(1,9,),p=rep(1/2, 2))
+
+df.tw %>%
+  filter(exp_id>2, batch=='B') %>%
+  mutate(acc=prediction==gt) %>%
+  group_by(condition, ix) %>%
+  summarise(acc=sum(acc)/n()) %>%
+  group_by(condition) %>%
+  summarise(sd=sd(acc), mean=sum(acc)/n())
+
+
+gt_accs = df.tw %>%
+  filter(exp_id>2, batch=='B') %>%
+  mutate(acc=prediction==gt)
+
+t.test(
+  gt_accs %>% filter(condition=='combine') %>% pull(acc),
+  gt_accs %>% filter(condition=='flip') %>% pull(acc)
+)
+
+
+
+
+
+
+
+
+
+
+
 
 
 

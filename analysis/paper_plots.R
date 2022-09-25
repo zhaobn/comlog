@@ -2,13 +2,18 @@
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(ggpubr)
 library(ggridges)
 
 load('../data/all_cleaned.Rdata')
 load('../data/fitted_models.Rdata')
-answers = read.csv('../data/tasks/answers.csv') %>% select(condition, trial, gt)
+
 fit_results = read.csv('cross_valids/processes.csv') %>% select(-X)
 cond_levels=c('construct', 'decon', 'combine', 'flip')
+
+answers = read.csv('../data/tasks/answers.csv') %>% select(condition, trial, gt)
+answers = rbind(mutate(answers, batch='A'), mutate(answers, batch='B')) %>%
+  select(condition, batch, trial, gt)
 
 #### Accuracy plot #### 
 ppt_cond = df.tw %>% count(condition,batch,trial,prediction)
@@ -17,10 +22,6 @@ gen_task = expand.grid(condition=c('combine','construct','decon','flip'),batch=c
 ppt_cond = gen_task %>%
   left_join(ppt_cond, by=c('condition','batch','trial','prediction')) %>%
   mutate(n=ifelse(is.na(n),0,n))
-
-answers = read.csv('../data/tasks/answers.csv') %>% select(condition, trial, gt)
-answers = rbind(mutate(answers, batch='A'), mutate(answers, batch='B')) %>%
-  select(condition, batch, trial, gt)
 
 # People
 ppt_accs = ppt_cond %>%
@@ -55,7 +56,13 @@ agr_accs = df.agr %>%
   group_by(condition, batch) %>%
   summarise(accuracy=round(100*sum(acc*fitted)/sum(fitted),2))
 
-pcfg_accs = df.pcfg %>%
+rr_accs = df.rr %>%
+  left_join(answers, by=c('condition', 'batch', 'trial')) %>%
+  mutate(acc=(gt==prediction)) %>%
+  group_by(condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*fitted)/sum(fitted),2))
+
+rrr_accs = df.rrr %>%
   left_join(answers, by=c('condition', 'batch', 'trial')) %>%
   mutate(acc=(gt==prediction)) %>%
   group_by(condition, batch) %>%
@@ -63,38 +70,41 @@ pcfg_accs = df.pcfg %>%
 
 model_accs = rbind(
   mutate(ag_accs, model='AG'),
-  mutate(agr_accs, model='AG-RJ'),
-  mutate(pcfg_accs, model='RatRule')
+  mutate(agr_accs, model='AGR'),
+  mutate(rr_accs, model='RR'),
+  #mutate(rrr_accs, model='RRR'),
 ) %>%
   mutate(condition=factor(condition, levels=cond_levels),
-         batch=ifelse(batch=='A','I','II'))
+         batch=ifelse(batch=='A','I','II'),
+         model=factor(model, levels=c('AGR','AG','RR')))
 
 
 
 ggplot(ppt_accs, aes(x=batch, y=accuracy)) +
   geom_bar(stat='identity', fill='black') +
   facet_grid(~condition) +
-  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.2, position=position_dodge(.9), color='gray50') +
+  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.2, position=position_dodge(.9), color='#116466') +
   geom_point(
     aes(x=batch, y=accuracy, shape=model, color=model), 
     position = position_jitterdodge(jitter.width = 0.05, jitter.height = 0.5, dodge.width = 0.4),
-    size=3, stroke=1.5, data=model_accs) +
-  scale_shape_manual(values=c(16, 17, 15)) +
+    size=5, stroke=1.5, data=model_accs) +
+  scale_shape_manual(values=c(16, 17, 15, 18)) +
   scale_color_manual(values=c("#cc0000", "#f1c232", "#63ace5")) +
   labs(x='', y='accuracy') +
   scale_y_continuous(labels=function(x) paste0(x, '%')) +
   theme_bw() +
-  theme(
-    text=element_text(size = 15),
-    strip.background =element_rect(fill="white", colour='white'),
-  )
-
+  theme(legend.title=element_blank(),
+        legend.position = 'right',
+      #legend.position=c(.9,.9),
+      strip.background = element_blank(),
+      panel.grid.minor = element_blank(),
+      text = element_text(size = 25)) +
+  facet_wrap(~condition, nrow=2)
 
 
 
 #### Accuracy plot with alternative models #### 
 load('../data/alter_fitted.Rdata')
-
 
 sim_accs = df.sim %>%
   left_join(answers, by=c('condition', 'batch', 'trial')) %>%
@@ -114,13 +124,13 @@ mm_accs = df.mm %>%
   group_by(condition, batch) %>%
   summarise(accuracy=round(100*sum(acc*fitted)/sum(fitted),2))
 
-gp_accs = df.gpr %>%
+gp_accs = df.gp %>%
   left_join(answers, by=c('condition', 'batch', 'trial')) %>%
   mutate(acc=(gt==prediction)) %>%
   group_by(condition, batch) %>%
   summarise(accuracy=round(100*sum(acc*fitted)/sum(fitted),2))
 
-rand_accs = df.gpr %>%
+rand_accs = df.gp %>%
   mutate(fitted=1/17) %>%
   left_join(answers, by=c('condition', 'batch', 'trial')) %>%
   mutate(acc=(gt==prediction)) %>%
@@ -128,21 +138,23 @@ rand_accs = df.gpr %>%
   summarise(accuracy=round(100*sum(acc*fitted)/sum(fitted),2))
 
 
-all_models = c('AG', 'AGR', 'Standard', 'Similarity', 'GPR', 'LinReg', 'Multimon')
+all_models = c('AGR', 'AG', 'RR', 'Similarity', 'GpReg', 'LinReg', 'Multinom')
 
 model_accs = rbind(
-  mutate(ag_accs, model='AG'),
   mutate(agr_accs, model='AGR'),
-  mutate(pcfg_accs, model='Standard'),
+  mutate(ag_accs, model='AG'),
+  mutate(rr_accs, model='RR'),
+  #mutate(rrr_accs, model='RRR'),
   mutate(sim_accs, model='Similarity'),
   mutate(lm_accs, model='LinReg'),
-  mutate(mm_accs, model='Multimon'),
-  mutate(gp_accs, model='GPR'),
+  mutate(mm_accs, model='Multinom'),
+  mutate(gp_accs, model='GpReg'),
   #mutate(rand_accs, model='Random'),
 ) %>%
   mutate(condition=factor(condition, levels=cond_levels),
          model=factor(model, levels=all_models),
-         batch=ifelse(batch=='A','I','II'))
+         batch=ifelse(batch=='A','I','II')) %>%
+  filter(model %in% c('AGR', 'AG', 'RR'))
 
 ggplot(ppt_accs, aes(x=batch, y=accuracy)) +
   geom_bar(stat='identity', fill='black') +
@@ -159,9 +171,95 @@ ggplot(ppt_accs, aes(x=batch, y=accuracy)) +
   scale_y_continuous(labels=function(x) paste0(x, '%')) +
   theme_bw() +
   theme(
-    text=element_text(size = 35),
+    legend.position='bottom',
+    text=element_text(size = 25),
     strip.background =element_rect(fill="white", colour='white'),
   )
+
+
+#### Plot for presentation #### 
+ppt_accs_plot = ppt_accs %>% filter(condition!='flip')
+model_accs_plot = model_accs %>% 
+  filter(condition!='flip') %>%
+  mutate(model=as.character(model)) %>%
+  mutate(model=ifelse(model=='Standard', 'Unbounded', model)) %>%
+  mutate(model=factor(model, levels=c('AG', 'AGR', 'Unbounded', 'Similarity', 'GPR', 'LinReg', 'Multimon')))
+
+ggplot(data=ppt_accs_plot, aes(x=batch, y=accuracy)) +
+  geom_bar(stat='identity', fill='black') +
+  facet_grid(~condition) +
+  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.2, position=position_dodge(.9)) +
+  geom_hline(yintercept=1/17*100, linetype='dashed', color='green', size=2) +
+  geom_point(
+    aes(x=batch, y=accuracy, shape=model, color=model,alpha=model),
+    position = position_jitterdodge(jitter.width = 0.1, jitter.height = 0.5, dodge.width = 0.4),
+    size=5, stroke=1.5, data=model_accs_plot) +
+  scale_shape_manual(values=c(16, 17, 15, rep(20,length(all_models)-3))) +
+  scale_color_manual(values=c("#cc0000", "#f1c232", "#63ace5", rep('#808080',length(all_models)-3))) +
+  scale_alpha_manual(values=c(1,1,1,rep(1,length(all_models)-3))) +
+  labs(x='', y='accuracy') +
+  scale_y_continuous(labels=function(x) paste0(x, '%')) +
+  theme_bw() +
+  theme(
+    text=element_text(size = 25),
+    strip.background =element_rect(fill="white", colour='white'),
+  )
+
+#### Acc fit plot #### 
+diag_accs = ppt_accs %>%
+  mutate(ppt=accuracy) %>%
+  select(condition, batch, ppt) %>%
+  right_join(model_accs, by=c('condition', 'batch')) %>%
+  mutate(index=paste0(condition, '-', batch)) %>%
+  mutate(model=factor(model, levels=c('AGR','AG','RR','GpReg','Similarity','Multinom','LinReg'))) %>%
+  filter(model %in% c('GpReg','Similarity','Multinom','LinReg'))
+
+ggplot(diag_accs, aes(x=accuracy, y=ppt)) +
+  geom_point() +
+  geom_smooth(method='lm', formula= y~x, fill = "lightgray") +
+  stat_cor(aes(label = ..r.label..), label.x = 9, label.y = 54) + # x 36
+  facet_wrap(~model, nrow=1) +
+  labs(x='model', y='people') +
+  scale_y_continuous(labels=function(x) x/100) +
+  scale_x_continuous(labels=function(x) x/100) +
+  theme_bw() +
+  theme(legend.title=element_blank(),
+        legend.position=c(.07,.87),
+        strip.background = element_blank(),
+        panel.grid.minor = element_blank(),
+        text = element_text(size = 20))
+
+#### NLL Improvement ####
+fits_all = read.csv(file='../data/fits_all.csv') %>%
+  filter(model != 'RRR')
+baseline_stats = df.tw %>% 
+  count(condition) %>% 
+  mutate(baseline=n*log(1/17)) %>% select(-n)
+
+fits_all %>% group_by(model, condition) %>%
+  summarise(nll=sum(nll)) %>%
+  left_join(baseline_stats, by='condition') %>%
+  mutate(improv=round(nll-baseline)) %>%
+  mutate(condition=ifelse(condition=='decon', 'de-construct', condition)) %>%
+  mutate(condition=factor(condition, levels=c("construct", 'de-construct', 'combine', 'flip'))) %>%
+  ggplot(aes(x=reorder(model, -nll), y=improv, fill=condition)) +
+  geom_bar(position="stack", stat="identity") +
+  geom_text(
+    aes(label = paste0('+', after_stat(y)), group = model), 
+    stat = 'summary', fun = sum, vjust = -1
+  ) +
+  theme_bw() +
+  labs(x='', y='') +
+  scale_fill_brewer(palette="Blues", direction=-1) +
+  theme(legend.title=element_blank(),
+        legend.position=c(.75,.9),
+        strip.background = element_blank(),
+        panel.grid.minor = element_blank(),
+        text = element_text(size = 20),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=.5))
+  
+
+
 
 
 #### Process plot #### 
@@ -218,12 +316,6 @@ df.agr = df.agr %>% mutate(
   batch=ifelse(batch=='A','I','II')
 )
 
-# df.gpr = gp_preds %>% mutate(
-#   trial=as.factor(as.character(trial)),
-#   condition=factor(condition, level=cond_levels),
-#   batch=ifelse(batch=='A','I','II')
-# )
-
 
 df.tw %>%
   mutate(
@@ -239,6 +331,7 @@ df.tw %>%
   #scale_x_discrete(limits=c(0,seq(max(df.agr$prediction)))) +
   scale_y_discrete(limits=rev) +
   facet_grid(batch~condition) +
+  #facet_grid(condition~batch) +
   theme_bw() +
   labs(x='result segment prediction', y='generalization task') +
   theme(
@@ -295,6 +388,215 @@ ggplot(ppt_pred, aes(x=condition, fill=pred)) +
     text=element_text(size = 20),
   )
   
+
+#### New plots ####
+
+ppt_cond = df.tw %>% count(exp_id,condition,batch,trial,prediction)
+gen_task = expand.grid(exp_id=seq(4),condition=c('combine','construct','decon','flip'),batch=c('A','B'),trial=seq(8),prediction=seq(0,16)) %>%
+  arrange(exp_id, condition, batch, trial, prediction)
+ppt_cond = gen_task %>%
+  left_join(ppt_cond, by=c('exp_id', 'condition','batch','trial','prediction')) %>%
+  mutate(n=ifelse(is.na(n),0,n))
+
+answers = read.csv('../data/tasks/answers.csv') %>% select(exp_id, condition, trial, gt)
+answers = rbind(mutate(answers, batch='A'), mutate(answers, batch='B')) %>%
+  select(exp_id, condition, batch, trial, gt)
+
+# People
+ppt_accs = ppt_cond %>%
+  left_join(answers, by=c('exp_id', 'condition', 'batch', 'trial')) %>%
+  mutate(acc=(gt==prediction))
+
+exp_1_accs = ppt_accs %>%
+  filter(exp_id==1, condition != 'flip') %>%
+  group_by(exp_id, condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*n)/sum(n),2), se=sd(acc)/sqrt(n())) %>% ungroup() %>%
+  mutate(exp_label='1') %>%
+  select(exp_label, condition, batch, accuracy, se)
+exp_2_accs = ppt_accs %>%
+  filter(exp_id==2, condition != 'flip') %>%
+  group_by(exp_id, condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*n)/sum(n),2), se=sd(acc)/sqrt(n())) %>%  ungroup() %>%
+  mutate(exp_label='2') %>%
+  select(exp_label, condition, batch, accuracy, se)
+exp_cur_accs = ppt_accs %>%
+  filter(exp_id<3, condition != 'flip') %>%
+  group_by(condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*n)/sum(n),2), se=sd(acc)/sqrt(n())) %>% ungroup() %>%
+  mutate(exp_label='cur') %>%
+  select(exp_label, condition, batch, accuracy, se)
+
+exp_3_accs = ppt_accs %>%
+  filter(exp_id==3, condition %in% c('combine', 'flip')) %>%
+  group_by(exp_id, condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*n)/sum(n),2), se=sd(acc)/sqrt(n())) %>% ungroup() %>%
+  mutate(exp_label='3') %>%
+  select(exp_label, condition, batch, accuracy, se)
+exp_4_accs = ppt_accs %>%
+  filter(exp_id==4, condition %in% c('combine', 'flip')) %>%
+  group_by(exp_id, condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*n)/sum(n),2), se=sd(acc)/sqrt(n())) %>% ungroup() %>%
+  mutate(exp_label='4') %>%
+  select(exp_label, condition, batch, accuracy, se)
+exp_com_accs = ppt_accs %>%
+  filter(exp_id>2, condition %in% c('combine', 'flip')) %>%
+  group_by(condition, batch) %>%
+  summarise(accuracy=round(100*sum(acc*n)/sum(n),2), se=sd(acc)/sqrt(n())) %>% ungroup() %>%
+  mutate(exp_label='com') %>%
+  select(exp_label, condition, batch, accuracy, se)
+
+ppt_agg = rbind(exp_1_accs, exp_2_accs, exp_3_accs, exp_4_accs, exp_cur_accs, exp_com_accs) %>%
+  mutate(exp_label=factor(exp_label, levels=c('1','2','cur','3','4','com')),
+         se=100*se, # in line with percentage
+         condition=factor(condition, level=cond_levels),
+         batch=ifelse(batch=='A','I','II'))
+
+ggplot(ppt_agg, aes(x=batch, y=accuracy)) +
+  geom_bar(stat='identity', fill='black') +
+  facet_grid(~condition) +
+  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.2, position=position_dodge(.9), color='gray50') +
+  labs(x='', y='accuracy') +
+  scale_y_continuous(labels=function(x) paste0(x, '%')) +
+  theme_bw() +
+  theme(
+    text=element_text(size = 15),
+    strip.background =element_rect(fill="white", colour='white'),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+    panel.background = element_blank(), axis.line = element_line(colour = "black"),
+    panel.spacing.y = unit(2, "lines")
+  ) +
+  facet_grid(exp_label~condition)
+
+
+
+rbind(exp_1_accs, exp_2_accs, exp_cur_accs) %>%
+  mutate(exp_label=factor(exp_label, levels=c('1','2','cur')),
+         se=100*se, # in line with percentage
+         condition=factor(condition, level=c('construct','decon','combine')),
+         batch=ifelse(batch=='A','I','II')) %>%
+  ggplot(aes(x=batch, y=accuracy)) +
+  geom_bar(stat='identity', fill='black') +
+  facet_grid(~condition) +
+  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.2, position=position_dodge(.9), color='gray50') +
+  labs(x='', y='accuracy') +
+  scale_y_continuous(labels=function(x) paste0(x, '%')) +
+  theme_bw() +
+  theme(
+    text=element_text(size = 15),
+    strip.background =element_rect(fill="white", colour='white'),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+    panel.background = element_blank(), axis.line = element_line(colour = "black"),
+    panel.spacing.y = unit(2, "lines")
+  ) +
+  facet_grid(exp_label~condition)
+
+
+rbind(exp_3_accs, exp_4_accs, exp_com_accs) %>%
+  mutate(exp_label=factor(exp_label, levels=c('3','4','com')),
+         se=100*se, # in line with percentage
+         condition=factor(condition, level=c('combine', 'flip')),
+         batch=ifelse(batch=='A','I','II')) %>%
+  ggplot(aes(x=batch, y=accuracy)) +
+  geom_bar(stat='identity', fill='black') +
+  facet_grid(~condition) +
+  geom_errorbar(aes(ymin=accuracy-se, ymax=accuracy+se), width=.2, position=position_dodge(.9), color='gray50') +
+  labs(x='', y='accuracy') +
+  scale_y_continuous(labels=function(x) paste0(x, '%')) +
+  theme_bw() +
+  theme(
+    text=element_text(size = 15),
+    strip.background =element_rect(fill="white", colour='white'),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+    panel.background = element_blank(), axis.line = element_line(colour = "black"),
+    panel.spacing.y = unit(2, "lines")
+  ) +
+  facet_grid(exp_label~condition)
+
+
+#### New plots Neil suggested ####
+
+answers = read.csv('../data/tasks/answers.csv') %>% select(exp_id, condition, trial, gt)
+answers = rbind(mutate(answers, batch='A'), mutate(answers, batch='B')) %>%
+  select(exp_id, condition, batch, trial, gt)
+
+# Accuracy per participant
+ind_acc = df.tw %>%
+  left_join(answers, by=c('exp_id', 'condition', 'batch', 'trial')) %>%
+  mutate(acc=(prediction==gt)*100, 
+         batch=ifelse(batch=='A', 'I', 'II'),
+         condition=ifelse(condition=='decon', 'de-construct', condition),
+         condition=factor(condition, levels=c('construct','de-construct','combine','flip'))) %>%
+  group_by(exp_id, ix, condition, batch) %>%
+  summarise(acc=sum(acc)/n())
+
+agg_stat = ind_acc %>%
+  group_by(exp_id, condition, batch) %>%
+  summarise(se=sd(acc)/sqrt(n()), acc=sum(acc)/n())
+
+agg_stat %>%
+  filter(exp_id < 3) %>%
+  mutate(exp_id=paste0('Exp ', as.character(exp_id))) %>%
+  ggplot(aes(x=batch, y=acc, fill=exp_id)) +
+  geom_bar(position='dodge', stat='identity') +
+  #geom_jitter(data=filter(ind_acc, exp_id < 3), aes(x=batch, y=acc), alpha=.5, size=.5, color='#116466', fill='white', shape=21) +
+  geom_errorbar(aes(ymin=acc-se, ymax=acc+se), width=.2, position=position_dodge(.9), color='#116466') +
+  scale_fill_manual(values=c("black", "#9E9E9E")) +
+  facet_grid(~condition)+
+  labs(x='', y='accuracy') +
+  scale_y_continuous(labels=function(x) paste0(x,"%")) +
+  theme_bw() +
+  theme(legend.title=element_blank(),
+        legend.position=c(.07,.87),
+        strip.background = element_blank(),
+        panel.grid.minor = element_blank(),
+        text = element_text(size = 25))
+  
+
+agg_stat %>%
+  filter(exp_id > 2) %>%
+  mutate(exp_id=paste0('Exp ', as.character(exp_id))) %>%
+  ggplot(aes(x=batch, y=acc, fill=exp_id)) +
+  geom_bar(position='dodge', stat='identity') +
+  #geom_jitter(data=filter(ind_acc, exp_id > 2), aes(x=batch, y=acc), alpha=.5, size=.5, color='#116466', fill='white', shape=21) +
+  geom_errorbar(aes(ymin=acc-se, ymax=acc+se), width=.2, position=position_dodge(.9), color='#116466') +
+  scale_fill_manual(values=c("black", "#9E9E9E")) +
+  facet_grid(~condition)+
+  labs(x='', y='') +
+  scale_y_continuous(labels=function(x) paste0(x,"%")) +
+  theme_bw() +
+  theme(legend.title=element_blank(),
+        legend.position=c(.1,.87),
+        strip.background = element_blank(),
+        panel.grid.minor = element_blank(),
+        text = element_text(size = 25))
+
+#### Model fit results ####
+
+fits = read.csv('cross_valids/sum.csv') %>% select(-X)
+
+fits_long = fits %>% 
+  gather('cond', 'value', -model) %>%
+  filter(cond!='overall')
+
+ggplot(fits_long, aes(x=model, y=value, fill=cond)) +
+  geom_bar(position="stack", stat="identity")
+
+# improvement
+fits %>% 
+  select(model, overall) %>%
+  mutate(impro=fits$overall[8]-overall) %>%
+  ggplot(aes(x=model, y=impro)) +
+    geom_bar(stat='identity')
+
+
+
+
+
+
+
+
+
+
 
 
 

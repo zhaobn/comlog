@@ -565,9 +565,22 @@ ggplot(acc_data_sd2_sfed, aes(x=batch, y=accuracy)) +
 #### End of Plots for Experiment 2
 
 
+#### Read label data for pysanky ###
+combine_1 = labels %>%
+  filter(exp %in% c('exp_1', 'exp_2'), condition=='combine') %>%
+  select(rule_cat_a, rule_cat_b) %>%
+  count(rule_cat_a, rule_cat_b)
+
+combine_2 = labels %>%
+  filter(exp %in% c('exp_3', 'exp_4'), condition=='combine') %>%
+  select(rule_cat_a, rule_cat_b) %>%
+  count(rule_cat_a, rule_cat_b)
+
+write.csv(combine_1, file='../data/responses/labels_combine_1.csv')
+write.csv(combine_2, file='../data/responses/labels_combine_2.csv')
 
 
-
+#### End of Read label data for pysanky ###
 
 
 
