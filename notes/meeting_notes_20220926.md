@@ -4,7 +4,7 @@
 
 Concerns:
 
-* The experiment didn't distinguish sub-part sharing of AG from PCFG
+* The experiments didn't distinguish sub-part sharing of AG from PCFG
 * PCFG + particle filters (small samples) in deconstruct could do well
 
 Links to make:
@@ -15,10 +15,11 @@ Links to make:
 
 ## Feeback Tom's lab
 
-* Robert Hawkins: [DreamCoder path-dependence}(https://proceedings.neurips.cc/paper/2020/file/1c104b9c0accfca52ef21728eaf01453-Paper.pdf)
+* Robert Hawkins: [DreamCoder path-dependence](https://proceedings.neurips.cc/paper/2020/file/1c104b9c0accfca52ef21728eaf01453-Paper.pdf)
 * Natalia Velez: how to extend the model in cultural evolution / social settings
+* (Name not picked up) Manipulate the amount of sharing/caching to model individual responses
 
 ## Draft status
 
-* Incorporate Noah's comments
+* Address Noah's comments
 * SI to be done
