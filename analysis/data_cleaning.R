@@ -43,6 +43,7 @@ df.sw = df.sw.raw %>%
 
 #### Transform trial data ####
 colnames(df.tw.raw)<-c('ix', 'id', 'batch', 'phase', 'trial', 'tid', 'agent', 'color', 'recipient', 'result', 'selection', 'correct')
+
 df.tw = df.tw.raw %>%
   mutate(batch=ifelse(batch=='alice', 'A', 'B')) %>%
   filter(phase=='gen') %>%
@@ -55,7 +56,7 @@ df.tw = df.tw %>%
 
 # Extract key feature values
 trial_data = df.tw %>%
-  filter(phase=='gen') %>%
+  #filter(phase=='gen') %>%
   mutate(exp_trial=trial,
          tid=as.character(tid),
          tid=as.numeric(substr(tid,2, nchar(tid))),
@@ -78,7 +79,7 @@ trial_data = trial_data %>%
   arrange(ix, condition, batch, trial)
 
 df.tw = trial_data
-save(df.sw, df.tw, file='../data/exp_4_cleaned.rdata')
+save(df.sw, df.tw, file='../data/exp_3_cleaned.rdata')
 
 # Label data
 labels = read_sheet("https://docs.google.com/spreadsheets/d/1xmfK-JrVznHkPfKPoicelXOW5Mj252G2TtY6O9PP2tM/")
