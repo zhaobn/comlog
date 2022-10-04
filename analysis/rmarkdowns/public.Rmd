@@ -1,94 +1,85 @@
+---
+title: "Analysis"
+author: "Bonan Zhao"
+date: "10/4/2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+---
+```{r include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
 
+
+```{r load}
+# Load packages
 library(tidyverse)
 library(ggplot2)
 library(ggpubr)
+library(kableExtra)
 library(ggridges)
 
-##### Check data and export to csv ##### 
+# Read data
+path_prefix = '../../data/osf/'
+df.sw = read_csv(paste0(path_prefix, 'subjects.csv'))
+df.tw = read_csv(paste0(path_prefix,'trials.csv'))
+model_data = read_csv(paste0(path_prefix,'models.csv'))
+```
 
-load('../data/all_cleaned.Rdata')
-load('../data/all_coded.Rdata')
+## Demographics
 
-# Subject data + labels
-subj = df.sw %>% 
-  select(exp_id, ix, condition, task_duration, age, sex)
-labl = labels %>%
-  mutate(exp_id=as.numeric(substr(exp, 5, nchar(exp))), ix=as.numeric(ix)) %>%
-  select(exp_id, ix, condition, report_a=input_a, coded_a=rule_cat_a, report_b=input_b, coded_b=rule_cat_b)
+Demographic info per experiment. All participants are adults with English as first language.
 
-subj_export = subj %>%
-  left_join(labl, by=c('exp_id', 'ix', 'condition'))
-write_csv(subj_export, file='../data/osf/subjects.csv')
+```{r demographics}
+df.sw %>% 
+  group_by(exp_id) %>%
+  summarise(n=n(), 
+            age_sd=sd(age), 
+            age_mean=mean(age), 
+            task_time_sd=sd(task_duration)/60000, # milliseconds to minutes
+            task_time_mean=mean(task_duration)/60000) %>%
+  rename(exp=exp_id) %>%
+  # styling table output
+  kbl(digits = 2) %>%
+  kable_styling()
+```
 
-# Fix missing input_a
-subj = read_csv('../data/osf/subjects.csv')
-to_select = colnames(subj)
+## Experiments 1 and 2
 
-subj = read_csv('../data/osf/subjects.csv') %>% select(-report_a)
-input_a = df.sw %>% select(ix, report_a=input_a)
-subj = subj %>%
-  left_join(input_a, by='ix') %>%
-  select(to_select)
-write_csv(subj, file='../data/osf/subjects.csv')
+### Generalization accuracy
 
-# Trial data
-answers = read.csv('../data/tasks/answers.csv') %>% select(-X)
-trl = df.tw %>%
-  left_join(answers, by=c('exp_id', 'condition', 'trial', 'stripe', 'dot', 'block')) %>%
-  mutate(is_groundTruth = as.numeric(prediction==gt)) %>%
-  select(exp_id, ix, condition, phase=batch, trial, stripe, dot, segment=block, prediction, is_groundTruth) 
-write_csv(trl, file='../data/osf/trials.csv')
-
-# Fitted models
-load('../data/fitted_models.Rdata')
-load('../data/alter_fitted.Rdata')
-
-by_cols = c('condition', 'batch', 'trial', 'prediction')
-mdl = df.ag %>% select(c(by_cols, 'n'))
-mdl = mdl %>%
-  left_join(select(df.ag, condition, batch, trial, prediction, raw_ag=prob, fitted_ag=fitted), by=by_cols) %>%
-  left_join(select(df.agr, condition, batch, trial, prediction, raw_agr=prob, fitted_agr=fitted), by=by_cols) %>%
-  left_join(select(df.rr, condition, batch, trial, prediction, raw_rr=prob, fitted_rr=fitted), by=by_cols) %>%
-  left_join(select(df.sim, condition, batch, trial, prediction, raw_sim=prob, fitted_sim=fitted), by=by_cols) %>%
-  left_join(select(df.gp, condition, batch, trial, prediction, raw_gp=prob, fitted_gp=fitted), by=by_cols) %>%
-  left_join(select(df.mm, condition, batch, trial, prediction, raw_mm=prob, fitted_mm=fitted), by=by_cols) %>%
-  left_join(select(df.lm, condition, batch, trial, prediction, raw_lm=prob, fitted_lm=fitted), by=by_cols) %>%
-  mutate(rand=1/17) %>%
-  rename(phase=batch)
-write_csv(mdl, file='../data/osf/models.csv')
-
-
-##### Stats all ##### 
-
-df.sw = read.csv('../data/osf/subjects.csv')
-df.tw = read.csv('../data/osf/trials.csv')
-
-# Demographics
-df.sw %>% group_by(exp_id) %>%
-  summarise(n=n(), sd(age), mean(age), sd(task_duration)/60000, mean(task_duration)/60000)
-
-##### Experiments 1 and 2 generalization accuracy ##### 
-
+```{r exp1_gen}
+# Read Experiments 1 and 2 final generalization predictions
 exp_1and2 = df.tw %>% filter(exp_id < 3, phase == 'B')
+
+# Descriptive statistics 
 exp_1and2 %>%
   group_by(condition, ix) %>%
   summarise(acc=sum(is_groundTruth)/n()) %>%
   group_by(condition) %>%
-  summarise(sd(acc), mean(acc))
+  summarise(accuracy_sd=sd(acc), accuracy_mean=mean(acc)) %>%
+  kbl(digits = 2) %>%
+  kable_styling()
 
+# Compare generalization accuracy between construct and deconstruct curricula
 t.test(
   exp_1and2 %>% filter(condition=='construct') %>% pull(is_groundTruth),
   exp_1and2 %>% filter(condition=='decon') %>% pull(is_groundTruth)
 )
 
+# Compare generalization accuracy between construct and combine curricula
 t.test(
   exp_1and2 %>% filter(condition=='construct') %>% pull(is_groundTruth),
   exp_1and2 %>% filter(condition=='combine') %>% pull(is_groundTruth)
 )
+```
 
+### Coded self-reports
 
-##### Experiments 1 and 2 coded self-reports ##### 
-
+```{r exp1_reports}
+# Read Experiments 1 and 2 coded self-reports
 labels_1and2 = df.sw %>% 
   filter(exp_id < 3) %>%
   select(ix, condition, coded_a, coded_b) %>%
@@ -147,27 +138,37 @@ t.test(
   label_checks_1and2 %>% filter(condition=='combine') %>% pull(is_mult),
   label_checks_1and2 %>% filter(condition=='decon') %>% pull(is_mult)
 )
+```
 
-## Phase 1 self-report length
+### Self-report length
+
+```{r exp1_length}
+# Get Phase I self-report length
 ph1_guess_length_1and2 = df.sw %>%
   filter(exp_id < 3) %>%
   select(ix, condition, report_a) %>%
   mutate(len_a=nchar(report_a))
 
+# Descriptive stats
 ph1_guess_length_1and2 %>%
   group_by(condition) %>%
-  summarise(mean=mean(len_a), sd=sd(len_a))
+  summarise(mean_length=mean(len_a), sd_length=sd(len_a)) %>%
+  kbl(digits = 2) %>%
+  kable_styling()
 
 t.test(
   ph1_guess_length_1and2 %>% filter(condition=='construct') %>% pull(len_a),
   ph1_guess_length_1and2 %>% filter(condition=='decon') %>% pull(len_a)
 )
+```
 
 
+## Experiments 3 and 4
 
-##### Experiments 3 and 4 ##### 
+### Generalization accuracy
 
-## Generalization accuracy (match to ground truth)
+```{r exp3_gen}
+# Read Experiments 3 and 4 final generalization predictions
 exp_3and4 = df.tw %>% filter(exp_id > 2, phase == 'B')
 exp_3and4 %>%
   group_by(condition, ix) %>%
@@ -179,24 +180,32 @@ t.test(
   exp_3and4 %>% filter(condition=='combine') %>% pull(is_groundTruth),
   exp_3and4 %>% filter(condition=='flip') %>% pull(is_groundTruth)
 )
+```
 
-## Self-reports
+### Coded self-reports
+
+```{r exp3_reports}
 labels_3and4 = df.sw %>% 
   filter(exp_id > 2) %>%
   mutate(is_gt=coded_b=='ground_truth')
 
+# Compute accuracy as match to ground truth
 labels_3and4 %>%
   group_by(condition) %>%
   summarise(is_gt=sum(is_gt), n=n()) %>%
-  mutate(perc=round(100*is_gt/n, 2))
+  mutate(perc=100*is_gt/n) %>%
+  kbl(digits = 2) %>%
+  kable_styling()
 
 t.test(
   labels_3and4 %>% filter(condition=='combine') %>% pull(is_gt),
   labels_3and4 %>% filter(condition=='flip') %>% pull(is_gt)
 )
+```
 
-## Compare alternative with ground truth
+### Alternative causal concept
 
+```{r exp3_alt}
 # Compute alternative answer
 alt_exp3and4 = df.tw %>%
   filter(exp_id>2) %>%
@@ -204,27 +213,35 @@ alt_exp3and4 = df.tw %>%
   mutate(alt_answer=ifelse(alt_answer<0, 0, alt_answer)) %>%
   mutate(is_alt=as.numeric(prediction==alt_answer))
 
+# Check accuracy stats in terms of matching the alternative 
 alt_exp3and4 %>%
   filter(phase=='B', condition=='flip') %>%
   group_by(condition, ix) %>%
+  # alt: alternative; gt: ground truth
   summarise(alt_acc=sum(is_alt)/n(), gt_acc=sum(is_groundTruth)/n()) %>%
   group_by(condition) %>%
-  summarise(sd(alt_acc), mean(alt_acc), sd(gt_acc), mean(gt_acc))
+  summarise(sd(alt_acc), mean(alt_acc), sd(gt_acc), mean(gt_acc)) %>%
+  kbl(digits = 2) %>%
+  kable_styling()
 
-
+# Check distributions over ground truth, alternative, and uncertain composition
 labels_3and4 %>%
   count(coded_b) %>%
-  mutate(perc=round(100*n/nrow(labels_3and4),2))
+  mutate(perc=100*n/nrow(labels_3and4)) %>%
+  rename(phase_2_report_type=coded_b) %>%
+  kbl(digits = 2) %>%
+  kable_styling()
 
 chisq.test(c(1, 13, 38), p=rep(1/3, 3))
+```
 
 
+## Modeling results
 
-##### Model plots ##### 
+### Model fits
 
-model_data = read_csv('../data/osf/models.csv')
-
-## LL improvement
+```{r model_fits, results='hide'}
+## Calculate model fits in log-likelihoods (LL)
 model_lls = model_data %>%
   select(condition, phase, trial, prediction, n, starts_with('fitted_')) %>%
   gather('model', 'prob', -c(condition, phase, trial, prediction, n)) %>%
@@ -232,11 +249,13 @@ model_lls = model_data %>%
   group_by(model, condition) %>%
   summarise(nll=sum(lp*n))
 
-# random baseline
+# Calculate random baseline
 rand_baseline = model_data %>%
   group_by(condition) %>%
   summarise(n=sum(n)) %>%
   mutate(rand_nll=n*log(1/17))
+
+# Get LL improvement
 model_ll_improv = model_lls %>%
   left_join(rand_baseline, by='condition') %>%
   mutate(improv=round(nll-rand_nll))
@@ -249,20 +268,23 @@ model_ll_improv %>%
   geom_bar(position="stack", stat="identity") +
   geom_text(
     aes(label = paste0('+', after_stat(y)), group = model), 
-    stat = 'summary', fun = sum, vjust = -1
+    stat = 'summary', fun = sum
   ) +
   theme_bw() +
   labs(x='', y='') +
   scale_fill_brewer(palette="Blues", direction=-1) +
   theme(legend.title=element_blank(),
-        legend.position=c(.75,.9),
+        legend.position='bottom',
         strip.background = element_blank(),
         panel.grid.minor = element_blank(),
         text = element_text(size = 20),
         axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=.5))
+```
 
+### Generalization accuracy
 
-## Accuracy fits
+```{r model_regs, results='hide'}
+# Calculate accuracy for fitted models
 answers = df.tw %>%
   filter(exp_id%%2==1) %>%
   select(condition, phase, trial, stripe, dot, segment) %>%
@@ -278,38 +300,43 @@ all_answers = expand.grid(
   left_join(answers, by=c('condition', 'phase', 'trial')) %>%
   mutate(is_groundTruth=as.numeric(prediction==groundTruth)) %>%
   select(-groundTruth)
-
-
 model_accs = model_data %>%
   select(condition, phase, trial, prediction, n, starts_with('fitted_')) %>%
   gather('model', 'prob', -c(condition, phase, trial, prediction, n)) %>%
   mutate(model=substr(model, 8, nchar(model))) %>%
   left_join(all_answers, by=c('condition', 'phase', 'trial', 'prediction')) %>%
   group_by(model, phase, condition) %>%
-  summarise(acc=sum(prob*is_groundTruth)/8, ppt_acc=sum(n*is_groundTruth)/sum(n))
+  summarise(acc=sum(prob*is_groundTruth)/8, ppt_acc=sum(n*is_groundTruth)/sum(n)) %>%
+  mutate(model=factor(model, levels=c('agr', 'ag', 'rr', 'sim', 'gp', 'mm', 'lm')))
 
+# Plot fits: model on x-axis, people on y-axis
 ggplot(model_accs, aes(x=acc, y=ppt_acc)) +
   geom_point() +
   geom_smooth(method='lm', formula= y~x, fill = "lightgray") +
   stat_cor(aes(label = ..r.label..), label.x = .09, label.y = .54) + # x 36
-  facet_wrap(~model, nrow=1) +
+  facet_wrap(~model, nrow=2) +
   labs(x='model', y='people') +
   theme_bw() +
   theme(legend.title=element_blank(),
         legend.position=c(.07,.87),
         strip.background = element_blank(),
         panel.grid.minor = element_blank(),
-        text = element_text(size = 20))
+        text = element_text(size = 15))
+```
 
+### Accuracy comparison of Bayesian-symbolic models
 
-## Detailed accuracy fits
+```{r model_details, results='hide'}
+# Prep participant accuracy data
 ppt_stats = df.tw %>%
   group_by(condition, phase) %>%
   summarise(se=sd(is_groundTruth)/sqrt(n()), ppt_acc=sum(is_groundTruth)/n())
 
+# Subset model model
 bayesian_models = model_accs %>%
   filter(model %in% c('ag', 'agr', 'rr'))
 
+# Plot
 ggplot(ppt_stats, aes(x=phase, y=ppt_acc)) +
   geom_bar(stat='identity', fill='black') +
   geom_errorbar(aes(ymin=ppt_acc-se, ymax=ppt_acc+se), width=.2, color='#116466')+
@@ -328,13 +355,17 @@ ggplot(ppt_stats, aes(x=phase, y=ppt_acc)) +
         #legend.position=c(.9,.9),
         strip.background = element_blank(),
         panel.grid.minor = element_blank(),
-        text = element_text(size = 25)) +
+        text = element_text(size = 15)) +
   facet_grid(~condition)
+```
 
+### Best fitting model
 
-##### Rainbow plot ####
+```{r rainbow, results='hide'}
+# factorize conditions for plotting
 cond_levels = c('construct', 'decon', 'combine', 'flip')
 
+# Prep ground truth answers data for plotting
 answers_t = all_answers %>%
   filter(is_groundTruth==1) %>%
   mutate(trial=as.factor(as.character(trial)),
@@ -342,6 +373,7 @@ answers_t = all_answers %>%
          phase=ifelse(phase=='A','I','II')) %>%
   select(condition, phase, trial, prediction)
 
+# Prep best fitting model result for plotting
 df.agr = model_data %>%
   select(condition, phase, trial, prediction, n, fitted_agr) %>%
   mutate(
@@ -350,6 +382,7 @@ df.agr = model_data %>%
     phase=ifelse(phase=='A','I','II')
   )
 
+# Plot
 df.tw %>%
   mutate(
     trial=as.factor(as.character(trial)),
@@ -357,11 +390,12 @@ df.tw %>%
     phase=ifelse(phase=='A','I','II')
   ) %>%
   ggplot(aes(y=trial, x=prediction, fill=trial)) +
+  # Participant selections, density bars
   geom_density_ridges(alpha=0.6, stat="binline", bins=20, scale=0.95) +
+  # Ground truth, dark dots on x-axis
   geom_point(data=answers_t) +
+  # Model predictions, density area
   geom_density_ridges(data=df.agr, aes(height=fitted_agr), stat="identity", alpha=0.4, scale=0.95) +
-  #geom_density_ridges(data=df.gpr, aes(height=prob), stat="identity", alpha=0.4, scale=0.95) +
-  #scale_x_discrete(limits=c(0,seq(max(df.agr$prediction)))) +
   scale_y_discrete(limits=rev) +
   facet_grid(phase~condition) +
   theme_bw() +
@@ -371,5 +405,10 @@ df.tw %>%
     text=element_text(size = 15),
     strip.background =element_rect(fill="white", colour='white'),
   )
+```
+
+
+
+
 
 
