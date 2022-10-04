@@ -4,6 +4,7 @@ library(tidyr)
 library(ggplot2)
 library(ggpubr)
 library(ggridges)
+library(patchwork)
 
 load('../data/all_cleaned.Rdata')
 load('../data/fitted_models.Rdata')
@@ -590,32 +591,89 @@ fits %>%
 
 
 
+#### For SI #####
+
+load('../data/raw/exp_1_raw.rdata')
+df.raws = df.sw %>% mutate(exp_id=1)
+
+for (i in c(2,3,4)) {
+  load(paste0('../data/raw/exp_', i, '_raw.rdata'))
+  df.raws = rbind(df.raws, mutate(df.sw, exp_id=i))
+}
 
 
+df.sw = df.raws %>%
+  select(exp_id, ix, condition, task_duration, difficulty,
+         input_a=task.input.a_input, cert_a=task.input.a_certainty,
+         input_b=task.input.b_input, cert_b=task.input.b_certainty) %>%
+  mutate(difficulty=as.numeric(difficulty), cert_a=as.numeric(cert_a), cert_b=as.numeric(cert_b)) %>%
+  mutate(condition=case_when(
+    condition=='comp_const' ~ 'combine',
+    condition=='comp_mult' ~ 'construct',
+    condition=='comp_mult_reverse' ~ 'decon',
+    condition=='mult' ~ 'combine',
+    condition=='sub' ~ 'flip',
+  )) %>%
+  mutate(condition=factor(condition, levels=c('construct','decon','combine','flip'))) %>%
+  mutate(exp_id=paste0('Experiment ', exp_id))
 
 
+## Completion time + self-reported difficulty
+plt_time_difficulty <- df.sw %>% 
+  group_by(exp_id, condition) %>%
+  summarise(
+    task_time_se=sd(task_duration/60000)/sqrt(n()),
+    task_time=mean(task_duration)/60000, 
+    difficulty_se=sd(difficulty)/sqrt(n()),
+    difficulty=mean(difficulty)) %>%
+  ggplot(aes(x=condition)) +
+  geom_bar(aes(y=task_time), stat='identity', fill='#69b3a2') +
+  geom_errorbar(aes(ymin=task_time-task_time_se, ymax=task_time+task_time_se), width=.2, position=position_dodge(.9), color='#116466') +
+  geom_line(aes(y=difficulty, group=1), linetype='dashed') +
+  geom_point(aes(y=difficulty), size=2) +
+  geom_errorbar(aes(ymin=difficulty-difficulty_se, ymax=difficulty+difficulty_se), width=.2, position=position_dodge(.9)) +
+  scale_y_continuous(
+    name='Minutes',
+    sec.axis=sec_axis(~./1.2, name='Scales (10=very hard)')
+  ) +
+  labs(x='', title = 'Average task completion time (bars) and self-evaluated difficulty (dots)') +
+  theme_bw() +
+  facet_grid(~exp_id, scales = "free")
 
+## Self-reported certainty
+plt_certainty <- df.sw %>%
+  select(exp_id, condition, ix, cert_a, cert_b) %>%
+  gather(phase, certainty, cert_a, cert_b) %>%
+  mutate(phase=ifelse(phase=='cert_a', 'Phase I', 'Phase II')) %>%
+  group_by(exp_id, condition, phase) %>%
+  summarise(cert_se=sd(certainty)/sqrt(n()),
+            certainty=mean(certainty)) %>%
+  ggplot(aes(x=phase,y=certainty,group=condition, color=condition)) +
+  geom_line(linetype="dashed", size=1.2) +
+  geom_point(aes(shape=condition), size=3.5) +
+  geom_pointrange(aes(ymin=certainty-cert_se, ymax=certainty+cert_se)) +
+  labs(x='', y='', title='Self-reported certainty') +
+  theme_bw() +
+  facet_grid(~exp_id, scales = "free")
 
+## Self-report length
+plt_len <- df.sw %>%
+  mutate(input_a_length=nchar(input_a), input_b_length=nchar(input_b)) %>%
+  select(exp_id, condition, ix, input_a_length, input_b_length) %>%
+  gather(phase, nchar, input_a_length, input_b_length) %>%
+  mutate(phase=ifelse(phase=='input_a_length', 'Phase I', 'Phase II')) %>%
+  group_by(exp_id, condition, phase) %>%
+  summarise(nchar_se=sd(nchar)/sqrt(n()),
+            nchar=mean(nchar)) %>%
+  ggplot(aes(x=phase,y=nchar,group=condition, color=condition)) +
+  geom_line(linetype="dashed", size=1.2) +
+  geom_point(aes(shape=condition), size=3.5) +
+  geom_pointrange(aes(ymin=nchar-nchar_se, ymax=nchar+nchar_se)) +
+  labs(x='', y='', title='Input length (nchar)') +
+  theme_bw() +
+  facet_grid(~exp_id, scales = "free")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+plt_time_difficulty / plt_certainty / plt_len
 
 
 
