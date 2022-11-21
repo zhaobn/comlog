@@ -1,7 +1,5 @@
 # %%
 import sys
-
-from sqlalchemy import true
 sys.path.append('/usr/local/lib/python3.9/site-packages') # why $PYTHONPATH won't work???
 
 # %%
@@ -44,19 +42,5 @@ for cond in ['construct', 'combine', 'decon', 'flip']:
 
 
 task_results.to_csv('gp_reg_results.csv')
-
-
-# # %% GP regression model
-# k = GPy.kern.RBF(input_dim=3, variance=1., lengthscale=1.)
-# m = GPy.models.GPRegression(trX,trY,k)
-
-# m.optimize(messages=True)
-
-
-# # %% Prediction
-# prY, prV = m.predict(prX)
-
-# pd.DataFrame({'preds':prY.flatten(), 'variance': prV.flatten()})
-
 
 # %%

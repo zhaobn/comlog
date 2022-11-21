@@ -298,17 +298,94 @@ t.test(
 
 
 
+#### Two-way ANOVA ####
+df.tw = read_csv('../data/osf/trials.csv')
+
+collapse_1 = df.tw %>% 
+  filter(exp_id < 3, phase=='B') %>%
+  select(exp_id, condition, is_groundTruth) %>%
+  mutate(exp_id=factor(exp_id), condition=factor(condition))
+
+aov(is_groundTruth ~ exp_id + condition, data = collapse_1) %>%
+  summary()
+
+aov(is_groundTruth ~ exp_id + condition + exp_id:condition, data = collapse_1) %>%
+  summary()
+
+collapse_3 = df.tw %>% 
+  filter(exp_id > 2, phase=='B') %>%
+  select(exp_id, condition, is_groundTruth) %>%
+  mutate(exp_id=factor(exp_id), condition=factor(condition))
+
+aov(is_groundTruth ~ exp_id + condition, data = collapse_3) %>%
+  summary()
+
+aov(is_groundTruth ~ exp_id + condition + exp_id:condition, data = collapse_3) %>%
+  summary()
 
 
+#### GPT-3 ####
+gpt3_preds = read.csv('../openai/gpt3-predictions.csv')
 
+# translate number words
+gpt3_preds = gpt3_preds %>%
+  filter(!(prediction %in% c('none','all'))) %>%
+  mutate(pred=case_when(
+    prediction=='three'~'3',
+    prediction=='four'~'4',
+    prediction=='six'~'6',
+    prediction=='nine'~'9',
+    prediction=='one'~'1',
+    prediction=='five'~'5',
+    prediction=='two'~'2',
+    prediction=='seven'~'7',
+    prediction=='twelve'~'12',
+    prediction=='eight'~'8',
+    prediction=='zero'~'0',
+  )) %>%
+  mutate(pred=as.numeric(pred))
 
+# Get all task and all selections
+info = expand.grid(exp_id=seq(4),phase=seq(2),task=seq(8),pred=seq(0,16))
+cond_info = answers %>% select(exp_id, condition) %>% unique()
+info = info %>% full_join(cond_info, by='exp_id') %>%
+  select(exp_id, condition, phase, task, pred) %>%
+  arrange(exp_id, condition, phase, task, pred)
 
+gpt3_full = info %>%
+  left_join(gpt3_preds, by=c('exp_id','condition','phase','task','pred')) %>%
+  select(exp_id, condition, phase, task, pred, prob) %>%
+  replace_na(list(prob=0))
 
+# Get residue probs for each task
+gpt3_predicted = gpt3_full %>%
+  filter(prob > 0) %>%
+  group_by(exp_id, condition, phase, task) %>%
+  summarise(total_prob=sum(prob), n=n()) %>%
+  mutate(residue=1-total_prob, to_spread = 17-n) %>%
+  mutate(res_prob=residue/to_spread)
 
+gpt3_ready = gpt3_full %>% filter(prob > 0)
+gpt3_rest = gpt3_full %>%
+  filter(prob == 0) %>%
+  left_join(gpt3_predicted, by=c('exp_id', 'condition', 'phase', 'task')) %>%
+  select(exp_id, condition, phase, task, pred, prob=res_prob)
+gpt3_filled = rbind(gpt3_ready, gpt3_rest) %>%
+  select(exp_id, condition, phase, task, pred, prob) %>%
+  arrange(exp_id, condition, phase, task, pred)
 
+# Get NLL
+ppt_data = df.tw %>%
+  mutate(phase=ifelse(batch=='A',1,2), task=trial, pred=prediction) %>%
+  select(exp_id, ix, condition, phase, task, pred) %>%
+  group_by(exp_id, condition, phase, task, pred) %>%
+  summarise(n=n())
+gpt3_nll = gpt3_filled %>%
+  left_join(ppt_data, by=c('exp_id', 'condition', 'phase', 'task', 'pred')) %>%
+  mutate(n=ifelse(is.na(n), 0, n))
 
-
-
+sum(log(gpt3_nll$prob)*gpt3_nll$n) 
+log(1/17)*8*2*570
 
 
 

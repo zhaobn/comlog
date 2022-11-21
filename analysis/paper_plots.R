@@ -1,7 +1,5 @@
 
-library(dplyr)
-library(tidyr)
-library(ggplot2)
+library(tidyverse)
 library(ggpubr)
 library(ggridges)
 library(patchwork)
@@ -674,6 +672,144 @@ plt_len <- df.sw %>%
   facet_grid(~exp_id, scales = "free")
 
 plt_time_difficulty / plt_certainty / plt_len
+
+
+#### Model prediction plot ####
+model_data = read_csv('../data/osf/models.csv')
+
+pred_data = model_data %>%
+  select(condition, phase, trial, prediction, raw_ag, raw_rr) %>%
+  gather(model, prob, raw_ag:raw_rr) %>%
+  mutate(model=toupper(substr(model, 5, nchar(model))))
+pred_accs = pred_data %>%
+  rename(batch=phase) %>%
+  left_join(answers, by=c('condition', 'batch', 'trial')) %>%
+  filter(gt==prediction) %>%
+  unique()
+pred_accs_agg = pred_accs %>%
+  group_by(condition, batch, model) %>%
+  summarise(acc=sum(prob)/n()) %>%
+  filter(condition != 'flip') %>%
+  mutate(phase=ifelse(batch=='A',1,2)) %>%
+  arrange(model, condition, phase)
+
+pred_accs_agg$condition = factor(pred_accs_agg$condition, 
+                                 levels=c('construct', 'decon', 'combine'),
+                                 labels=c('construct', 'de-construct', 'combine'))
+
+pred_accs_agg %>%
+  filter(condition == 'construct') %>%
+  ggplot(., aes(x=phase, y=acc, group=model)) +
+  geom_line(aes(color=model, linetype=model), size=1.2, position=position_jitter(w=0.04, h=0)) +
+  scale_x_continuous(breaks = c(1,2)) +
+  scale_color_manual(values=c("#116466", "#cecece")) +
+  labs(x='', y='') +
+  #facet_wrap(~condition) +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position = 'none', text=element_text(size = 20))
+ 
+
+#### Try new ppt acc plots ####
+library(GGally)
+
+ppt = read_csv('../data/osf/trials.csv')
+
+plot_one = function(eid, cond) {
+  test_data = ppt %>%
+    filter(exp_id==eid, condition==cond) %>%
+    group_by(ix, phase) %>%
+    summarise(acc=sum(is_groundTruth)/n()) %>%
+    spread(phase, acc)
+  
+  test_mean = ppt %>%
+    filter(exp_id==eid, condition==cond) %>%
+    group_by(ix, phase) %>%
+    summarise(acc=sum(is_groundTruth)/n()) %>%
+    group_by(phase) %>%
+    summarise(m=mean(acc))
+  
+  plt = ggparcoord(data = test_data, 
+             columns = 2:3, 
+             scale = "globalminmax",
+             alphaLines = 0.2,
+             #showPoints = TRUE,
+             boxplot = TRUE) +
+    geom_point(data = test_mean, aes(x = phase, y = m),
+               size = 4, inherit.aes = FALSE, color = 'red') +
+    labs(x='', y='') +
+    # coord_flip() +
+    # scale_x_discrete(limits = c('B','A')) +
+    theme_bw()
+  
+  return(plt)
+}
+
+(plot_one(1, 'construct') | plot_one(1, 'decon') | plot_one(1, 'combine')) /
+  (plot_one(2, 'construct') | plot_one(2, 'decon') | plot_one(2, 'combine'))
+
+
+(plot_one(1, 'construct') | plot_one(1, 'decon') | plot_one(1, 'combine') | plot_one(3, 'combine') | plot_one(3, 'flip')) /
+  (plot_one(2, 'construct') | plot_one(2, 'decon') | plot_one(2, 'combine') | plot_one(4, 'combine') | plot_one(4, 'flip'))
+
+
+(plot_one(1, 'construct')|plot_one(2, 'construct'))/
+  (plot_one(1, 'decon')|plot_one(2, 'decon'))/
+  (plot_one(1, 'combine')|plot_one(2, 'combine'))/
+  (plot_one(3, 'combine') | plot_one(3, 'flip'))/
+  (plot_one(4, 'combine') | plot_one(4, 'flip'))
+
+
+(plot_one(3, 'combine') | plot_one(3, 'flip')) /
+  (plot_one(4, 'combine') | plot_one(4, 'flip'))
+
+
+plot_mult = function(eids, cond) {
+  test_data = ppt %>%
+    filter(exp_id %in% eids, condition==cond) %>%
+    group_by(ix, phase) %>%
+    summarise(acc=sum(is_groundTruth)/n()) %>%
+    spread(phase, acc)
+  
+  test_mean = ppt %>%
+    filter(exp_id %in% eids, condition==cond) %>%
+    group_by(ix, phase) %>%
+    summarise(acc=sum(is_groundTruth)/n()) %>%
+    group_by(phase) %>%
+    summarise(m=mean(acc))
+  
+  plt = ggparcoord(data = test_data, 
+                   columns = 2:3, 
+                   scale = "globalminmax",
+                   alphaLines = 0.2,
+                   #showPoints = TRUE,
+                   boxplot = TRUE) +
+    geom_point(data = test_mean, aes(x = phase, y = m),
+               size = 4, inherit.aes = FALSE, color = 'red') +
+    labs(x='', y='') +
+    # coord_flip() +
+    # scale_x_discrete(limits = c('B','A')) +
+    theme_bw()
+  
+  return(plt)
+}
+
+
+plot_mult(c(1,2),'construct') | plot_mult(c(1,2),'decon') | plot_mult(c(1,2),'combine') | plot_mult(c(3,4),'combine') | plot_mult(c(3,4),'flip')
+
+
+# more attempts
+
+
+
+
+
+
+
+
+
+
 
 
 
