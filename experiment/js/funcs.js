@@ -570,11 +570,11 @@ function showCompletion(code, nCorrect) {
   let co = createText('p', `You got ${nCorrect} predictions correct!
   You will get £${bonusVal} bonus on top of your base pay.
   Bonus for writing the correct causal relationships will be paid after manual checks.`)
-  let returnLink = createCustomElement('p', '', '')
-  returnLink.innerHTML = `Click <a href='https://app.prolific.co/submissions/complete?cc=${code}'>here</a> to redirect to Prolific.`
+  // let returnLink = createCustomElement('p', '', '')
+  // returnLink.innerHTML = `Click <a href='https://app.prolific.co/submissions/complete?cc=${code}'>here</a> to redirect to Prolific.`
   document.getElementById('completion-code').append(t);
   document.getElementById('completed').append(co);
-  document.getElementById('completed').append(returnLink);
+  // document.getElementById('completed').append(returnLink);
 }
 function generateToken (length) {
   let tokens = '';
@@ -741,17 +741,17 @@ function download(content, fileName, contentType) {
 //   }
 //   return setups
 // }
-// Demo for paper
-function prepConfigs() {
-  let setups = {
-      'learnA': [23, 42, 61],
-      'genA': [100, 71, 78, 55, 47, 83, 9, 3],
-      'learnB': [35, 50, 65],
-      'genB': [100, 71, 78, 55, 47, 83, 9, 3],
-      'genC': [100, 71, 78, 55, 47, 83, 9, 3],
-  }
-  return setups
-}
+// // Demo for paper
+// function prepConfigs() {
+//   let setups = {
+//       'learnA': [23, 42, 61],
+//       'genA': [100, 71, 78, 55, 47, 83, 9, 3],
+//       'learnB': [35, 50, 65],
+//       'genB': [100, 71, 78, 55, 47, 83, 9, 3],
+//       'genC': [100, 71, 78, 55, 47, 83, 9, 3],
+//   }
+//   return setups
+// }
 
 function fmtConfig(dataArr, batch, phase, agentColor = 'tomato') {
   let fmtted = []

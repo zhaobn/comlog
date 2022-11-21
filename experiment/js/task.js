@@ -1,9 +1,9 @@
-const mode = 'dev' // '', 'dev', 'test', 'flask'
+const mode = '' // '', 'dev', 'test', 'flask'
 
 /** Pick a condition */
-const conds_for_exp = ['sub', 'mult']; //[ 'comp_mult', 'comp_mult_reverse', 'comp_const' ];
-const cond = 'demo'; // conds_for_exp[Math.floor(Math.random() * conds_for_exp.length)];
-(mode==='dev'|mode==='test')? console.log(`${mode} mode; condition ${cond}.`) : null;
+// const conds_for_exp = ['sub', 'mult']; //[ 'comp_mult', 'comp_mult_reverse', 'comp_const' ];
+// const cond = 'demo'; // conds_for_exp[Math.floor(Math.random() * conds_for_exp.length)];
+// (mode==='dev'|mode==='test')? console.log(`${mode} mode; condition ${cond}.`) : null;
 
 const start_time = Date.now();
 let start_task_time = 0;
@@ -487,7 +487,8 @@ doneBtn.onclick = () => {
   } else {
     showCompletion('8692C148', nCorrect);
     // console.log(clientData);
-    download(JSON.stringify(clientData), 'data.txt', '"text/csv"');
+    // download(JSON.stringify(clientData), 'data.txt', '"text/csv"');
+    console.log(clientData)
   }
 };
 

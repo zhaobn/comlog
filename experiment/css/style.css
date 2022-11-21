@@ -287,24 +287,25 @@ a {
   margin-right: 30px;
 }
 .demo-btn-group {
-  margin: 4% 0 0 0;
+  margin: auto;
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
+  width: 400px;
 }
-.demo-btn-group button {
+.demo-btn-group a {
   background-color: #e0e0e0; /* Green background */
   border: 1px solid white; /* Green border */
   color: black; /* White text */
   padding: 10px 32%; /* Some padding */
   cursor: pointer; /* Pointer/hand icon */
-  width: 50%; /* Set a width if needed */
+  width: 80%; /* Set a width if needed */
   text-align: left;
   font-size: 20px;
-  width: 98%;
 }
-.demo-btn-group button:hover {
+.demo-btn-group a:hover {
   background-color: #116466;
   color: white;
 }
