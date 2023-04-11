@@ -12,9 +12,10 @@ from program_inf import *
 # %% Setting up
 COND = 'flip'
 DVAR = 'stripes'
-TOP_N = 3
+TOP_N = 4
 EXCEPTS = 0
-LEARN_ITERS = list(range(100, 1501, 100)) + list(range(2000, 5001, 500))
+LEARN_ITERS = [ 2**(x+1) for x in range(10) ]
+# LEARN_ITERS = list(range(100, 1501, 100)) + list(range(2000, 5001, 500))
 
 # %% Prep data
 task_data = {
@@ -62,24 +63,24 @@ def getResults (iter):
   # Learning phase A
   pl = Program_lib(pd.read_csv('../data/task_pm.csv', index_col=0, na_filter=False))
   g1 = Gibbs_sampler(pl, all_frames, task_data['learn_a'], iteration=iter)
-  g1.run(top_n=TOP_N, save_prefix=f'data/process_{iter}/{COND}_a_', save_intermediate=False)
+  g1.run(top_n=TOP_N, fs_cap=0, save_prefix=f'data_allframes/process_{iter}/{COND}_a_', save_intermediate=False)
 
   # Gen predictions A
-  a_learned = pd.read_csv(f'data/process_{iter}/{COND}_a_post_samples.csv', index_col=0, na_filter=False)
-  a_gen = sim_for_all(task_data['gen'],  Program_lib(a_learned), 1000)
-  a_gen.to_csv(f'data/process_{iter}/{COND}_preds_a.csv')
+  a_learned = pd.read_csv(f'data_allframes/process_{iter}/{COND}_a_post_samples.csv', index_col=0, na_filter=False)
+  a_gen = sim_for_all(task_data['gen'],  Program_lib(a_learned), 10000)
+  a_gen.to_csv(f'data_allframes/process_{iter}/{COND}_preds_a.csv')
 
   # Learning phase B
-  pl2 = Program_lib(pd.read_csv(f'data/process_{iter}/{COND}_a_post_samples.csv', index_col=0, na_filter=False))
+  pl2 = Program_lib(pd.read_csv(f'data_allframes/process_{iter}/{COND}_a_post_samples.csv', index_col=0, na_filter=False))
   pl2.update_lp_adaptor()
   pl2.update_overall_lp()
   g2 = Gibbs_sampler(pl2, all_frames, task_data['learn_a']+task_data['learn_b'], iteration=iter, lib_is_post=True)
-  g2.run(top_n=TOP_N, save_prefix=f'data/process_{iter}/{COND}_b_', save_intermediate=False)
+  g2.run(top_n=TOP_N, fs_cap=0, save_prefix=f'data_allframes/process_{iter}/{COND}_b_', save_intermediate=False)
 
   # Gen predictions B
-  b_learned = pd.read_csv(f'data/process_{iter}/{COND}_b_post_samples.csv', index_col=0, na_filter=False)
-  b_gen = sim_for_all(task_data['gen'],  Program_lib(b_learned), 1000)
-  b_gen.to_csv(f'data/process_{iter}/{COND}_preds_b.csv')
+  b_learned = pd.read_csv(f'data_allframes/process_{iter}/{COND}_b_post_samples.csv', index_col=0, na_filter=False)
+  b_gen = sim_for_all(task_data['gen'],  Program_lib(b_learned), 10000)
+  b_gen.to_csv(f'data_allframes/process_{iter}/{COND}_preds_b.csv')
 
 # %%
 if __name__ == '__main__':

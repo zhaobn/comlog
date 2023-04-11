@@ -27,7 +27,7 @@ class Gibbs_sampler:
     self.lib_is_post = lib_is_post
 
   # Frames => programs consistent with data
-  def find_programs(self, iter_log, pm_lib, frame_sample=20, fs_cap=100, exceptions_allowed=0):
+  def find_programs(self, iter_log, pm_lib, frame_sample, fs_cap, exceptions_allowed):
     pl = Program_lib(pm_lib)
     data = self.data
     frames_left = self.frames.copy()
@@ -36,11 +36,15 @@ class Gibbs_sampler:
     while (len(filtered)) < 1 and ns < fs_cap+1:
       ns += 1
       # Sample frames
-      if len(frames_left) <= frame_sample:
+      if fs_cap < 1: # no cap on frames; unfold all frames and sample
         sampled_frames = frames_left.copy()
       else:
-        sampled_frames = frames_left.sample(n=frame_sample, weights='prob').reset_index(drop=True)
-      frames_left = frames_left[~frames_left['terms'].isin(sampled_frames['terms'])]
+        if len(frames_left) <= frame_sample:
+          sampled_frames = frames_left.copy()
+        else:
+          sampled_frames = frames_left.sample(n=frame_sample, weights='prob').reset_index(drop=True)
+        frames_left = frames_left[~frames_left['terms'].isin(sampled_frames['terms'])]
+
       for k in range(len(sampled_frames)):
         # Unfold programs wrt current library
         all_programs = pl.unfold_programs_with_lp(sampled_frames.iloc[k].at['terms'], sampled_frames.iloc[k].at['log_prob'], data)
@@ -55,6 +59,7 @@ class Gibbs_sampler:
           passed_pm['log_prob'] = passed_pm['log_prob'] - 2*passed_pm['n_exceptions'] # likelihood: exp(-2 * n_exceptions)
           print(f"[{iter_log}|{k}/{len(sampled_frames)}, -{ns}th] {sampled_frames.iloc[k].at['terms']}: {len(passed_pm)} passed") if len(iter_log)>0 else None
           filtered = filtered.append(passed_pm[['terms', 'comp_lp', 'log_prob', 'n_exceptions']], ignore_index=True)
+
     return filtered
 
   # Sample extracted programs for reuse
