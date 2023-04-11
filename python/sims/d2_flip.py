@@ -14,7 +14,8 @@ COND = 'flip'
 DVAR = 'stripes'
 TOP_N = 4
 EXCEPTS = 0
-LEARN_ITERS = [ 2**(x+1) for x in range(10) ]
+LEARN_ITERS = list(range(1,11))
+# LEARN_ITERS = [ 2**(x+1) for x in range(10) ]
 # LEARN_ITERS = list(range(100, 1501, 100)) + list(range(2000, 5001, 500))
 
 # %% Prep data

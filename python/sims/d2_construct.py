@@ -14,7 +14,8 @@ COND = 'construct'
 DVAR = 'stripes'
 TOP_N = 4
 EXCEPTS = 0
-LEARN_ITERS = [ 2**(x+1) for x in range(10) ]
+LEARN_ITERS = list(range(1,11))
+# LEARN_ITERS = [ 2**(x+1) for x in range(10) ]
 # LEARN_ITERS = list(range(100, 1501, 100)) + list(range(2000, 5001, 500))
 
 # %% Prep data
@@ -75,7 +76,7 @@ def getResults (iter):
   pl2.update_lp_adaptor()
   pl2.update_overall_lp()
   g2 = Gibbs_sampler(pl2, all_frames, task_data['learn_a']+task_data['learn_b'], iteration=iter, lib_is_post=True)
-  g2.run(top_n=TOP_N, rame_sample=100, fs_cap=100000, save_prefix=f'data_d2/process_{iter}/{COND}_b_', save_intermediate=False)
+  g2.run(top_n=TOP_N, frame_sample=100, fs_cap=100000, save_prefix=f'data_d2/process_{iter}/{COND}_b_', save_intermediate=False)
 
   # Gen predictions B
   b_learned = pd.read_csv(f'data_d2/process_{iter}/{COND}_b_post_samples.csv', index_col=0, na_filter=False)
@@ -86,3 +87,6 @@ def getResults (iter):
 if __name__ == '__main__':
   with Pool(5) as p:
     p.map(getResults, [iter for iter in LEARN_ITERS])
+
+
+# %%
