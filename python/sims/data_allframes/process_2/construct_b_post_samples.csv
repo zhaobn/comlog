@@ -23,8 +23,7 @@
 21,"[BK,I,I]",egg_num,egg,program,1.0,1.0,-2.772588722239781
 22,"[KB,I,I]",egg_num,num,program,1.0,1.0,-2.772588722239781
 23,"[B,I,I]",num,num,program,1.0,1.0,-1.3862943611198906
-24,"[SC,[BB,subnn,[CB,[B,mulnn,getStripe],[B,I,I]]],getDot]",egg_num,num,program,0.0,3.0,-12.5944322857354
-25,"[SC,[BB,subnn,[CS,[BK,mulnn,getStripe],[B,I,I]]],getDot]",egg_num,num,program,0.0,2.0,-13.287579466295345
-26,"[SC,[BB,subnn,[SC,[KB,mulnn,[B,I,I]],getStripe]],getDot]",egg_num,num,program,0.0,1.0,-13.287579466295345
-27,"[SC,[BB,subnn,[SS,[BK,mulnn,getStripe],[KB,I,I]]],getDot]",egg_num,num,program,0.0,1.0,-14.673873827415235
-28,"[SC,[BB,subnn,[BC,[B,mulnn,[B,I,I]],getStripe]],getDot]",egg_num,num,program,0.0,1.0,-12.5944322857354
+24,"[SC,[BB,subnn,[BC,[B,mulnn,[B,I,I]],getStripe]],getDot]",egg_num,num,program,0.0,2.0,-12.5944322857354
+25,"[SC,[BB,subnn,[CB,[B,mulnn,getStripe],[B,I,I]]],getDot]",egg_num,num,program,0.0,2.0,-12.5944322857354
+26,"[SC,[BB,subnn,[CS,[BK,mulnn,getStripe],[B,I,I]]],getDot]",egg_num,num,program,0.0,2.0,-13.287579466295345
+27,"[SC,[BB,subnn,[SC,[KB,mulnn,[B,I,I]],getStripe]],getDot]",egg_num,num,program,0.0,2.0,-13.287579466295345

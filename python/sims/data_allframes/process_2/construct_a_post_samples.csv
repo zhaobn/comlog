@@ -26,5 +26,4 @@
 24,"[BC,[B,mulnn,[B,I,I]],getStripe]",egg_num,num,program,0.0,2.0,-6.643789733147672
 25,"[CB,[B,mulnn,getStripe],[B,I,I]]",egg_num,num,program,0.0,2.0,-6.643789733147672
 26,"[CS,[BK,mulnn,getStripe],[B,I,I]]",egg_num,num,program,0.0,2.0,-7.336936913707618
-27,"[SS,[BK,mulnn,getStripe],[KB,I,I]]",egg_num,num,program,0.0,1.0,-8.723231274827508
-28,"[SC,[KB,mulnn,[B,I,I]],getStripe]",egg_num,num,program,0.0,1.0,-7.336936913707618
+27,"[SC,[KB,mulnn,[B,I,I]],getStripe]",egg_num,num,program,0.0,2.0,-7.336936913707618
