@@ -2,8 +2,9 @@
 
 ## MS Review
 
-Play with number of iterations of Gibbs sampling & search depth
-https://docs.google.com/presentation/d/1346GacHeOQKvrY13YE4APrH282litnPyPCKSl_Wn4C8/edit?usp=sharing
+* Play with number of iterations of Gibbs sampling & search depth
+  https://docs.google.com/presentation/d/1346GacHeOQKvrY13YE4APrH282litnPyPCKSl_Wn4C8/edit?usp=sharing
+* Respond to library learning literature
 
 ## Pilot
 
