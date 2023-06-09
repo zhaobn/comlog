@@ -309,8 +309,37 @@ labels_fixed %>%
 labels = labels_fixed
 save(labels, file='../data/all_coded.Rdata')
 
+# Look at recoded data
+rc_1 = read.csv('../data/responses/recoded/exp_1.csv') %>% 
+  mutate(ix=X,
+         exp_id=1,
+    condition=case_when(condition=='comp_mult' ~ 'construct',
+                             condition=='comp_const' ~ 'combine',
+                             condition=='comp_mult_reverse' ~ 'decon')) %>%
+  select(exp_id, ix, condition, a_input, a_code, b_input, b_code)
+rc_2 = read.csv('../data/responses/recoded/exp_2.csv') %>% 
+  mutate(exp_id=2,
+    condition=case_when(condition=='comp_mult' ~ 'construct',
+                             condition=='comp_const' ~ 'combine',
+                             condition=='comp_mult_reverse' ~ 'decon')) %>%
+  select(exp_id, ix, condition, a_input, a_code, b_input, b_code)
+rc_3 = read.csv('../data/responses/recoded/exp_3.csv') %>% 
+  mutate(exp_id=3,
+         a_code=a_coded, b_code=b_coded,
+         condition=case_when(condition=='sub' ~ 'flip',
+                             condition=='mult' ~ 'combine')) %>%
+  select(exp_id, ix, condition, a_input, a_code, b_input, b_code)
+rc_4 = read.csv('../data/responses/recoded/exp_4.csv') %>% 
+  filter(a_input != '2') %>%
+  mutate(exp_id=4, ix=nat,
+         a_code=a_coded, b_code=b_coded,
+         condition=case_when(condition=='sub' ~ 'flip',
+                             condition=='mult' ~ 'combine')) %>%
+  select(exp_id, ix, condition, a_input, a_code, b_input, b_code)
 
+df.labels = rbind(rc_1, rc_2, rc_3, rc_4)
+save(df.labels, file='../data/responses/recoded.Rda')
 
-
-
+df.labels = df.labels %>%
+  mutate(b_code=ifelse(b_code=='add)2', 'add_2', b_code))
 

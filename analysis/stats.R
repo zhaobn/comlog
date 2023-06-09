@@ -47,6 +47,20 @@ MANOVA(
   EMMEANS('condition')
 
 
+#### Conditions ####
 
+pdata = read.csv('../data/osf/trials.csv')
+pdata = pdata %>% mutate(cf = as.factor(as.character(exp_id)))
 
+data_1 = pdata %>% 
+  filter(exp_id < 3) %>%
+  group_by(ix, cf, condition) %>%
+  summarise(acc=sum(is_groundTruth)/n())
+aov(acc ~ cf + condition + cf * condition, data = data_1) %>% summary()
+
+data_2 = pdata %>% 
+  filter(exp_id > 2) %>%
+  group_by(ix, cf, condition) %>%
+  summarise(acc=sum(is_groundTruth)/n())
+aov(acc ~ cf + condition + cf * condition, data = data_2) %>% summary()
 

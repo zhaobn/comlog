@@ -12,14 +12,18 @@ from program_lib import Program_lib
 
 # %%
 class Gibbs_sampler:
-  def __init__(self, program_lib, frames, data_list, iteration, burnin=0, lib_is_post=False):
+  def __init__(self, program_lib, frame_list, data_list, iteration, burnin=0, lib_is_post=False):
     input_lib = program_lib.content
     self.init_lib = input_lib.copy()                        # Initial program library
     self.post_samples = input_lib[input_lib['is_init']==1]  # Place holder for posterior samples
     self.sample_cache = None                                # Temp cache for each iteration
 
-    self.frames = frames
-    self.frames['prob'] = self.frames.apply(lambda row: math.exp(row['log_prob']), axis=1)
+    self.frame_d1 = frame_list[0]
+    self.frame_d2 = frame_list[1]
+    self.switch = math.exp(-1)/(math.exp(-1)+math.exp(-2))
+
+    self.frame_d1['prob'] = self.frame_d1.apply(lambda row: math.exp(row['log_prob']), axis=1)
+    self.frame_d2['prob'] = self.frame_d2.apply(lambda row: math.exp(row['log_prob']), axis=1)
 
     self.data = secure_list(data_list)
     self.iter = iteration
@@ -30,7 +34,12 @@ class Gibbs_sampler:
   def find_programs(self, iter_log, pm_lib, frame_sample, fs_cap, exceptions_allowed):
     pl = Program_lib(pm_lib)
     data = self.data
-    frames_left = self.frames.copy()
+
+    if np.random.random() < self.switch:
+      frames_left = self.frame_d1.copy()
+    else:
+      frames_left = self.frame_d2.copy()
+
     filtered = pd.DataFrame({'terms': [], 'comp_lp': [], 'log_prob': [], 'n_exceptions': []})
     ns = 0
     while (len(filtered)) < 1 and ns < fs_cap+1:

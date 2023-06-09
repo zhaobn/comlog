@@ -19,12 +19,18 @@ library(tidyverse)
 library(kableExtra)
 library(ggpubr)
 library(ggridges)
+library(ggpubr)
 
 # Read data
 path_prefix = '../../data/osf/'
 df.sw = read_csv(paste0(path_prefix, 'subjects.csv'))
 df.tw = read_csv(paste0(path_prefix,'trials.csv'))
 model_data = read_csv(paste0(path_prefix,'models.csv'))
+
+# Custom function
+cohen_d = function(s1, s2) {
+  return( (mean(s1)-mean(s2))/sqrt((var(s1)+var(s2))/2) )
+}
 ```
 
 ## Demographics
@@ -65,6 +71,10 @@ exp_1and2 %>%
 # Compare generalization accuracy between construct and deconstruct curricula
 t.test(
   exp_1and2 %>% filter(condition=='construct') %>% pull(is_groundTruth),
+  exp_1and2 %>% filter(condition=='decon') %>% pull(is_groundTruth)
+)
+cohen_d(
+  exp_1and2 %>% filter(condition=='construct') %>% pull(is_groundTruth), 
   exp_1and2 %>% filter(condition=='decon') %>% pull(is_groundTruth)
 )
 
@@ -113,6 +123,24 @@ t.test(
   label_checks_1and2 %>% filter(condition=='construct') %>% pull(is_gt),
   label_checks_1and2 %>% filter(condition=='decon') %>% pull(is_gt)
 )
+cohen_d(
+  label_checks_1and2 %>% filter(condition=='construct') %>% pull(is_gt),
+  label_checks_1and2 %>% filter(condition=='decon') %>% pull(is_gt)
+)
+
+label_checks_1and2 %>%
+  filter(coded_a=='mult', condition=='construct') %>%
+  group_by(coded_b) %>%
+  summarise(n=n()) %>%
+  mutate(perc=n/sum(n))
+
+
+label_checks_1and2 %>%
+  filter(coded_a=='complex', condition=='decon') %>%
+  group_by(coded_b) %>%
+  summarise(n=n()) %>%
+  mutate(perc=n/sum(n))
+
 
 # Phase II complex guesses, construct vs. de-construct
 t.test(
@@ -128,6 +156,10 @@ t.test(
 
 # Decon Phase I mult vs. construct Phase II mult
 t.test(
+  label_checks_1and2 %>% filter(condition=='construct') %>% pull(is_mult),
+  label_checks_1and2 %>% filter(condition=='decon') %>% pull(is_mult)
+)
+cohen_d(
   label_checks_1and2 %>% filter(condition=='construct') %>% pull(is_mult),
   label_checks_1and2 %>% filter(condition=='decon') %>% pull(is_mult)
 )
@@ -159,6 +191,11 @@ t.test(
   ph1_guess_length_1and2 %>% filter(condition=='construct') %>% pull(len_a),
   ph1_guess_length_1and2 %>% filter(condition=='decon') %>% pull(len_a)
 )
+
+cohen_d(
+  ph1_guess_length_1and2 %>% filter(condition=='construct') %>% pull(len_a),
+  ph1_guess_length_1and2 %>% filter(condition=='decon') %>% pull(len_a)
+)
 ```
 
 
@@ -176,6 +213,10 @@ exp_3and4 %>%
   summarise(sd(acc), mean(acc))
 
 t.test(
+  exp_3and4 %>% filter(condition=='combine') %>% pull(is_groundTruth),
+  exp_3and4 %>% filter(condition=='flip') %>% pull(is_groundTruth)
+)
+cohen_d(
   exp_3and4 %>% filter(condition=='combine') %>% pull(is_groundTruth),
   exp_3and4 %>% filter(condition=='flip') %>% pull(is_groundTruth)
 )
@@ -200,6 +241,24 @@ t.test(
   labels_3and4 %>% filter(condition=='combine') %>% pull(is_gt),
   labels_3and4 %>% filter(condition=='flip') %>% pull(is_gt)
 )
+cohen_d(
+  labels_3and4 %>% filter(condition=='combine') %>% pull(is_gt),
+  labels_3and4 %>% filter(condition=='flip') %>% pull(is_gt)
+)
+
+
+labels_3and4 %>%
+  filter(condition=='flip') %>%
+  group_by(coded_b) %>%
+  summarise(n=n()) %>%
+  mutate(perc=n/sum(n))
+
+labels_3and4 %>%
+  filter(condition=='combine') %>%
+  group_by(coded_b) %>%
+  summarise(n=n()) %>%
+  mutate(perc=n/sum(n))
+
 ```
 
 ### Alternative causal concept
@@ -231,7 +290,8 @@ labels_3and4 %>%
   kbl(digits = 2) %>%
   kable_styling()
 
-chisq.test(c(1, 13, 38), p=rep(1/3, 3))
+chisq.test(c(5, 40), p=rep(1/2,2))
+sqrt(27.2/45)
 ```
 
 
@@ -262,18 +322,20 @@ model_ll_improv = model_lls %>%
 # plot
 model_ll_improv %>%
   mutate(condition=ifelse(condition=='decon', 'de-construct', condition)) %>%
-  mutate(condition=factor(condition, levels=c("construct", 'de-construct', 'combine', 'flip'))) %>%
+  mutate(condition=factor(condition, levels=c("construct", 'de-construct', 'combine', 'flip')),
+         model=factor(model, levels=c('agr', 'rr', 'ag', 'gp', 'sim', 'mm', 'lm'), 
+                       labels = c('AGR', 'RR', 'AG', 'GpReg', 'Simlarity', 'Multinom', 'LinReg'))) %>%
   ggplot(aes(x=reorder(model, -nll), y=improv, fill=condition)) +
   geom_bar(position="stack", stat="identity") +
   geom_text(
     aes(label = paste0('+', after_stat(y)), group = model), 
-    stat = 'summary', fun = sum
+    stat = 'summary', fun = sum, size=5, nudge_y = 200
   ) +
   theme_bw() +
   labs(x='', y='') +
   scale_fill_brewer(palette="Blues", direction=-1) +
   theme(legend.title=element_blank(),
-        legend.position='bottom',
+        legend.position=c(0.8, 0.85),
         strip.background = element_blank(),
         panel.grid.minor = element_blank(),
         text = element_text(size = 20),
@@ -321,6 +383,43 @@ ggplot(model_accs, aes(x=acc, y=ppt_acc)) +
         strip.background = element_blank(),
         panel.grid.minor = element_blank(),
         text = element_text(size = 15))
+
+p_bs = model_accs %>%
+  filter(model %in% c('ag', 'agr', 'rr')) %>%
+  mutate(model = factor(model, levels=c('agr', 'ag', 'rr'), labels=c('AGR', 'AG', 'RR'))) %>%
+  ggplot(aes(x=acc, y=ppt_acc)) +
+  geom_point() +
+  geom_smooth(method='lm', formula= y~x, fill = "lightgray") +
+  stat_cor(aes(label = ..r.label..), label.x = .05, label.y = .54) + # x 36
+  facet_wrap(~model, nrow=1) +
+  labs(x='model', y='people') +
+  theme_bw() +
+  theme(legend.title=element_blank(),
+        legend.position=c(.07,.87),
+        strip.background = element_blank(),
+        panel.grid.minor = element_blank(),
+        text = element_text(size = 15))
+
+
+p_ss = model_accs %>%
+  filter(model %in% c('sim', 'gp', 'mm', 'lm')) %>%
+  mutate(model = factor(model, levels=c('gp', 'sim', 'mm', 'lm'), labels=c('GpReg', 'Similarity', 'Multinom', 'LinReg'))) %>%
+  ggplot(aes(x=acc, y=ppt_acc)) +
+  geom_point() +
+  geom_smooth(method='lm', formula= y~x, fill = "lightgray") +
+  stat_cor(aes(label = ..r.label..), label.x = .05, label.y = .54) + # x 36
+  facet_wrap(~model, nrow=1) +
+  labs(x='model', y='people') +
+  theme_bw() +
+  theme(legend.title=element_blank(),
+        legend.position=c(.07,.87),
+        strip.background = element_blank(),
+        panel.grid.minor = element_blank(),
+        text = element_text(size = 15))
+
+
+ggarrange(p_bs, p_ss, nrow = 2)
+
 ```
 
 ### Accuracy comparison of Bayesian-symbolic models
@@ -329,11 +428,19 @@ ggplot(model_accs, aes(x=acc, y=ppt_acc)) +
 # Prep participant accuracy data
 ppt_stats = df.tw %>%
   group_by(condition, phase) %>%
-  summarise(se=sd(is_groundTruth)/sqrt(n()), ppt_acc=sum(is_groundTruth)/n())
+  summarise(se=sd(is_groundTruth)/sqrt(n()), ppt_acc=sum(is_groundTruth)/n()) %>%
+  mutate(phase=ifelse(phase=='A', 'I', 'II'),
+         condition = factor(condition, levels=c('construct', 'decon', 'combine', 'flip'), 
+                            labels = c('construct', 'de-construct', 'combine', 'flip')))
 
 # Subset model model
 bayesian_models = model_accs %>%
-  filter(model %in% c('ag', 'agr', 'rr'))
+  filter(model %in% c('ag', 'agr', 'rr')) %>%
+  mutate(model = factor(model, levels=c('agr', 'ag', 'rr'), labels=c('AGR', 'AG', 'RR')),
+         condition = factor(condition, levels=c('construct', 'decon', 'combine', 'flip'), 
+                            labels = c('construct', 'de-construct', 'combine', 'flip'))) %>%
+  mutate(phase=ifelse(phase=='A', 'I', 'II'))
+  
 
 # Plot
 ggplot(ppt_stats, aes(x=phase, y=ppt_acc)) +
@@ -354,7 +461,7 @@ ggplot(ppt_stats, aes(x=phase, y=ppt_acc)) +
         #legend.position=c(.9,.9),
         strip.background = element_blank(),
         panel.grid.minor = element_blank(),
-        text = element_text(size = 15)) +
+        text = element_text(size = 20)) +
   facet_grid(~condition)
 ```
 

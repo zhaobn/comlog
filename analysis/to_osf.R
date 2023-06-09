@@ -373,3 +373,24 @@ df.tw %>%
   )
 
 
+##### Update new labels ##### 
+subjects_data = read.csv('../data/osf/subjects.csv')
+load('../data/responses/recoded.Rda')
+
+r_labels = df.labels %>% select(ix, a_code, b_code)
+subjects_data_copy = subjects_data %>%
+  select(exp_id, ix, condition, task_duration, age, sex, report_a, report_b) %>%
+  left_join(r_labels, by='ix') %>%
+  select(exp_id, ix, condition, task_duration, age, sex, report_a, coded_a=a_code, report_b, coded_b=b_code)
+write_csv(subjects_data_copy, '../data/osf/subjects.csv')
+
+
+# Rename code
+subjects_data = subjects_data %>%
+  mutate(coded_a=ifelse(coded_a=='gt', 'ground_truth', coded_a), 
+         coded_b=ifelse(coded_b=='gt', 'ground_truth', coded_b))
+write_csv(subjects_data, '../data/osf/subjects.csv')
+
+
+
+

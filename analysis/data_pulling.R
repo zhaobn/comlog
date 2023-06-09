@@ -72,3 +72,44 @@ df.tw<-df.tw%>%select(-prolific_id)
 save(file='../data/raw/exp_3_raw.rdata', df.sw, df.tw)
 
 
+
+#### Make label files for pySankey
+
+all_labels = read.csv('../data/osf/subjects.csv')
+
+save_labels = function(cond) {
+  all_labels %>%
+    filter(condition == cond) %>%
+    select(rule_cat_a = coded_a, rule_cat_b = coded_b) %>%
+    write.csv(paste0('../data/responses/recoded/labels_', cond, '.csv'))
+  
+}
+
+#save_labels('combine')
+save_labels('decon')
+save_labels('flip')
+
+
+all_labels %>%
+  filter(condition == 'combine', exp_id > 2) %>%
+  select(rule_cat_a = coded_a, rule_cat_b = coded_b) %>%
+  write.csv(paste0('../data/responses/recoded/labels_combine_2.csv'))
+
+
+
+show_labs = function(cond, phase) {
+   data = read.csv(paste0('../data/responses/recoded/labels_', cond, '.csv'))
+   if (phase == 'a') {
+     unique(data$rule_cat_a)
+   } else {
+     unique(data$rule_cat_b)
+   }
+}
+show_labs('combine_2', 'b')
+
+
+
+
+
+
+

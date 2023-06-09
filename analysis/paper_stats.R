@@ -389,6 +389,89 @@ log(1/17)*8*2*570
 
 
 
+##### Try new codes ####
+coded = load('../data/responses/recoded.Rda')
+
+labels_1and2 = df.labels %>% 
+  filter(exp_id < 3) %>%
+  select(ix, condition, coded_a=a_code, coded_b=b_code) %>%
+  gather('phase', 'coded', -c(ix, condition)) %>%
+  mutate(phase=toupper(substr(phase, 7,8))) %>%
+  count(condition, phase, coded)
+
+# Add percentage
+labels_total_1and2 = labels_1and2 %>%
+  group_by(condition, phase) %>%
+  summarise(total=sum(n))
+labels_1and2 = labels_1and2 %>%
+  left_join(labels_total_1and2, by=c('condition', 'phase')) %>%
+  mutate(perc=n/total)
+
+# Plot to see all percentage  
+ggplot(labels_1and2, aes(x=phase, y=perc, fill=coded)) +
+  geom_bar(position="fill", stat='identity') +
+  facet_grid(~condition) +
+  geom_text(aes(x=phase, label=paste0(round(perc*100,2),'%')), position = position_stack(vjust = 0.5)) +
+  facet_grid(~condition)
+
+# For tests reported in paper
+label_checks_1and2 = df.labels %>% 
+  filter(exp_id < 3) %>%
+  mutate(is_gt = b_code=='gt',
+         is_complex = b_code=='complex',
+         is_mult = ifelse(condition=='decon', b_code=='mult', a_code=='mult'))
+
+# Phase II ground truth, construct vs. de-construct
+t.test(
+  label_checks_1and2 %>% filter(condition=='construct') %>% pull(is_gt),
+  label_checks_1and2 %>% filter(condition=='decon') %>% pull(is_gt)
+)
+
+# Phase II complex guesses, construct vs. de-construct
+t.test(
+  label_checks_1and2 %>% filter(condition=='construct') %>% pull(is_complex),
+  label_checks_1and2 %>% filter(condition=='decon') %>% pull(is_complex)
+)
+
+# Phase II complex guesses, combine vs. de-construct
+t.test(
+  label_checks_1and2 %>% filter(condition=='combine') %>% pull(is_complex),
+  label_checks_1and2 %>% filter(condition=='decon') %>% pull(is_complex)
+)
+
+# Decon Phase I mult vs. construct Phase II mult
+t.test(
+  label_checks_1and2 %>% filter(condition=='construct') %>% pull(is_mult),
+  label_checks_1and2 %>% filter(condition=='decon') %>% pull(is_mult)
+)
+
+# Decon Phase I mult vs. combine Phase II mult
+t.test(
+  label_checks_1and2 %>% filter(condition=='combine') %>% pull(is_mult),
+  label_checks_1and2 %>% filter(condition=='decon') %>% pull(is_mult)
+)
+
+labels_3and4 = df.sw %>% 
+  filter(exp_id > 2) %>%
+  mutate(is_gt=coded_b=='ground_truth')
+
+# Compute accuracy as match to ground truth
+labels_3and4 %>%
+  group_by(condition) %>%
+  summarise(is_gt=sum(is_gt), n=n()) %>%
+  mutate(perc=100*is_gt/n) %>%
+  kbl(digits = 2) %>%
+  kable_styling()
+
+t.test(
+  labels_3and4 %>% filter(condition=='combine') %>% pull(is_gt),
+  labels_3and4 %>% filter(condition=='flip') %>% pull(is_gt)
+)
+
+
+
+
+
 
 
 

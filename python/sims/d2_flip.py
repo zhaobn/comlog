@@ -4,6 +4,7 @@ import sys
 sys.path.append('../')
 
 from multiprocessing import Pool
+from random import sample
 
 from program_sim import *
 from task_terms import *
@@ -12,9 +13,9 @@ from program_inf import *
 # %% Setting up
 COND = 'flip'
 DVAR = 'stripes'
-TOP_N = 4
+TOP_N = sample([1,2,3],1)[0]
 EXCEPTS = 0
-LEARN_ITERS = [16, 32, 64, 128, 256, 512, 1024] #list(range(1,11))
+LEARN_ITERS = list(range(1,11)) + [ 2**x for x in range(4,11) ]
 # LEARN_ITERS = [ 2**(x+1) for x in range(10) ]
 # LEARN_ITERS = list(range(100, 1501, 100)) + list(range(2000, 5001, 500))
 

@@ -261,6 +261,7 @@ fits = rbind(sims, mixs) %>%
   mutate(improv = cfit - rand)
 
 
+# Overall plot
 fits_checked = fits %>% 
   filter(run!='D1') %>%
   group_by(type, run, iter) %>%
@@ -271,12 +272,23 @@ library(wesanderson)
 ggplot(data=fits_checked, aes(x=iter, y=improv, group=model)) +
   geom_line(aes(color=model), size=1.2) +
   scale_x_continuous(trans='log2') +
+  geom_hline(yintercept=4495, color = "black", linetype='dashed') +
   theme_bw() +
   scale_color_manual(values=wes_palette(n=4, name="Zissou1"))
 
 
-
-
+# Plot per condition
+fits %>%
+  filter(run!='D1') %>%
+  mutate(model=paste0(ifelse(type=='ag','AG','Revisit'),'-',ifelse(run=='D2','d2','d1')),
+         condition=factor(condition, levels=c('construct','decon','combine', 'flip'))) %>%
+  ggplot(aes(x=iter, y=improv, group=model)) +
+  geom_line(aes(color=model), size=1.1) +
+  scale_x_continuous(trans='log2') +
+  facet_wrap(~condition) +
+  theme_bw() +
+  scale_color_manual(values=wes_palette(n=4, name="Zissou1")) +
+  theme(legend.position = 'bottom')
 
 
 
